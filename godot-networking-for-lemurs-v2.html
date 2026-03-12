@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Godot Networking for Lemurs 🐒</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap');
+:root{
+  --bg:#080b0f;--panel:#0c1018;--border:#192030;
+  --accent:#3ecfff;--accent2:#ff6b9d;--accent3:#7fff6b;
+  --text:#dde8f0;--muted:#4a6070;--code-bg:#070a0e;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;display:flex;flex-direction:column;}
+header{flex-shrink:0;padding:1.6rem 2rem 1.2rem;text-align:center;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+header canvas#hero{position:absolute;inset:0;width:100%;height:100%;opacity:.15;pointer-events:none;}
+header .inner{position:relative;z-index:1;}
+.tagline-chip{display:inline-block;background:var(--accent);color:#000;font-family:'Space Mono',monospace;font-size:.6rem;padding:.2rem .7rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.5rem;}
+h1{font-size:clamp(1.5rem,3.5vw,2.8rem);font-weight:800;line-height:1;letter-spacing:-.02em;}
+h1 span{color:var(--accent);}
+.subtitle{font-family:'Space Mono',monospace;font-size:.72rem;color:var(--muted);margin-top:.35rem;}
+.disclaimer{font-family:'Space Mono',monospace;font-size:.57rem;color:var(--muted);margin-top:.25rem;opacity:.6;}
+.progress-bar{flex-shrink:0;height:2px;background:var(--border);}
+.progress-fill{height:100%;background:var(--accent);transition:width .4s ease;}
+nav{flex-shrink:0;display:flex;gap:.35rem;padding:.6rem 1.2rem;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--panel);scrollbar-width:none;}
+nav::-webkit-scrollbar{display:none;}
+.nav-btn{flex-shrink:0;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:.65rem;padding:.3rem .65rem;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nav-btn.active{background:var(--accent);color:#000;border-color:var(--accent);}
+main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
+@media(max-width:860px){main{grid-template-columns:1fr;overflow-y:auto;}}
+.lesson-panel{overflow-y:auto;padding:1.6rem;border-right:1px solid var(--border);scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.lesson-number{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.4rem;}
+.lesson-title{font-size:1.45rem;font-weight:800;line-height:1.1;margin-bottom:.8rem;}
+.lesson-body{font-family:'Space Mono',monospace;font-size:.74rem;line-height:1.85;color:#9ab0c0;}
+.lesson-body p{margin-bottom:.85rem;}
+.lesson-body strong{color:var(--accent);}
+.lesson-body em{color:var(--accent3);font-style:normal;}
+.lesson-body .tip{background:#0a1820;border-left:3px solid var(--accent2);padding:.65rem .9rem;margin:.85rem 0;color:#ccd8e0;}
+.lesson-body .tip::before{content:'🐒 LEMUR TIP: ';color:var(--accent2);font-weight:700;}
+.lesson-body .step-card{background:#0a0e16;border:1px solid var(--border);border-left:3px solid var(--accent3);padding:.65rem .9rem;margin:.5rem 0;}
+.lesson-body .step-card .step-num{color:var(--accent3);font-weight:700;font-size:.6rem;letter-spacing:.12em;display:block;margin-bottom:.2rem;}
+.lesson-body .challenge{background:#100814;border:1px solid var(--accent2);padding:.65rem .9rem;margin:.5rem 0;}
+.lesson-body .challenge::before{content:'⚡ TRY THIS: ';color:var(--accent2);font-weight:700;}
+.lesson-body code{background:#121c28;color:var(--accent3);padding:.1em .35em;font-size:.84em;}
+.viz-panel{display:flex;flex-direction:column;background:var(--code-bg);min-height:0;}
+.canvas-area{flex:0 0 260px;position:relative;background:#040608;border-bottom:1px solid var(--border);overflow:hidden;}
+canvas#viz-out{width:100%;height:100%;display:block;}
+.canvas-label{position:absolute;top:.4rem;left:.7rem;font-family:'Space Mono',monospace;font-size:.55rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.code-toolbar{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:.4rem .75rem;border-bottom:1px solid var(--border);background:var(--panel);}
+.code-toolbar span{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted);letter-spacing:.08em;}
+.copy-btn{background:var(--accent);color:#000;border:none;font-family:'Space Mono',monospace;font-size:.62rem;font-weight:700;padding:.25rem .75rem;cursor:pointer;}
+.copy-btn.done{background:var(--accent3);}
+.snippet-area{flex:1;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+pre#code-snippet{padding:.85rem 1rem;font-family:'Space Mono',monospace;font-size:.67rem;line-height:1.72;color:#b0d8c8;min-height:100%;background:transparent;}
+pre#code-snippet .kw{color:var(--accent);}
+pre#code-snippet .fn{color:#ffd080;}
+pre#code-snippet .st{color:var(--accent3);}
+pre#code-snippet .cm{color:var(--muted);}
+pre#code-snippet .nm{color:var(--accent2);}
+pre#code-snippet .dc{color:#c09fff;}
+</style>
+</head>
+<body>
+<header>
+  <canvas id="hero"></canvas>
+  <div class="inner">
+    <div class="tagline-chip">🐒 Multiplayer School · Godot 4</div>
+    <h1>Godot Networking for <span>Lemurs</span></h1>
+    <p class="subtitle">// packets → RPCs → prediction → rollback → you ship multiplayer</p>
+    <p class="disclaimer">⚠ Godot 4 · GDScript throughout · educational, not a production framework</p>
+  </div>
+</header>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<nav id="lesson-nav"></nav>
+<main>
+  <div class="lesson-panel" id="lesson-text"></div>
+  <div class="viz-panel">
+    <div class="canvas-area">
+      <span class="canvas-label" id="viz-label">▶ live diagram</span>
+      <canvas id="viz-out"></canvas>
+    </div>
+    <div class="code-toolbar">
+      <span>GDSCRIPT</span>
+      <button class="copy-btn" id="copy-btn" onclick="copySnippet()">⎘ COPY</button>
+    </div>
+    <div class="snippet-area"><pre id="code-snippet"></pre></div>
+  </div>
+</main>
+<script>
+const LESSONS = [
+{
+title:"The Network Is Just Shouting",
+subtitle:"01 — What Actually Happens",
+vizLabel:"▶ packets flying the wire",
+viz:"packets",
+snippet:`<span class="cm"># The internet moves data in small chunks called PACKETS.</span>
+<span class="cm"># Two protocols — pick your poison:</span>
+
+<span class="cm"># TCP — reliable, ordered, slower</span>
+<span class="cm"># Head-of-line blocking kills real-time games.</span>
+
+<span class="cm"># UDP — unreliable, unordered, FAST</span>
+<span class="cm"># Fire and forget. You handle loss. Godot uses ENet (UDP-based).</span>
+
+<span class="cm"># RTT = Round Trip Time. The number that governs your life.</span>
+<span class="kw">var</span> ping_ms = <span class="nm">40</span>    <span class="cm"># local LAN — barely noticeable</span>
+<span class="kw">var</span> ping_ms = <span class="nm">80</span>    <span class="cm"># same country — totally playable</span>
+<span class="kw">var</span> ping_ms = <span class="nm">180</span>   <span class="cm"># cross-continent — you feel it</span>
+<span class="kw">var</span> ping_ms = <span class="nm">400</span>   <span class="cm"># intercontinental — rubber-band city</span>
+
+<span class="cm"># ENet gives you the best of both worlds:</span>
+<span class="cm"># choose reliability PER PACKET — fast when you want,</span>
+<span class="cm"># guaranteed when you need it.</span>`,
+body:`<p>Good news: networking is not magic. Bad news: it is two computers trying to share data while the universe actively conspires against them. Packets get lost. Clocks drift. WiFi is a lie. Your only job is to <em>lose gracefully</em>.</p>
+<div class="step-card"><span class="step-num">TCP vs UDP — PICK YOUR PAIN</span>
+<strong>TCP</strong>: every packet is acknowledged. Lost packets are resent. Ordered. Reliable. The catch: <em>head-of-line blocking</em> — a single lost packet stalls everything while TCP waits for the retry. Bad for fast games.<br><br>
+<strong>UDP</strong>: fire and forget. Packets may be lost or arrive out of order. Nothing stalls. Each packet is independent. <em>Fast games use UDP.</em></div>
+<p>Godot's default transport is <strong>ENet</strong> — UDP with optional per-packet reliability. You get speed when you want it and guaranteed delivery when you need it.</p>
+<div class="step-card"><span class="step-num">RTT — THE NUMBER THAT GOVERNS EVERYTHING</span>
+RTT (Round-Trip Time) is how long a packet takes to leave your machine, reach the other end, and get a reply back. Your ping. Every problem in multiplayer — desyncs, rubber-banding, prediction errors — is a fight against RTT. <em>All of multiplayer programming is hiding that gap from the player.</em></div>
+<div class="tip">The network is a bad postal service run by caffeinated raccoons. Packets fall off trucks. Some arrive twice. Some arrive six months later, completely irrelevant. Your code must assume any of this can happen at any time. That one player on hotel WiFi will find every gap in your error handling within five minutes of your jam releasing.</div>
+<div class="challenge">Next time you play any online game, find the ping display. Find the highest-ping player. Watch them move. Everything you are seeing happened that many milliseconds ago on their machine. You are watching a ghost. Your entire job as a multiplayer programmer is making that ghost look alive.</div>`
+},
+{
+title:"Two Ways to Connect",
+subtitle:"02 — Server vs Peer-to-Peer",
+vizLabel:"▶ client-server vs peer-to-peer",
+viz:"topology",
+snippet:`<span class="cm"># CLIENT-SERVER: everyone connects to one central machine</span>
+<span class="kw">func</span> <span class="fn">host_game</span>():
+    <span class="kw">var</span> peer = ENetMultiplayerPeer.<span class="fn">new</span>()
+    peer.<span class="fn">create_server</span>(<span class="nm">7000</span>, <span class="nm">32</span>)  <span class="cm"># port, max_clients</span>
+    multiplayer.multiplayer_peer = peer
+    <span class="fn">print</span>(<span class="st">"Server running on port 7000"</span>)
+
+<span class="kw">func</span> <span class="fn">join_game</span>(address: <span class="kw">String</span>):
+    <span class="kw">var</span> peer = ENetMultiplayerPeer.<span class="fn">new</span>()
+    peer.<span class="fn">create_client</span>(address, <span class="nm">7000</span>)
+    multiplayer.multiplayer_peer = peer
+
+<span class="cm"># That is literally it. Two Godot instances talking.</span>
+<span class="cm"># Test: Project → Debug → Run Multiple Instances.</span>
+
+<span class="cm"># LISTEN SERVER: the host is both server AND client.</span>
+<span class="cm"># Player 1 presses "Host", others enter their IP and "Join".</span>
+<span class="cm"># No dedicated machine needed. Great for jams.</span>
+<span class="cm"># Host gets 0ms latency since they ARE the server.</span>`,
+body:`<p>Before you write a single line of Godot networking code, you need to answer one question: <strong>who is in charge?</strong> Get this wrong and you will be refactoring it out of everything six months from now. Get it right and the rest falls into place.</p>
+<div class="step-card"><span class="step-num">CLIENT-SERVER — ONE HOST RULES THEM ALL</span>
+One machine is the <strong>server</strong>. Everyone else is a <strong>client</strong>. Clients send inputs. The server runs authoritative game logic. The server sends state back to clients.<br><br>
+<em>Pros:</em> Cheat prevention is tractable. One source of truth. Easy to reason about.<br>
+<em>Cons:</em> Someone has to run the server. Either costs money or the host has a latency advantage.</div>
+<div class="step-card"><span class="step-num">PEER-TO-PEER — EVERYONE TALKS TO EVERYONE</span>
+No dedicated server. Every machine connects to every other directly. Classic for 2-player fighting games.<br><br>
+<em>Pros:</em> No server costs. Direct connections can mean lower latency.<br>
+<em>Cons:</em> Cheating is hard to prevent. NAT traversal is painful. Falls apart with many players.</div>
+<p>For most indie games: <strong>client-server wins.</strong> Make one player the host — a <em>listen server</em>. They run both server and client simultaneously. Zero latency for them since they ARE the server. Slightly unfair at high level, completely fine for a jam.</p>
+<div class="step-card"><span class="step-num">PEER IDs — HOW GODOT IDENTIFIES EVERYONE</span>
+<code>multiplayer.get_unique_id()</code> — who am I?<br>
+<code>multiplayer.is_server()</code> — am I the server?<br>
+<code>multiplayer.get_peers()</code> — list all connected peers<br><br>
+<em>The server always has ID 1.</em> Clients get random IDs. Memorise this — it drives everything.</div>
+<div class="tip">For a game jam: make player 1 the host. They press "Host", others type their IP and press "Join". Ship it. No server bill, no setup time, works. Polish the networking architecture <em>after</em> you confirm the game is actually fun — which most jam games are not, and that is okay.</div>`
+},
+{
+title:"Godot's Multiplayer Brain",
+subtitle:"03 — The MultiplayerAPI",
+vizLabel:"▶ multiplayer architecture",
+viz:"apimap",
+snippet:`<span class="cm"># The four signals you ALWAYS wire up</span>
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="cm"># Server fires when a client connects</span>
+    multiplayer.peer_connected.<span class="fn">connect</span>(<span class="fn">_on_peer_joined</span>)
+    <span class="cm"># Server fires when a client disconnects</span>
+    multiplayer.peer_disconnected.<span class="fn">connect</span>(<span class="fn">_on_peer_left</span>)
+    <span class="cm"># Client fires on successful connect</span>
+    multiplayer.connected_to_server.<span class="fn">connect</span>(<span class="fn">_on_connected</span>)
+    <span class="cm"># Client fires if connection fails</span>
+    multiplayer.connection_failed.<span class="fn">connect</span>(<span class="fn">_on_failed</span>)
+
+<span class="kw">func</span> <span class="fn">_on_peer_joined</span>(id: <span class="kw">int</span>):
+    <span class="fn">print</span>(<span class="st">"New peer: "</span>, id)
+    <span class="fn">spawn_player</span>(id)
+
+<span class="kw">func</span> <span class="fn">_on_peer_left</span>(id: <span class="kw">int</span>):
+    <span class="fn">print</span>(<span class="st">"Peer gone: "</span>, id)
+    <span class="fn">remove_player</span>(id)
+
+<span class="cm"># CRITICAL: name nodes by peer ID for RPC routing!</span>
+<span class="kw">func</span> <span class="fn">spawn_player</span>(id: <span class="kw">int</span>):
+    <span class="kw">var</span> p = PlayerScene.<span class="fn">instantiate</span>()
+    p.name = <span class="kw">str</span>(id)  <span class="cm"># the RPC router uses this path</span>
+    p.<span class="fn">set_multiplayer_authority</span>(id)
+    $Players.<span class="fn">add_child</span>(p)`,
+body:`<p>The good news about Godot 4: the engine does a shocking amount of the hard work for you. The bad news: you still have to understand what it is doing under the hood or you will spend hours debugging phantom desyncs caused by wiring up signals in the wrong order.</p>
+<div class="step-card"><span class="step-num">THE MULTIPLAYER PEER — YOUR NETWORK DRIVER</span>
+<code>ENetMultiplayerPeer</code> is the default transport. Create it, configure as server or client, hand it to <code>multiplayer.multiplayer_peer</code>. Godot handles all low-level socket work. You never write raw byte code.<br><br>
+Other peers with the identical API: <code>WebSocketMultiplayerPeer</code> (for HTML5 exports), <code>WebRTCMultiplayerPeer</code> (browser P2P). Swap the peer type, everything else stays the same.</div>
+<div class="step-card"><span class="step-num">THE CONNECTION LIFECYCLE — FOUR SIGNALS</span>
+<em>peer_connected(id)</em> — fires on server when a client joins. Create their player object here.<br>
+<em>peer_disconnected(id)</em> — fires on server when a client leaves. Delete their player object here.<br>
+<em>connected_to_server</em> — fires on clients when they successfully join.<br>
+<em>connection_failed</em> — fires on clients if the attempt times out.</div>
+<div class="step-card"><span class="step-num">AUTOMATE IT — SPAWNER &amp; SYNCHRONIZER</span>
+Godot 4 includes <strong>MultiplayerSpawner</strong> (auto-creates/destroys nodes across all peers) and <strong>MultiplayerSynchronizer</strong> (continuously syncs specified properties like position). Drop them in your scene, configure in the Inspector — no code needed. Great for prototyping.</div>
+<div class="tip">Node names drive RPC routing and if you get them wrong you will see silent failures that are <em>terrible</em> to debug. If your Player node is at <code>/root/Game/Players/42</code>, RPCs travel by that exact path. Always name player nodes by peer ID (<code>str(id)</code>). A messy scene tree means confusing multiplayer bugs.</div>`
+},
+{
+title:"RPC: Calling Functions Across Space",
+subtitle:"04 — Remote Procedure Calls",
+vizLabel:"▶ RPCs flying across the wire",
+viz:"rpc",
+snippet:`<span class="cm"># @rpc turns a function into a network call.</span>
+<span class="cm"># Parameters: mode, sync, transfer_mode, channel</span>
+
+<span class="cm"># POSITION — unreliable is correct.</span>
+<span class="cm"># If one drops, the next arrives 16ms later anyway.</span>
+<span class="dc">@rpc</span>(<span class="st">"any_peer"</span>, <span class="st">"call_remote"</span>, <span class="st">"unreliable"</span>)
+<span class="kw">func</span> <span class="fn">sync_position</span>(pos: <span class="kw">Vector2</span>):
+    position = pos
+
+<span class="cm"># DAMAGE — reliable is correct.</span>
+<span class="cm"># One missed death event = one invincible ghost.</span>
+<span class="dc">@rpc</span>(<span class="st">"authority"</span>, <span class="st">"call_remote"</span>, <span class="st">"reliable"</span>)
+<span class="kw">func</span> <span class="fn">take_damage</span>(amount: <span class="kw">int</span>):
+    health -= amount
+    <span class="fn">update_health_bar</span>()
+
+<span class="cm"># HOW TO CALL:</span>
+<span class="fn">sync_position</span>.<span class="fn">rpc</span>(position)        <span class="cm"># broadcast to everyone</span>
+<span class="fn">sync_position</span>.<span class="fn">rpc_id</span>(<span class="nm">2</span>, position)  <span class="cm"># send to peer 2 only</span>
+<span class="fn">take_damage</span>.<span class="fn">rpc_id</span>(<span class="nm">1</span>, <span class="nm">50</span>)         <span class="cm"># ask server (ID 1) to apply damage</span>
+
+<span class="cm"># To also run locally:</span>
+<span class="fn">take_damage</span>.<span class="fn">rpc</span>(<span class="nm">50</span>)  <span class="cm"># runs on remotes</span>
+<span class="fn">take_damage</span>(<span class="nm">50</span>)      <span class="cm"># runs locally (call it separately)</span>`,
+body:`<p>RPCs are the main event. <strong>Remote Procedure Call</strong> — you call a function on your machine, it executes on someone else's machine, across the internet, as if it were local. Godot 4 makes this ludicrously easy with the <code>@rpc</code> annotation. Do not let the ease fool you — getting the parameters wrong will ruin your game.</p>
+<div class="step-card"><span class="step-num">@RPC ANNOTATION — FOUR THINGS TO CONFIGURE</span>
+<strong>mode:</strong> <em>"authority"</em> — only the node's owner may call this remotely. <em>"any_peer"</em> — any peer may call it.<br><br>
+<strong>sync:</strong> <em>"call_remote"</em> (default) — runs only on receivers. <em>"call_local"</em> — also runs on the caller.<br><br>
+<strong>transfer_mode:</strong> <em>"unreliable"</em> (fast, lossy), <em>"unreliable_ordered"</em>, or <em>"reliable"</em> (guaranteed).<br><br>
+<strong>channel:</strong> Separate traffic lanes to avoid head-of-line blocking between different data types.</div>
+<div class="step-card"><span class="step-num">THE GOLDEN RULE — UNRELIABLE FOR POSITION, RELIABLE FOR EVENTS</span>
+Position updates fire 20–60 times per second. A lost packet is replaced in 16ms. Use <em>unreliable.</em><br><br>
+For important one-off events — player death, item pickup, match start — use <em>reliable</em>. A missed death event means a ghost running at full health.</div>
+<div class="step-card"><span class="step-num">THE PATTERN — CLIENT SENDS INPUT, SERVER RESPONDS</span>
+Client: <code>submit_input.rpc_id(1, my_input)</code> → Server validates → <code>apply_state.rpc(new_pos, new_hp)</code><br><br>
+Never trust a client calling a damage function on themselves. A cheater will find it in five minutes. All gameplay logic lives on the server. Clients are fancy input devices.</div>
+<div class="tip">The most common RPC bug ever: forgetting the function body runs on the RECEIVER, not you. <code>take_damage.rpc(50)</code> runs <code>take_damage</code> on every other peer. Your machine does not run it unless you use <em>"call_local"</em> or call it directly too.</div>`
+},
+{
+title:"Who Owns What",
+subtitle:"05 — Authority &amp; Ownership",
+vizLabel:"▶ authority ownership map",
+viz:"authority",
+snippet:`<span class="cm"># Every node has exactly one multiplayer authority — its owner.</span>
+<span class="cm"># Default: server (ID 1) owns everything.</span>
+
+<span class="kw">func</span> <span class="fn">spawn_player</span>(peer_id: <span class="kw">int</span>):
+    <span class="kw">var</span> p = PlayerScene.<span class="fn">instantiate</span>()
+    p.name = <span class="kw">str</span>(peer_id)
+    p.<span class="fn">set_multiplayer_authority</span>(peer_id)  <span class="cm"># THIS is the key call</span>
+    $Players.<span class="fn">add_child</span>(p)
+
+<span class="cm"># Inside Player.gd:</span>
+<span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
+    <span class="cm"># Only the owner reads input and moves</span>
+    <span class="kw">if not</span> <span class="fn">is_multiplayer_authority</span>():
+        <span class="kw">return</span>
+
+    <span class="kw">var</span> dir = Input.<span class="fn">get_vector</span>(
+        <span class="st">"ui_left"</span>, <span class="st">"ui_right"</span>, <span class="st">"ui_up"</span>, <span class="st">"ui_down"</span>
+    )
+    position += dir * speed * delta
+    <span class="fn">sync_pos</span>.<span class="fn">rpc</span>(position)
+
+<span class="dc">@rpc</span>(<span class="st">"authority"</span>, <span class="st">"call_remote"</span>, <span class="st">"unreliable"</span>)
+<span class="kw">func</span> <span class="fn">sync_pos</span>(pos: <span class="kw">Vector2</span>):
+    position = pos  <span class="cm"># puppets: just snap to received position</span>`,
+body:`<p>Here is a fun problem: every player's character node exists on every machine simultaneously. Without rules, Player 2's client could theoretically move Player 1's character. And a cheater <em>will</em> try. The answer is <strong>multiplayer authority</strong> — one owner per node, enforced by the engine.</p>
+<div class="step-card"><span class="step-num">THE AUTHORITY SYSTEM — ONE OWNER PER NODE</span>
+Every node has exactly one authority — the peer that may call <em>"authority"</em>-mode RPCs on it.<br><br>
+<code>set_multiplayer_authority(peer_id)</code> — assign ownership<br>
+<code>is_multiplayer_authority()</code> — am I the owner of this node?<br>
+<code>get_multiplayer_authority()</code> — who owns this?<br><br>
+Pattern: when spawning a player node, immediately call <code>set_multiplayer_authority(peer_id)</code>. Inside their <code>_physics_process</code>, check <code>is_multiplayer_authority()</code> before reading any input.</div>
+<div class="step-card"><span class="step-num">ONE NODE, THREE SIMULTANEOUS ROLES</span>
+On every machine, each player node plays all three roles at once:<br><br>
+<strong>AUTHORITY COPY</strong> (on the owner's machine) — reads input, moves, sends position.<br>
+<strong>PUPPET COPY</strong> (on all other machines) — receives positions, renders, does nothing else.<br>
+<strong>SERVER COPY</strong> (on the server) — validates, runs physics, is the official truth.<br><br>
+Same scene. Same script. Behaviour decided by <code>is_multiplayer_authority()</code>.</div>
+<div class="step-card"><span class="step-num">AUTHORITY PROPAGATES DOWN THE TREE</span>
+Setting authority on a parent propagates to all children. A Player node with children (weapon, hitbox, HUD) — all owned by the same peer in one call. Be careful with nodes the server should control — they will inherit player authority if nested under that player.</div>
+<div class="tip">The architecture that does not embarrass you later: server owns GameState (scores, timers, rules), each player owns their Player node (input, local movement), and the server runs a shadow simulation of everyone for validation. Client = fast approximation. Server = truth. Tattoo that on your wrist.</div>`
+},
+{
+title:"The Lag Monster",
+subtitle:"06 — Latency, Jitter &amp; Loss",
+vizLabel:"▶ latency timeline",
+viz:"latency",
+snippet:`<span class="cm"># Measuring actual RTT with a ping-pong RPC</span>
+<span class="kw">var</span> _ping_sent_at: <span class="kw">int</span> = <span class="nm">0</span>
+
+<span class="kw">func</span> <span class="fn">send_ping</span>():
+    _ping_sent_at = Time.<span class="fn">get_ticks_msec</span>()
+    <span class="fn">_pong</span>.<span class="fn">rpc_id</span>(<span class="nm">1</span>)  <span class="cm"># send to server</span>
+
+<span class="dc">@rpc</span>(<span class="st">"any_peer"</span>, <span class="st">"call_remote"</span>, <span class="st">"reliable"</span>)
+<span class="kw">func</span> <span class="fn">_pong</span>():
+    <span class="kw">if</span> multiplayer.<span class="fn">is_server</span>():
+        <span class="cm"># server bounces back to caller</span>
+        <span class="fn">_pong</span>.<span class="fn">rpc_id</span>(multiplayer.<span class="fn">get_remote_sender_id</span>())
+    <span class="kw">else</span>:
+        <span class="kw">var</span> rtt = Time.<span class="fn">get_ticks_msec</span>() - _ping_sent_at
+        <span class="fn">print</span>(<span class="st">"RTT: "</span>, rtt, <span class="st">"ms  one-way ~"</span>, rtt / <span class="nm">2</span>, <span class="st">"ms"</span>)
+
+<span class="cm"># ENet also exposes stats directly:</span>
+<span class="cm"># var ep = multiplayer.multiplayer_peer.get_peer(id)</span>
+<span class="cm"># ep.get_statistic(ENetPacketPeer.PEER_ROUND_TRIP_TIME)</span>
+
+<span class="cm"># get_remote_sender_id() — inside any @rpc function,</span>
+<span class="cm"># tells you EXACTLY who sent it. Essential for validation.</span>`,
+body:`<p>Harsh truth: you cannot make light travel faster. Physics is not on your side. What you <em>can</em> do is make your game feel like the delay does not exist — through prediction, interpolation, and careful design. First step: name the monsters you are fighting.</p>
+<div class="step-card"><span class="step-num">LATENCY — THE CONSTANT DELAY</span>
+Time between pressing a button and the server knowing. Roughly half the RTT. At 100ms ping: inputs arrive 50ms late, server response arrives 50ms later. Player sees their character react 100ms after pressing — unless you hide this. (You will. Lesson 08.)</div>
+<div class="step-card"><span class="step-num">JITTER — THE INCONSISTENCY</span>
+Latency that varies randomly: 60ms, 62ms, 58ms, 120ms, 61ms. That 120ms spike is jitter. It makes packets arrive out of order — a newer position update arrives before an older one, causing remote players to snap backwards.<br><br>
+Fix: <strong>jitter buffer</strong>. Add 20–50ms of artificial delay to incoming packets, play them back smoothly. You trade tiny extra latency for smooth motion. Used in every video call on earth.</div>
+<div class="step-card"><span class="step-num">PACKET LOSS — THE SILENCE</span>
+ENet retransmits reliable packets automatically. Unreliable packets are gone forever. For position updates that is fine — next one arrives soon. For deaths and pickups: use <em>reliable</em>, full stop.</div>
+<div class="step-card"><span class="step-num">CLOCK SYNC — WHOSE TIME IS IT?</span>
+Every machine's clock drifts. <code>Time.get_ticks_msec()</code> is local — it does not sync automatically. For tick-based simulations you must implement clock synchronisation at connection time or desync will creep in.</div>
+<div class="tip">The most reliable RTT measurement is also the most embarrassingly simple: send a packet with a timestamp, server bounces it back, measure elapsed time. Do this every few seconds, smooth with a rolling average. Display it in your debug overlay. Now you know exactly how bad your players' connections are before you start blaming your own code.</div>`
+},
+{
+title:"State Sync Strategies",
+subtitle:"07 — What Do You Send?",
+vizLabel:"▶ snapshot vs event sync",
+viz:"statesync",
+snippet:`<span class="cm"># SNAPSHOTS — send full state at fixed intervals</span>
+<span class="kw">var</span> tick_rate: <span class="kw">int</span> = <span class="nm">20</span>  <span class="cm"># 20 updates/sec = 50ms interval</span>
+<span class="kw">var</span> _tick_accum: <span class="kw">float</span> = <span class="nm">0.0</span>
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
+    <span class="kw">if not</span> <span class="fn">is_multiplayer_authority</span>(): <span class="kw">return</span>
+    _tick_accum += delta
+    <span class="kw">if</span> _tick_accum &gt;= <span class="nm">1.0</span> / tick_rate:
+        _tick_accum = <span class="nm">0.0</span>
+        <span class="fn">recv_snapshot</span>.<span class="fn">rpc</span>(position, velocity)
+
+<span class="dc">@rpc</span>(<span class="st">"authority"</span>, <span class="st">"call_remote"</span>, <span class="st">"unreliable_ordered"</span>)
+<span class="kw">func</span> <span class="fn">recv_snapshot</span>(pos: <span class="kw">Vector2</span>, vel: <span class="kw">Vector2</span>):
+    _remote_pos = pos
+    _remote_vel = vel
+
+<span class="cm"># INTERPOLATION — smooth the gaps between snapshots</span>
+<span class="kw">func</span> <span class="fn">_process</span>(delta):
+    <span class="kw">if</span> <span class="fn">is_multiplayer_authority</span>(): <span class="kw">return</span>
+    position = position.<span class="fn">lerp</span>(_remote_pos, <span class="nm">12.0</span> * delta)
+
+<span class="cm"># EVENTS — send only on change, for important things</span>
+<span class="dc">@rpc</span>(<span class="st">"any_peer"</span>, <span class="st">"call_remote"</span>, <span class="st">"reliable"</span>)
+<span class="kw">func</span> <span class="fn">player_fired</span>(aim_dir: <span class="kw">Vector2</span>):
+    <span class="kw">var</span> bullet = BulletScene.<span class="fn">instantiate</span>()
+    bullet.direction = aim_dir
+    <span class="fn">add_child</span>(bullet)`,
+body:`<p>Every frame your game produces gigabytes of state. You can send maybe a few kilobytes of it over the network. Deciding <em>what</em> to send, <em>how often</em>, and <em>how reliably</em> is one of the most impactful architectural decisions in multiplayer game design.</p>
+<div class="step-card"><span class="step-num">SNAPSHOT SYNC — SEND STATE, NOT EVENTS</span>
+Every N milliseconds broadcast full relevant state: position, velocity, health, animation state. Old snapshots discarded automatically with <em>unreliable_ordered</em>.<br><br>
+Good for: physics objects, player positions, frequently-changing values.<br>
+Bad for: discrete one-off events like explosions or item pickups.<br>
+Cost: predictable, fixed bandwidth.</div>
+<div class="step-card"><span class="step-num">EVENT-DRIVEN — SEND WHAT HAPPENED</span>
+Send RPCs only when something changes: player fired, player jumped, player picked up an item.<br><br>
+Good for: rare important events with side effects — sounds, particles, score.<br>
+Bad for: continuous state — "position unchanged" every tick costs more than just sending the position.<br>
+Pitfall: a lost unreliable event = desync that never self-heals.</div>
+<div class="step-card"><span class="step-num">INTERPOLATION — SMOOTH THE GAPS</span>
+You receive a position at t=0ms, next at t=50ms. What do you render at t=25ms? <strong>Interpolate</strong> — blend between last known and newly received. Player looks smooth even at low tick rates. Trade-off: you render 50–100ms in the past. Usually invisible.</div>
+<div class="tip">Tick rate is your bandwidth budget dial. 20Hz = 50ms between updates, fine for strategy and RPGs. 60Hz = 16ms, needed for fast-paced action. The hybrid that works for most indie games: positions via unreliable snapshots at 20Hz, important events via reliable RPCs on-demand. The golden rule: <em>never send what the other end can compute itself.</em></div>
+<div class="challenge">Add dead reckoning to your interpolation. When a snapshot arrives, store velocity alongside position. Between snapshots, extrapolate: <code>predicted_pos = last_pos + last_vel * elapsed</code>. Then lerp toward newly arriving snapshots to correct drift. Compare it to pure lerp. For slow-moving characters, lerp wins. For fast projectiles, dead reckoning wins. Now you know why some things feel snappy and others feel floaty.</div>`
+},
+{
+title:"Client-Side Prediction",
+subtitle:"08 — Moving Before Permission",
+vizLabel:"▶ prediction &amp; reconciliation",
+viz:"prediction",
+snippet:`<span class="cm"># Apply input LOCALLY and IMMEDIATELY.</span>
+<span class="cm"># Send it to the server. Correct if the server disagrees.</span>
+
+<span class="kw">var</span> _input_buffer: <span class="kw">Array</span> = []
+<span class="kw">var</span> _current_tick: <span class="kw">int</span> = <span class="nm">0</span>
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
+    <span class="kw">if not</span> <span class="fn">is_multiplayer_authority</span>(): <span class="kw">return</span>
+
+    <span class="kw">var</span> dir = Input.<span class="fn">get_vector</span>(<span class="st">"ui_left"</span>,<span class="st">"ui_right"</span>,<span class="st">"ui_up"</span>,<span class="st">"ui_down"</span>)
+    _input_buffer.<span class="fn">append</span>({<span class="st">"tick"</span>: _current_tick, <span class="st">"dir"</span>: dir})
+
+    <span class="fn">_apply_input</span>(dir, delta)                     <span class="cm"># move IMMEDIATELY</span>
+    <span class="fn">_server_input</span>.<span class="fn">rpc_id</span>(<span class="nm">1</span>, _current_tick, dir)  <span class="cm"># tell server</span>
+    _current_tick += <span class="nm">1</span>
+
+<span class="dc">@rpc</span>(<span class="st">"authority"</span>, <span class="st">"call_remote"</span>, <span class="st">"unreliable_ordered"</span>)
+<span class="kw">func</span> <span class="fn">reconcile</span>(confirmed_tick: <span class="kw">int</span>, server_pos: <span class="kw">Vector2</span>):
+    <span class="cm"># Drop inputs the server has confirmed</span>
+    _input_buffer = _input_buffer.<span class="fn">filter</span>(
+        <span class="kw">func</span>(i): <span class="kw">return</span> i[<span class="st">"tick"</span>] &gt; confirmed_tick
+    )
+    <span class="cm"># If server disagrees: snap and replay buffered inputs</span>
+    <span class="kw">if</span> position.<span class="fn">distance_to</span>(server_pos) &gt; <span class="nm">1.0</span>:
+        position = server_pos
+        <span class="kw">for</span> inp <span class="kw">in</span> _input_buffer:
+            <span class="fn">_apply_input</span>(inp[<span class="st">"dir"</span>], <span class="nm">0.016</span>)`,
+body:`<p>Here is the dirty secret of every smooth-feeling multiplayer game: <strong>the client is lying to you</strong>. Not maliciously — helpfully. At 100ms ping, waiting for server confirmation before moving your character feels like wading through concrete. So you do not wait. You move immediately, tell the server what you did, and quietly fix any discrepancy when the truth arrives.</p>
+<div class="step-card"><span class="step-num">THE PREDICTION LOOP — FIVE STEPS</span>
+1. Player presses right.<br>
+2. Client immediately moves the character right. Locally. Right now.<br>
+3. Client sends "tick 42: pressed right" to the server.<br>
+4. Server simulates tick 42 with the received input.<br>
+5. Server sends back "at tick 42 you were at position X". Client compares — if they match, great. If not, snap to server position and replay all buffered unconfirmed inputs.</div>
+<div class="step-card"><span class="step-num">INPUT BUFFERING — WHY YOU KEEP A RECORD</span>
+Every unconfirmed input lives in a buffer. When the server confirms up to tick N, discard everything at or before N. The rest are unconfirmed — applied locally but not yet blessed by the server.<br><br>
+If the server corrects you, re-simulate from the correction using all buffered inputs. This is <strong>replay</strong>. For replay to work the simulation must be deterministic — same inputs always produce the same position delta.</div>
+<div class="step-card"><span class="step-num">WHEN IT GOES WRONG — RUBBER-BANDING</span>
+Running forward, snap backward, running again. Prediction correction failing. Common causes:<br>
+— Server and client running physics at different rates<br>
+— Non-deterministic physics (floating point differences)<br>
+— Server-side collision the client did not know about</div>
+<div class="tip">Client prediction is for <em>your own</em> character only. Remote players arrive as position snapshots and get smoothly interpolated. You never predict remote players — you have literally zero idea what inputs they are pressing right now. The exception: projectiles, where many games spawn a local visual preview on fire and reconcile if the server disagrees.</div>`
+},
+{
+title:"Rollback: The Core Idea",
+subtitle:"09 — Assume, Simulate, Correct",
+vizLabel:"▶ rollback tick timeline",
+viz:"rollback",
+snippet:`<span class="cm"># THE ROLLBACK ALGORITHM in pseudocode</span>
+<span class="cm">#</span>
+<span class="cm"># Every tick:</span>
+<span class="cm">#   1. Collect local input</span>
+<span class="cm">#   2. Predict remote inputs (repeat last known)</span>
+<span class="cm">#   3. Save game state</span>
+<span class="cm">#   4. Simulate one tick with all inputs</span>
+<span class="cm">#   5. Send local input to peers</span>
+<span class="cm">#</span>
+<span class="cm"># When a remote input arrives for a past tick:</span>
+<span class="cm">#   1. Check: did we predict it correctly?</span>
+<span class="cm">#   2. If wrong: restore state at that tick</span>
+<span class="cm">#   3. Replace predicted input with real input</span>
+<span class="cm">#   4. Resimulate all ticks up to present</span>
+<span class="cm">#   5. Render the corrected present</span>
+
+<span class="cm"># Rollback vs delay-based:</span>
+<span class="cm">#</span>
+<span class="cm"># DELAY-BASED: wait N frames for all inputs,</span>
+<span class="cm">#   then simulate. Safe but sluggish.</span>
+<span class="cm">#   Used by: SF2, early NeoGeo games</span>
+<span class="cm">#</span>
+<span class="cm"># ROLLBACK: simulate immediately with guesses,</span>
+<span class="cm">#   correct silently when truth arrives.</span>
+<span class="cm">#   Used by: Guilty Gear Strive, SF6, MK1</span>`,
+body:`<p>Client prediction (lesson 08) hides your own input latency. But you still have <em>no idea</em> what other players are pressing right now — their inputs are in the mail, somewhere between their keyboard and your ears. Rollback is the answer: simulate the whole world on guesses, then quietly rewind and correct when the truth lands. Fast enough that players never notice.</p>
+<div class="step-card"><span class="step-num">THE CORE LOOP — GUESS, SIMULATE, CORRECT</span>
+You receive Player 2's inputs ~30–80ms late due to network delay. Rather than waiting, you <strong>guess</strong> their input (almost always: repeat their last known input — humans are creatures of habit). Simulate the frame. Render it.<br><br>
+When the real input arrives, compare: did you guess right? If yes, nothing to do. If wrong: silently roll back to the saved state for that tick, insert the real input, re-simulate every subsequent tick up to the present, and render. The player never sees a freeze.</div>
+<div class="step-card"><span class="step-num">WHY GUESSING WORKS — INPUT COHERENCE</span>
+Input guess accuracy is surprisingly high — typically 85–95%. Players hold directions for multiple frames. Attacks execute over several frames. The game loop rate (60Hz) is much faster than human reaction time (~150ms). So for most frames, "repeat last input" is exactly right.<br><br>
+When guesses are wrong it is usually because of brief input transitions — releasing a key, starting a new motion. These corrections are small and imperceptible unless your rollback is deeper than 8 frames.</div>
+<div class="step-card"><span class="step-num">ROLLBACK DEPTH — HOW FAR BACK CAN YOU GO?</span>
+Rollback depth = maximum frames you can roll back. Determined by your network conditions: at 60Hz, 60ms RTT = 4 frames one-way, so you may need to roll back 4–8 frames. Each extra frame of depth costs:<br>
+— Memory: one full game state snapshot<br>
+— CPU: one extra simulation pass per rollback<br><br>
+Most games cap at 8–10 frames. Beyond that, corrections become visible. If your RTT regularly exceeds ~130ms (8 frames at 60Hz), rollback struggles — consider adding 1–2 frames of delay-based input buffering as a floor.</div>
+<div class="tip">Rollback is a high-skill technique. It turns your game into a time machine, which sounds cool until the time machine takes you to a slightly different universe than your opponent. That is what desync feels like. The fix is determinism, covered in lesson 14. Build a checksum system early — it is the only way to know if you have a problem before you ship.</div>`,
+},
+{
+title:"The Tick Loop",
+subtitle:"10 — Fixed Timestep Engine",
+vizLabel:"▶ tick vs render frame",
+viz:"tickloop",
+snippet:`<span class="cm"># RollbackManager.gd — the tick engine</span>
+<span class="kw">extends</span> Node
+
+<span class="kw">const</span> TICK_RATE = <span class="nm">60</span>               <span class="cm"># ticks per second</span>
+<span class="kw">const</span> TICK_DELTA = <span class="nm">1.0</span> / TICK_RATE  <span class="cm"># 0.01666... seconds</span>
+
+<span class="kw">var</span> current_tick: <span class="kw">int</span> = <span class="nm">0</span>
+<span class="kw">var</span> _tick_accum: <span class="kw">float</span> = <span class="nm">0.0</span>
+<span class="kw">var</span> _max_rollback_frames: <span class="kw">int</span> = <span class="nm">8</span>
+
+<span class="cm"># Rollback runs its OWN tick loop — separate from Godot's _process!</span>
+<span class="cm"># _process just advances the accumulator.</span>
+<span class="kw">func</span> <span class="fn">_process</span>(delta: <span class="kw">float</span>):
+    _tick_accum += delta
+    <span class="cm"># Run as many fixed ticks as time has accumulated</span>
+    <span class="kw">while</span> _tick_accum >= TICK_DELTA:
+        _tick_accum -= TICK_DELTA
+        <span class="fn">_run_tick</span>(current_tick)
+        current_tick += <span class="nm">1</span>
+    <span class="cm"># Render at the real frame rate with interpolation</span>
+    <span class="fn">_render_interpolated</span>(_tick_accum / TICK_DELTA)
+
+<span class="kw">func</span> <span class="fn">_run_tick</span>(tick: <span class="kw">int</span>):
+    <span class="fn">_collect_local_input</span>(tick)
+    <span class="fn">_predict_remote_inputs</span>(tick)
+    <span class="fn">_save_state</span>(tick)         <span class="cm"># BEFORE simulating</span>
+    <span class="fn">_simulate</span>(tick)           <span class="cm"># advance physics/logic</span>
+    <span class="fn">_send_local_input</span>(tick)   <span class="cm"># network it out</span>
+    <span class="fn">_cleanup_old_states</span>(tick) <span class="cm"># keep only last N frames</span>
+
+<span class="cm"># CRITICAL: use TICK_DELTA as your delta, never real frame time</span>
+<span class="kw">func</span> <span class="fn">_simulate</span>(tick: <span class="kw">int</span>):
+    <span class="kw">for</span> entity <span class="kw">in</span> _simulated_entities:
+        entity.<span class="fn">rollback_tick</span>(TICK_DELTA)  <span class="cm"># fixed delta always</span>`,
+body:`<p>Everything in rollback hinges on one rule: your game simulation must run on a <strong>fixed timestep</strong>, completely decoupled from your render framerate. Violate this and rollback will produce different results on different machines. Not sometimes. Every time. Your desync will be immediate and total.</p>
+<div class="step-card"><span class="step-num">FIXED TICK vs RENDER FRAME — WHY THEY MUST BE SEPARATE</span>
+Godot's <code>_process(delta)</code> gives you a variable delta — 16ms at 60fps, 33ms at 30fps, sometimes 22ms on a busy frame. If your game logic uses this directly, two machines running at different framerates will compute different positions from the same inputs. <em>That is a desync.</em><br><br>
+Rollback uses a fixed tick rate (typically 60 ticks/second = 16.666ms always). The tick loop accumulates real time and fires as many fixed ticks as have elapsed. Rendering runs at whatever framerate the GPU allows, interpolating between the last two ticks for smoothness.</div>
+<div class="step-card"><span class="step-num">THE ACCUMULATOR PATTERN</span>
+<code>_tick_accum</code> collects real time. Each <code>_process</code> call adds <code>delta</code> to it. While it is ≥ one tick, fire a tick and subtract the tick duration. What remains in the accumulator is used for render interpolation (0.0 = just started a tick, 1.0 = about to start the next).<br><br>
+This handles: dropped frames (two ticks fire in one _process), slow machines (ticks catch up), fast machines (sometimes zero ticks fire, frame is pure interpolation).</div>
+<div class="step-card"><span class="step-num">THE ORDER INSIDE _run_tick — MATTERS ENORMOUSLY</span>
+<em>1. Collect local input</em> — read Input.is_action_pressed() now<br>
+<em>2. Predict remote inputs</em> — for any peer whose input has not arrived yet<br>
+<em>3. Save state</em> — snapshot the entire game world BEFORE simulating<br>
+<em>4. Simulate</em> — advance physics and logic with TICK_DELTA<br>
+<em>5. Send local input</em> — broadcast this tick's input to peers<br>
+<em>6. Cleanup</em> — discard state history older than max_rollback_frames<br><br>
+State is saved BEFORE simulate so you can restore to "what the world looked like before this tick ran." Rolling back to tick N and re-simulating it puts you exactly where you were before tick N executed.</div>
+<div class="step-card"><span class="step-num">DISABLING GODOT'S BUILT-IN PHYSICS</span>
+Godot runs physics in <code>_physics_process</code> at its own rate. For rollback you take manual control:<br><br>
+<code>get_tree().physics_interpolation_enabled = false</code><br>
+<code>Engine.physics_ticks_per_second = 60</code>  <span style="color:#4a6070">  # match your tick rate</span><br><br>
+Or bypass Godot physics entirely and implement your own movement math inside <code>rollback_tick()</code>. Many rollback games use simple Euler integration: <code>pos += vel * TICK_DELTA</code>. Simple, deterministic, fast to re-simulate.</div>
+<div class="tip">Cap your resimulation: if you are 10 frames behind and each resimulation takes 3ms, that is 30ms of extra CPU in one frame — enough to cause another dropped frame, causing more catchup, causing a spiral. Track how many rollback ticks fired per frame and emit a warning when it exceeds max_rollback_frames. That signals network conditions too bad for rollback to hide.</div>`,
+},
+{
+title:"State Serialization",
+subtitle:"11 — Save and Restore Everything",
+vizLabel:"▶ state snapshot structure",
+viz:"stateserialize",
+snippet:`<span class="cm"># Every entity that participates in rollback implements two methods.</span>
+
+<span class="cm"># --- Player.gd ---</span>
+<span class="kw">extends</span> CharacterBody2D
+
+<span class="cm"># SAVE: return a Dictionary of every variable that affects future state</span>
+<span class="kw">func</span> <span class="fn">save_state</span>() -> <span class="kw">Dictionary</span>:
+    <span class="kw">return</span> {
+        <span class="st">"position"</span>: position,
+        <span class="st">"velocity"</span>: velocity,
+        <span class="st">"health"</span>: health,
+        <span class="st">"facing"</span>: facing,
+        <span class="st">"anim_frame"</span>: $Sprite2D.frame,
+        <span class="st">"anim_progress"</span>: $AnimationPlayer.current_animation_position,
+        <span class="st">"attack_cooldown"</span>: _attack_cooldown,
+        <span class="st">"is_invincible"</span>: _is_invincible,
+        <span class="st">"jumps_remaining"</span>: _jumps_remaining,
+    }
+
+<span class="cm"># RESTORE: apply a previously saved Dictionary back to this node</span>
+<span class="kw">func</span> <span class="fn">load_state</span>(s: <span class="kw">Dictionary</span>) -> <span class="kw">void</span>:
+    position           = s[<span class="st">"position"</span>]
+    velocity           = s[<span class="st">"velocity"</span>]
+    health             = s[<span class="st">"health"</span>]
+    facing             = s[<span class="st">"facing"</span>]
+    $Sprite2D.frame    = s[<span class="st">"anim_frame"</span>]
+    $AnimationPlayer.current_animation_position = s[<span class="st">"anim_progress"</span>]
+    _attack_cooldown   = s[<span class="st">"attack_cooldown"</span>]
+    _is_invincible     = s[<span class="st">"is_invincible"</span>]
+    _jumps_remaining   = s[<span class="st">"jumps_remaining"</span>]
+
+<span class="cm"># --- RollbackManager.gd ---</span>
+<span class="cm"># Iterate all rollback participants and collect their state</span>
+<span class="kw">func</span> <span class="fn">_save_state</span>(tick: <span class="kw">int</span>):
+    <span class="kw">var</span> snapshot = {}
+    <span class="kw">for</span> entity <span class="kw">in</span> _rollback_entities:
+        snapshot[entity.<span class="fn">get_path</span>()] = entity.<span class="fn">save_state</span>()
+    _state_history[tick] = snapshot
+
+<span class="kw">func</span> <span class="fn">_restore_state</span>(tick: <span class="kw">int</span>):
+    <span class="kw">var</span> snapshot = _state_history[tick]
+    <span class="kw">for</span> entity <span class="kw">in</span> _rollback_entities:
+        entity.<span class="fn">load_state</span>(snapshot[entity.<span class="fn">get_path</span>()])`,
+body:`<p>The save/restore system is where rollback either works or falls apart. The requirements sound simple: save everything, restore everything, fast enough to run 60 times per second. The word "everything" is where developers get bitten. Miss a single variable and you will have a desync that takes hours to find.</p>
+<div class="step-card"><span class="step-num">WHAT TO SAVE — EVERYTHING THAT AFFECTS FUTURE STATE</span>
+If a variable is read during <code>rollback_tick()</code>, it must be in the snapshot. Common misses:<br><br>
+— Cooldown timers / countdowns<br>
+— Invincibility frames, hitstun counters<br>
+— Animation state (frame index AND position within the frame)<br>
+— RNG seed (if using random values in logic)<br>
+— Spawned bullet/projectile list<br>
+— Combo counter, state machine current state<br><br>
+<em>Visual-only</em> state does not need saving: particle effects, screen shake, hit sparks. These are cosmetic and re-triggered by game events during resimulation. Only the last frame rendered is shown to the player anyway.</div>
+<div class="step-card"><span class="step-num">REGISTRATION PATTERN — TELL THE MANAGER ABOUT YOURSELF</span>
+Entities opt in by registering with the RollbackManager on _ready:<br><br>
+<code>func _ready():</code><br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;RollbackManager.register(self)</code><br>
+<code>func _exit_tree():</code><br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;RollbackManager.unregister(self)</code><br><br>
+The manager stores a list of all registered entities. Each tick it iterates them to collect and restore state. Newly spawned entities (bullets, pickups) must register immediately on <code>add_child()</code>. Entities that die during resimulation must handle being re-spawned or re-killed correctly.</div>
+<div class="step-card"><span class="step-num">MEMORY COST — HOW MUCH IS ONE SNAPSHOT?</span>
+Two players × ~12 variables × 8 bytes average = ~200 bytes per entity, per tick. At 60 ticks/second with 8 frames of rollback history: 8 snapshots × (2 players × 200 bytes) = ~3.2KB. Trivial. Even with 20 bullets and 10 game objects, a snapshot stays well under 50KB. Memory is not your constraint — CPU for resimulation is.</div>
+<div class="step-card"><span class="step-num">HANDLING SPAWNS AND DESPAWNS DURING ROLLBACK</span>
+This is the hardest part. If a bullet was spawned at tick 42 and you roll back to tick 40, the bullet must be deleted. When resimulating tick 42, it must be re-spawned. Solutions:<br><br>
+<em>Object pooling:</em> never actually delete objects, just hide and recycle them. Snapshot includes "active" flag.<br>
+<em>Snapshot the spawn list:</em> save which entities exist at each tick. On restore, add/remove nodes to match.<br>
+<em>Deterministic spawn IDs:</em> use tick number + peer ID as a deterministic unique ID for spawned entities.</div>
+<div class="tip">Use <code>get_path()</code> as your state dictionary key. It handles nested scenes cleanly, survives refactors, and — critically — if an entity is deleted and re-created during rollback, the path stays the same while the object reference changes. Object references as dictionary keys in rollback code is a one-way ticket to baffling bugs at 2am the night before your release.</div>`,
+},
+{
+title:"Input Sync &amp; Prediction",
+subtitle:"12 — Collecting and Guessing",
+vizLabel:"▶ input frames arriving",
+viz:"inputsync",
+snippet:`<span class="cm"># InputFrame: one tick's worth of input from one peer</span>
+<span class="kw">class_name</span> <span class="fn">InputFrame</span>
+<span class="kw">var</span> tick: <span class="kw">int</span>
+<span class="kw">var</span> peer_id: <span class="kw">int</span>
+<span class="kw">var</span> move: <span class="kw">Vector2</span>   <span class="cm"># left stick / WASD direction</span>
+<span class="kw">var</span> buttons: <span class="kw">int</span>    <span class="cm"># bitmask: bit0=jump, bit1=attack, bit2=block</span>
+
+<span class="kw">func</span> <span class="fn">serialize</span>() -> <span class="kw">PackedByteArray</span>:
+    <span class="kw">var</span> buf = PackedByteArray()
+    buf.<span class="fn">resize</span>(<span class="nm">13</span>)  <span class="cm"># 4 + 4 + 4 + 1 bytes</span>
+    buf.<span class="fn">encode_s32</span>(<span class="nm">0</span>, tick)
+    buf.<span class="fn">encode_float</span>(<span class="nm">4</span>, move.x)
+    buf.<span class="fn">encode_float</span>(<span class="nm">8</span>, move.y)
+    buf[<span class="nm">12</span>] = buttons
+    <span class="kw">return</span> buf
+
+<span class="kw">static func</span> <span class="fn">deserialize</span>(buf: <span class="kw">PackedByteArray</span>, from_peer: <span class="kw">int</span>) -> <span class="fn">InputFrame</span>:
+    <span class="kw">var</span> f = InputFrame.<span class="fn">new</span>()
+    f.peer_id = from_peer
+    f.tick    = buf.<span class="fn">decode_s32</span>(<span class="nm">0</span>)
+    f.move.x  = buf.<span class="fn">decode_float</span>(<span class="nm">4</span>)
+    f.move.y  = buf.<span class="fn">decode_float</span>(<span class="nm">8</span>)
+    f.buttons = buf[<span class="nm">12</span>]
+    <span class="kw">return</span> f
+
+<span class="cm"># --- In RollbackManager ---</span>
+
+<span class="cm"># Send local input: broadcast every tick, include last N frames</span>
+<span class="cm"># (redundancy combats single-packet loss)</span>
+<span class="dc">@rpc</span>(<span class="st">"any_peer"</span>, <span class="st">"call_remote"</span>, <span class="st">"unreliable"</span>)
+<span class="kw">func</span> <span class="fn">recv_input</span>(frames: <span class="kw">PackedByteArray</span>):
+    <span class="kw">var</span> sender = multiplayer.<span class="fn">get_remote_sender_id</span>()
+    <span class="kw">var</span> offset = <span class="nm">0</span>
+    <span class="kw">while</span> offset < frames.<span class="fn">size</span>():
+        <span class="kw">var</span> frame = InputFrame.<span class="fn">deserialize</span>(frames.<span class="fn">slice</span>(offset, offset + <span class="nm">13</span>), sender)
+        offset += <span class="nm">13</span>
+        <span class="fn">_on_remote_input_received</span>(frame)
+
+<span class="cm"># PREDICTION: if no input arrived for this tick, use last known</span>
+<span class="kw">func</span> <span class="fn">_predict_input</span>(peer: <span class="kw">int</span>, tick: <span class="kw">int</span>) -> <span class="fn">InputFrame</span>:
+    <span class="kw">var</span> last = _last_received_input.get(peer)
+    <span class="kw">if</span> last == <span class="kw">null</span>:
+        <span class="kw">return</span> InputFrame.<span class="fn">new</span>()  <span class="cm"># neutral: no input</span>
+    <span class="kw">var</span> predicted = InputFrame.<span class="fn">new</span>()
+    predicted.peer_id = peer
+    predicted.tick    = tick
+    predicted.move    = last.move     <span class="cm"># repeat last direction</span>
+    predicted.buttons = last.buttons  <span class="cm"># repeat last buttons</span>
+    <span class="kw">return</span> predicted`,
+body:`<p>Rollback's promise is this: as long as every peer eventually receives every other peer's input for every tick — even late — the simulation will converge to the same result everywhere. The input sync layer is what makes "eventually" happen fast enough for players not to notice.</p>
+<div class="step-card"><span class="step-num">THE INPUTFRAME — SERIALIZE SMALL</span>
+One tick of input is tiny. For a 2D fighter: direction (2 floats) + buttons (1 byte bitmask) + tick number (4 bytes) = 13 bytes. Sending 60 of these per second per peer = 780 bytes/sec outbound. Negligible. If you are sending more, you are over-engineering it.<br><br>
+Bitmask your buttons: <code>var buttons: int = 0</code>. Set bits with <code>buttons |= (1 &lt;&lt; 0)</code> for jump, <code>(1 &lt;&lt; 1)</code> for attack, etc. Eight buttons fit in one byte. Unset with <code>buttons &amp;= ~(1 &lt;&lt; 0)</code>. Test with <code>buttons &amp; (1 &lt;&lt; 0) != 0</code>.</div>
+<div class="step-card"><span class="step-num">REDUNDANCY — SENDING MULTIPLE FRAMES PER PACKET</span>
+UDP can drop packets. A dropped input frame = rollback. Mitigation: include the last <em>N</em> input frames in every packet. If the current packet gets through, older frames are also confirmed redundantly.<br><br>
+With N=3 redundancy and 2% packet loss, the chance of losing all three copies of a frame is 0.02³ = 0.000008. Essentially zero. Your packet grows from 13 bytes to 39 bytes. Still tiny. The Godot Rollback addon uses this technique by default.</div>
+<div class="step-card"><span class="step-num">WHEN REMOTE INPUT ARRIVES — THREE CASES</span>
+<em>Case 1: tick is in the future.</em> Store it. We will use it when we get there.<br>
+<em>Case 2: tick matches our current prediction.</em> Great — confirm it. No rollback needed.<br>
+<em>Case 3: tick is in the past and prediction was wrong.</em> Trigger rollback. Restore state at that tick, correct the input, resimulate up to current_tick.</div>
+<div class="step-card"><span class="step-num">INPUT DELAY — ADDING A FLOOR</span>
+Optional but helpful: add 1–2 frames of local input delay. When you press a key, store the input for <em>tick+2</em> instead of <em>tick</em>. This gives remote inputs extra time to arrive before you need them — reducing rollbacks on average. The cost is 33ms of extra input latency. For most games the reduction in corrections is worth it. Fighting games typically use 0–2 frames of delay depending on RTT.</div>
+<div class="tip">This one will get you: <code>Input.is_action_just_pressed()</code> depends on Godot's internal frame event system, which does not fire during resimulation. Read all inputs once per real tick, pack them into your InputFrame, and use <em>only</em> the InputFrame values during simulation. Both the initial pass and every resimulation pass use the same stored data. Read input once per real tick, store it in the InputFrame, and use the stored value during both the initial simulation and any resimulation passes.</div>`,
+},
+{
+title:"Full Rollback Implementation",
+subtitle:"13 — The Complete Manager",
+vizLabel:"▶ rollback execution flow",
+viz:"rollbackflow",
+snippet:`<span class="cm"># RollbackManager.gd — complete implementation skeleton</span>
+<span class="kw">extends</span> Node
+
+<span class="kw">const</span> TICK_RATE      = <span class="nm">60</span>
+<span class="kw">const</span> TICK_DELTA     = <span class="nm">1.0</span> / TICK_RATE
+<span class="kw">const</span> MAX_ROLLBACK   = <span class="nm">8</span>
+<span class="kw">const</span> INPUT_REDUNDANCY = <span class="nm">3</span>  <span class="cm"># send last N input frames</span>
+
+<span class="kw">var</span> current_tick:   <span class="kw">int</span> = <span class="nm">0</span>
+<span class="kw">var</span> _tick_accum:    <span class="kw">float</span> = <span class="nm">0.0</span>
+<span class="kw">var</span> _state_history: <span class="kw">Dictionary</span> = {}
+<span class="kw">var</span> _input_history: <span class="kw">Dictionary</span> = {}  <span class="cm"># tick -> {peer_id: InputFrame}</span>
+<span class="kw">var</span> _local_history: <span class="kw">Array</span>[<span class="fn">InputFrame</span>] = []  <span class="cm"># for redundancy</span>
+<span class="kw">var</span> _last_received: <span class="kw">Dictionary</span> = {}   <span class="cm"># peer -> last InputFrame</span>
+<span class="kw">var</span> _confirmed_tick: <span class="kw">Dictionary</span> = {} <span class="cm"># peer -> last confirmed tick</span>
+<span class="kw">var</span> _entities: <span class="kw">Array</span> = []
+
+<span class="kw">func</span> <span class="fn">register</span>(e): _entities.<span class="fn">append</span>(e)
+<span class="kw">func</span> <span class="fn">unregister</span>(e): _entities.<span class="fn">erase</span>(e)
+
+<span class="kw">func</span> <span class="fn">_process</span>(delta: <span class="kw">float</span>):
+    _tick_accum += delta
+    <span class="kw">while</span> _tick_accum >= TICK_DELTA:
+        _tick_accum -= TICK_DELTA
+        <span class="fn">_run_tick</span>(current_tick)
+        current_tick += <span class="nm">1</span>
+
+<span class="kw">func</span> <span class="fn">_run_tick</span>(tick: <span class="kw">int</span>):
+    <span class="cm"># 1. Local input</span>
+    <span class="kw">var</span> local_inp = <span class="fn">_read_local_input</span>(tick)
+    <span class="fn">_store_input</span>(tick, multiplayer.<span class="fn">get_unique_id</span>(), local_inp)
+    _local_history.<span class="fn">push_front</span>(local_inp)
+    <span class="kw">if</span> _local_history.<span class="fn">size</span>() > INPUT_REDUNDANCY:
+        _local_history.<span class="fn">resize</span>(INPUT_REDUNDANCY)
+
+    <span class="cm"># 2. Predict remote inputs (for any that haven't arrived)</span>
+    <span class="kw">for</span> peer <span class="kw">in</span> multiplayer.<span class="fn">get_peers</span>():
+        <span class="kw">if not</span> _has_real_input(tick, peer):
+            <span class="fn">_store_input</span>(tick, peer, <span class="fn">_predict_input</span>(peer, tick))
+
+    <span class="cm"># 3. Snapshot state BEFORE simulating</span>
+    <span class="fn">_save_state</span>(tick)
+
+    <span class="cm"># 4. Simulate</span>
+    <span class="kw">for</span> entity <span class="kw">in</span> _entities:
+        <span class="kw">var</span> inp = _input_history[tick][entity.<span class="fn">get_authority_id</span>()]
+        entity.<span class="fn">rollback_tick</span>(TICK_DELTA, inp)
+
+    <span class="cm"># 5. Broadcast local input (with redundancy)</span>
+    <span class="fn">_send_local_input</span>()
+
+    <span class="cm"># 6. Prune old history</span>
+    <span class="kw">var</span> oldest = tick - MAX_ROLLBACK - <span class="nm">1</span>
+    _state_history.<span class="fn">erase</span>(oldest)
+
+<span class="dc">@rpc</span>(<span class="st">"any_peer"</span>, <span class="st">"call_remote"</span>, <span class="st">"unreliable"</span>)
+<span class="kw">func</span> <span class="fn">recv_input_packet</span>(data: <span class="kw">PackedByteArray</span>):
+    <span class="kw">var</span> sender = multiplayer.<span class="fn">get_remote_sender_id</span>()
+    <span class="kw">var</span> offset = <span class="nm">0</span>
+    <span class="kw">while</span> offset < data.<span class="fn">size</span>():
+        <span class="kw">var</span> frame = InputFrame.<span class="fn">deserialize</span>(data.<span class="fn">slice</span>(offset, offset + <span class="nm">13</span>), sender)
+        offset += <span class="nm">13</span>
+        <span class="fn">_on_remote_frame</span>(frame)
+
+<span class="kw">func</span> <span class="fn">_on_remote_frame</span>(frame: <span class="fn">InputFrame</span>):
+    <span class="kw">var</span> tick = frame.tick
+    <span class="kw">var</span> peer = frame.peer_id
+    _last_received[peer] = frame
+
+    <span class="cm"># Already past this tick — check if prediction was right</span>
+    <span class="kw">if</span> tick < current_tick:
+        <span class="kw">var</span> predicted = _input_history.get(tick, {}).get(peer)
+        <span class="kw">if</span> predicted <span class="kw">and</span> <span class="fn">_inputs_differ</span>(predicted, frame):
+            <span class="fn">_do_rollback</span>(tick, peer, frame)
+    <span class="kw">else</span>:
+        <span class="cm"># Future or current — store real input</span>
+        <span class="fn">_store_input</span>(tick, peer, frame)
+
+<span class="kw">func</span> <span class="fn">_do_rollback</span>(from_tick: <span class="kw">int</span>, peer: <span class="kw">int</span>, real: <span class="fn">InputFrame</span>):
+    <span class="kw">if</span> from_tick < current_tick - MAX_ROLLBACK:
+        <span class="fn">push_error</span>(<span class="st">"Rollback too deep: "</span> + <span class="kw">str</span>(current_tick - from_tick) + <span class="st">" frames"</span>)
+        <span class="kw">return</span>
+    <span class="fn">_store_input</span>(from_tick, peer, real)  <span class="cm"># replace prediction with truth</span>
+    <span class="fn">_restore_state</span>(from_tick)            <span class="cm"># wind back</span>
+    <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(from_tick, current_tick):  <span class="cm"># resimulate forward</span>
+        <span class="kw">for</span> entity <span class="kw">in</span> _entities:
+            <span class="kw">var</span> inp = _input_history[t][entity.<span class="fn">get_authority_id</span>()]
+            entity.<span class="fn">rollback_tick</span>(TICK_DELTA, inp)`,
+body:`<p>Theory time is over. Here is the complete implementation. This is the class that sits at the top of your scene tree, owns the tick loop, coordinates all entities, and handles every rollback. Read it top to bottom. Every rollback game is a variation of this — simpler if you have fewer entities, more complex if you have physics objects, but the structure does not change.</p>
+<div class="step-card"><span class="step-num">THE ENTITY CONTRACT — WHAT EACH GAME OBJECT MUST IMPLEMENT</span>
+Every entity participating in rollback implements three methods:<br><br>
+<code>save_state() -> Dictionary</code> — return all state variables<br>
+<code>load_state(s: Dictionary) -> void</code> — restore from saved dict<br>
+<code>rollback_tick(delta: float, input: InputFrame) -> void</code> — one tick of simulation<br><br>
+The <code>rollback_tick</code> replaces <code>_physics_process</code> entirely. It must be pure and deterministic — same inputs, same output. Never read from <code>Input</code> inside it, never read the real clock, never spawn nodes without recording them.</div>
+<div class="step-card"><span class="step-num">COMPARING INPUTS — WHEN IS A PREDICTION WRONG?</span>
+<code>_inputs_differ(predicted, real)</code> compares two InputFrames. For Vector2 movement, use an epsilon: <code>predicted.move.distance_to(real.move) > 0.001</code> to handle float precision. For button bitmasks: exact comparison <code>predicted.buttons != real.buttons</code>.<br><br>
+Only roll back if they actually differ. Many incoming packets will confirm predictions you already guessed correctly — treat them as free confirmations, no work needed.</div>
+<div class="step-card"><span class="step-num">THE ROLLBACK ITSELF — FIVE LINES THAT MATTER</span>
+<code>_store_input(from_tick, peer, real)</code> — replace the predicted input with truth<br>
+<code>_restore_state(from_tick)</code> — reload all entity states from the snapshot<br>
+<code>for t in range(from_tick, current_tick)</code> — resimulate every tick since<br>
+Run each entity's <code>rollback_tick</code> with the now-corrected input<br>
+Return to normal — the manager continues from <code>current_tick</code> as if nothing happened</div>
+<div class="step-card"><span class="step-num">VISUAL CONSISTENCY — DON'T RENDER DURING RESIMULATION</span>
+During the rollback resimulation loop, you are computing game states rapidly. You do not want particles to trigger, sounds to play, or screen shake to start for each resimulated tick. Gate all visual/audio side-effects with a flag:<br><br>
+<code>if not RollbackManager.is_resimulating:</code><br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;$AnimationPlayer.play("hit_flash")</code><br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;$SFX.play()</code><br><br>
+Set <code>is_resimulating = true</code> at the start of the rollback loop and back to <code>false</code> at the end. This one flag prevents ghost particles and duplicate sound effects.</div>
+<div class="tip">Build a debug overlay on day one: current tick, ticks-rolled-back-this-frame, prediction accuracy. A healthy rollback implementation shows >90% prediction accuracy on a normal connection. If yours shows 60%, your guess strategy needs work. If it shows 99% but you still see visible corrections, your resimulation is too slow. These two numbers tell you everything.</div>`,
+},
+{
+title:"Determinism &amp; Debugging",
+subtitle:"14 — Guaranteed to Agree",
+vizLabel:"▶ desync detection",
+viz:"desync",
+snippet:`<span class="cm"># CHECKSUM-BASED DESYNC DETECTION</span>
+<span class="cm"># Hash the game state every N ticks and compare across peers.</span>
+<span class="cm"># Any mismatch = your simulation is non-deterministic.</span>
+
+<span class="kw">func</span> <span class="fn">_compute_checksum</span>() -> <span class="kw">int</span>:
+    <span class="kw">var</span> h = <span class="nm">0</span>
+    <span class="kw">for</span> entity <span class="kw">in</span> _entities:
+        <span class="kw">var</span> s = entity.<span class="fn">save_state</span>()
+        <span class="cm"># Hash each float with fixed precision to avoid platform drift</span>
+        h = hash(h ^ hash(<span class="fn">snapped</span>(s[<span class="st">"position"</span>].x, <span class="nm">0.0001</span>)))
+        h = hash(h ^ hash(<span class="fn">snapped</span>(s[<span class="st">"position"</span>].y, <span class="nm">0.0001</span>)))
+        h = hash(h ^ hash(s[<span class="st">"health"</span>]))
+        h = hash(h ^ hash(s[<span class="st">"buttons"</span>]))
+    <span class="kw">return</span> h
+
+<span class="kw">const</span> CHECK_INTERVAL = <span class="nm">15</span>  <span class="cm"># check every 15 ticks = 4 per second</span>
+
+<span class="kw">func</span> <span class="fn">_run_tick</span>(tick: <span class="kw">int</span>):
+    <span class="cm"># ... simulate as normal ...</span>
+    <span class="kw">if</span> tick % CHECK_INTERVAL == <span class="nm">0</span>:
+        <span class="fn">_share_checksum</span>.<span class="fn">rpc</span>(tick, <span class="fn">_compute_checksum</span>())
+
+<span class="dc">@rpc</span>(<span class="st">"any_peer"</span>, <span class="st">"call_remote"</span>, <span class="st">"reliable"</span>)
+<span class="kw">func</span> <span class="fn">_share_checksum</span>(tick: <span class="kw">int</span>, remote_hash: <span class="kw">int</span>):
+    <span class="kw">var</span> local_hash = _checksum_history.get(tick, <span class="nm">0</span>)
+    <span class="kw">if</span> local_hash != remote_hash:
+        <span class="fn">push_error</span>(<span class="st">"DESYNC at tick %d! local=%d remote=%d"</span> % [tick, local_hash, remote_hash])
+        <span class="cm"># In debug: dump both states and diff them</span>
+        <span class="fn">_dump_state_diff</span>(tick)
+
+<span class="cm"># DETERMINISM CHECKLIST — common culprits:</span>
+<span class="cm">#</span>
+<span class="cm"># BAD:  position += velocity * delta   (delta varies per frame)</span>
+<span class="cm"># GOOD: position += velocity * TICK_DELTA  (fixed always)</span>
+<span class="cm">#</span>
+<span class="cm"># BAD:  var rng = RandomNumberGenerator.new()  (different seed)</span>
+<span class="cm"># GOOD: RollbackManager.rng.randf()  (shared seeded RNG)</span>
+<span class="cm">#</span>
+<span class="cm"># BAD:  await get_tree().create_timer(1.0).timeout  (real time)</span>
+<span class="cm"># GOOD: _timer_ticks -= 1; if _timer_ticks <= 0: ...  (tick count)</span>
+<span class="cm">#</span>
+<span class="cm"># BAD:  if Engine.get_frames_per_second() > 55: ...  (per-machine)</span>
+<span class="cm"># GOOD: don't. never read FPS in game logic.</span>`,
+body:`<p>Nightmare scenario: your rollback implementation is correct, your input sync is solid, and your game still slowly drifts out of sync. Players start seeing each other in different positions. Health bars disagree. Someone is clearly in a different universe. This is a <strong>determinism bug</strong>, and finding it without the right tools is a special kind of hell.</p>
+<div class="step-card"><span class="step-num">CHECKSUM SYNC — YOUR DESYNC RADAR</span>
+Every N ticks, hash your entire game state and broadcast it to all peers. If any peer receives a checksum that differs from their own for the same tick: you have a desync. Log the tick number, dump the full state from both sides, diff them.<br><br>
+In production: silently log and attempt a full state reset from the server. In development: pause and show a big red "DESYNC" overlay with a state dump. The diff will tell you exactly which variable diverged first.</div>
+<div class="step-card"><span class="step-num">FLOATING POINT — THE SILENT KILLER</span>
+<code>float</code> arithmetic results can differ between CPU architectures, compiler optimisations, and operating systems — even for the same inputs. Common culprits:<br><br>
+— <code>sin()</code>, <code>cos()</code>, <code>sqrt()</code> — transcendental functions can produce slightly different results<br>
+— Fused Multiply-Add (FMA) instructions — some CPUs combine operations differently<br>
+— <code>Vector2.normalized()</code> — involves sqrt, can drift<br><br>
+Mitigation: use integer arithmetic where possible. Round critical floats to 4 decimal places with <code>snapped(value, 0.0001)</code>. Avoid trigonometry in gameplay logic — use <code>move_toward()</code> and <code>lerp()</code> instead.</div>
+<div class="step-card"><span class="step-num">THE SHARED RNG — RANDOM WITHOUT CHAOS</span>
+<code>randf()</code> advances a global seed. Different call orders on different machines = different sequences. Solution: one shared RNG with a known seed, agreed at match start:<br><br>
+<code>var rng := RandomNumberGenerator.new()</code><br>
+<code>rng.seed = match_seed  # sent from server at match start</code><br><br>
+All entities call <code>RollbackManager.rng.randf()</code> for any in-game randomness. The calls must happen in the same order on every machine — which they will, since your simulation is deterministic in all other respects.</div>
+<div class="step-card"><span class="step-num">TIMERS — TICK-BASED NOT TIME-BASED</span>
+Never use <code>get_tree().create_timer()</code> or <code>Time.get_ticks_msec()</code> in game logic. These measure real elapsed time, which differs between resimulation passes and normal play. Replace every timer with a tick counter:<br><br>
+<code>var _cooldown_ticks: int = 0</code><br>
+<code>_cooldown_ticks -= 1</code> (in rollback_tick)<br>
+<code>if _cooldown_ticks <= 0: fire_attack()</code><br><br>
+At 60 ticks/sec, a 1-second cooldown = 60 ticks. Integer arithmetic, perfectly deterministic.</div>
+<div class="tip">Build a determinism test into your workflow before you touch any networking code: record a full single-player session's inputs, replay them twice back-to-back, compare the final checksum. If they differ, you have a non-deterministic element and you will find it now rather than after shipping. Binary search the replay to isolate exactly which tick it first diverges. If the checksum differs, you have a non-deterministic element. Binary search the replay to find which tick it first diverges. This is faster than debugging live multiplayer sessions.</div>`,
+},
+{
+title:"Why Browsers Are Awkward",
+subtitle:"15 — The Browser Sandbox Problem",
+vizLabel:"▶ what works where",
+viz:"browsercompat",
+snippet:`<span class="cm"># The bad news: ENet is a raw UDP library.</span>
+<span class="cm"># Browsers do not allow raw UDP sockets.</span>
+<span class="cm"># So ENetMultiplayerPeer = silent failure in HTML5 exports.</span>
+
+<span class="cm"># The good news: Godot's high-level multiplayer API (RPCs,</span>
+<span class="cm"># authority, spawning) works with ANY peer type.</span>
+<span class="cm"># Swap the peer, keep everything else.</span>
+
+<span class="cm"># OPTION 1: WebSocket — easiest, needs a relay server</span>
+<span class="cm"># Works in every browser. TCP-like. All traffic hits your server.</span>
+<span class="kw">func</span> <span class="fn">ws_host</span>():
+    <span class="kw">var</span> peer = WebSocketMultiplayerPeer.<span class="fn">new</span>()
+    peer.<span class="fn">create_server</span>(<span class="nm">7000</span>)
+    multiplayer.multiplayer_peer = peer  <span class="cm"># done</span>
+
+<span class="kw">func</span> <span class="fn">ws_join</span>(url: <span class="kw">String</span>):
+    <span class="kw">var</span> peer = WebSocketMultiplayerPeer.<span class="fn">new</span>()
+    peer.<span class="fn">create_client</span>(<span class="st">"ws://"</span> + url + <span class="st">":7000"</span>)
+    multiplayer.multiplayer_peer = peer
+
+<span class="cm"># OPTION 2: WebRTC — complex, but true P2P in the browser</span>
+<span class="cm"># No server needed for game traffic after handshake.</span>
+<span class="cm"># We cover this fully in lessons 16-18.</span>
+
+<span class="cm"># OPTION 3: ENet (native builds only)</span>
+<span class="cm"># Fastest, simplest — but zero browser support.</span>
+<span class="cm"># If you ship desktop-only: just use ENet. Ignore this whole chapter.</span>`,
+body:`<p>You want players in a browser. You googled "Godot HTML5 multiplayer." You found twelve contradictory forum posts from 2021. Sit down. Here is the actual situation.</p>
+<div class="step-card"><span class="step-num">THE BROWSER SANDBOX — WHY ENet DIES THERE</span>
+Browsers are paranoid. By design, JavaScript (and WebAssembly, which is what Godot HTML5 exports compile to) cannot open raw UDP sockets. ENet is a raw UDP library. So your entire ENet-based multiplayer just silently does nothing when exported to HTML5. No error, no crash — it just never connects.<br><br>
+What browsers <em>do</em> allow: WebSocket (a TCP tunnel dressed up with a handshake) and WebRTC (a complex P2P protocol specifically designed for browser-to-browser communication). That's it. Pick one.</div>
+<div class="step-card"><span class="step-num">WEBSOCKET — THE SENSIBLE CHOICE FOR MOST GAMES</span>
+<code>WebSocketMultiplayerPeer</code> works in every browser, has the identical Godot API to ENet, and only needs a server that speaks the WebSocket protocol. Traffic is reliable and ordered (TCP under the hood). Downsides: all traffic routes through your server, and it is slightly slower than raw UDP for fast-paced games.<br><br>
+For a 2–10 player indie game: WebSocket is almost always the right call. Set up an <a href="#">nginx WebSocket proxy</a> in front of your Godot server and you're done. Ship the HTML5 version. Move on.</div>
+<div class="step-card"><span class="step-num">WEBRTC — WHEN YOU ACTUALLY NEED P2P</span>
+WebRTC lets two browsers connect directly without routing through your server. Once the initial handshake completes, game packets travel peer-to-peer. No bandwidth bill. Lower latency than a relay. This sounds great until you try to implement it.<br><br>
+The catch: WebRTC requires a "signaling server" (a separate WebSocket server just to introduce the peers), a STUN server (to discover public IPs), possibly a TURN server (to relay when direct connection fails), and about 200 lines of setup code. Then 30% of players will still fail to connect directly and need the TURN relay anyway. It is a lot. We cover all of it in lessons 16–18.</div>
+<div class="step-card"><span class="step-num">THE DECISION TREE</span>
+Shipping <em>desktop only</em>? → Use ENet. Skip this chapter.<br>
+Shipping <em>browser</em> with a server budget? → Use WebSocket. Fastest path.<br>
+Shipping <em>browser</em> and specifically need zero server costs for game traffic? → WebRTC. Buckle up.<br>
+Shipping <em>both desktop and browser</em>? → ENet for desktop, WebSocket for browser, same RPC code for both.</div>
+<div class="tip">Test your HTML5 export on day one of browser development, not day fifteen. Export to HTML5, open in a real browser (not Godot's built-in preview), open the dev console (F12 → Console + Network tabs). Godot's own output panel shows nothing when running in a browser. Every connection error, every WebSocket failure, every "why is nothing happening" answer is in that console.</div>`,
+},
+{
+title:"The Signaling Dance",
+subtitle:"16 — SDP Offers, Answers &amp; Why",
+vizLabel:"▶ SDP offer/answer exchange",
+viz:"sdp",
+snippet:`<span class="cm"># SDP (Session Description Protocol) — a text blob that says:</span>
+<span class="cm"># "here is what I support: codecs, formats, network routes"</span>
+<span class="cm"># WebRTC uses it to negotiate how two peers will talk.</span>
+<span class="cm">#</span>
+<span class="cm"># You do not read or parse SDP directly.</span>
+<span class="cm"># You just pass it through your signaling server like a letter.</span>
+
+<span class="cm"># --- SignalingClient.gd (runs on both peers) ---</span>
+<span class="kw">extends</span> Node
+
+<span class="kw">var</span> _ws := WebSocketPeer.<span class="fn">new</span>()
+<span class="kw">var</span> _rtc_peer := WebRTCMultiplayerPeer.<span class="fn">new</span>()
+<span class="kw">var</span> _connections: <span class="kw">Dictionary</span> = {}  <span class="cm"># peer_id -> WebRTCPeerConnection</span>
+
+<span class="kw">func</span> <span class="fn">connect_to_signal_server</span>(url: <span class="kw">String</span>):
+    _ws.<span class="fn">connect_to_url</span>(url)  <span class="cm"># e.g. "ws://yourserver.com:9000"</span>
+
+<span class="kw">func</span> <span class="fn">_process</span>(_delta):
+    _ws.<span class="fn">poll</span>()
+    <span class="kw">while</span> _ws.<span class="fn">get_available_packet_count</span>() > <span class="nm">0</span>:
+        <span class="kw">var</span> msg = JSON.<span class="fn">parse_string</span>(_ws.<span class="fn">get_packet</span>().<span class="fn">get_string_from_utf8</span>())
+        <span class="fn">_handle_signal</span>(msg)
+
+<span class="kw">func</span> <span class="fn">_handle_signal</span>(msg: <span class="kw">Dictionary</span>):
+    <span class="kw">match</span> msg[<span class="st">"type"</span>]:
+        <span class="st">"peer_joined"</span>:  <span class="fn">_create_peer_connection</span>(msg[<span class="st">"id"</span>], <span class="kw">true</span>)
+        <span class="st">"peer_left"</span>:    <span class="fn">_remove_peer</span>(msg[<span class="st">"id"</span>])
+        <span class="st">"offer"</span>:        <span class="fn">_handle_offer</span>(msg[<span class="st">"from"</span>], msg[<span class="st">"sdp"</span>])
+        <span class="st">"answer"</span>:       <span class="fn">_handle_answer</span>(msg[<span class="st">"from"</span>], msg[<span class="st">"sdp"</span>])
+        <span class="st">"ice"</span>:          <span class="fn">_handle_ice</span>(msg[<span class="st">"from"</span>], msg[<span class="st">"media"</span>], msg[<span class="st">"index"</span>], msg[<span class="st">"sdp"</span>])
+
+<span class="kw">func</span> <span class="fn">_create_peer_connection</span>(peer_id: <span class="kw">int</span>, i_am_offerer: <span class="kw">bool</span>):
+    <span class="kw">var</span> conn := WebRTCPeerConnection.<span class="fn">new</span>()
+    conn.<span class="fn">initialize</span>({
+        <span class="st">"iceServers"</span>: [
+            {<span class="st">"urls"</span>: [<span class="st">"stun:stun.l.google.com:19302"</span>]},
+            {<span class="st">"urls"</span>: [<span class="st">"turn:yourturnserver.com:3478"</span>],
+             <span class="st">"username"</span>: <span class="st">"user"</span>, <span class="st">"credential"</span>: <span class="st">"pass"</span>}
+        ]
+    })
+    conn.session_description_created.<span class="fn">connect</span>(
+        <span class="kw">func</span>(type, sdp): <span class="fn">_on_sdp_created</span>(peer_id, type, sdp)
+    )
+    conn.ice_candidate_created.<span class="fn">connect</span>(
+        <span class="kw">func</span>(m, idx, s): <span class="fn">_send_signal</span>({<span class="st">"type"</span>:<span class="st">"ice"</span>,<span class="st">"to"</span>:peer_id,<span class="st">"media"</span>:m,<span class="st">"index"</span>:idx,<span class="st">"sdp"</span>:s})
+    )
+    _rtc_peer.<span class="fn">add_peer</span>(conn, peer_id)
+    _connections[peer_id] = conn
+    <span class="kw">if</span> i_am_offerer:
+        conn.<span class="fn">create_offer</span>()  <span class="cm"># triggers session_description_created with type="offer"</span>
+
+<span class="kw">func</span> <span class="fn">_on_sdp_created</span>(peer_id: <span class="kw">int</span>, type: <span class="kw">String</span>, sdp: <span class="kw">String</span>):
+    _connections[peer_id].<span class="fn">set_local_description</span>(type, sdp)
+    <span class="fn">_send_signal</span>({<span class="st">"type"</span>: type, <span class="st">"to"</span>: peer_id, <span class="st">"sdp"</span>: sdp})
+
+<span class="kw">func</span> <span class="fn">_handle_offer</span>(from_id: <span class="kw">int</span>, sdp: <span class="kw">String</span>):
+    <span class="kw">if not</span> _connections.<span class="fn">has</span>(from_id):
+        <span class="fn">_create_peer_connection</span>(from_id, <span class="kw">false</span>)
+    _connections[from_id].<span class="fn">set_remote_description</span>(<span class="st">"offer"</span>, sdp)
+    <span class="cm"># set_remote_description triggers session_description_created with type="answer"</span>
+
+<span class="kw">func</span> <span class="fn">_handle_answer</span>(from_id: <span class="kw">int</span>, sdp: <span class="kw">String</span>):
+    _connections[from_id].<span class="fn">set_remote_description</span>(<span class="st">"answer"</span>, sdp)
+
+<span class="kw">func</span> <span class="fn">_handle_ice</span>(from_id: <span class="kw">int</span>, media: <span class="kw">String</span>, index: <span class="kw">int</span>, sdp: <span class="kw">String</span>):
+    _connections[from_id].<span class="fn">add_ice_candidate</span>(media, index, sdp)
+
+<span class="kw">func</span> <span class="fn">_send_signal</span>(msg: <span class="kw">Dictionary</span>):
+    _ws.<span class="fn">send_text</span>(JSON.<span class="fn">stringify</span>(msg))`,
+body:`<p>WebRTC does not let two machines connect directly out of thin air. They need an introduction. The signaling server is the mutual friend who makes that introduction — then politely leaves the room.</p>
+<div class="step-card"><span class="step-num">WHY A SIGNALING SERVER EXISTS</span>
+Two browsers want to connect directly. But neither one knows the other's actual network address yet — that is what ICE/STUN is for, and ICE/STUN requires both sides to already be in contact to exchange candidates. Classic chicken-and-egg problem.<br><br>
+The signaling server is the shared middleman. It does one thing: pass messages between peers who have not yet connected to each other. These messages are SDP blobs and ICE candidates — not game data. Once the WebRTC connection is established, the signaling server is done. It never sees a single packet of game traffic.</div>
+<div class="step-card"><span class="step-num">SDP — THE NEGOTIATION LETTER</span>
+SDP (Session Description Protocol) is a text blob — literally a wall of <code>a=</code> and <code>m=</code> lines — that describes what a peer supports: supported codecs, data channel formats, network parameters. You never read or write it directly. You ask WebRTC to generate it, then forward it to the other peer through your signaling server.<br><br>
+The exchange: Alice calls <code>create_offer()</code> → gets an SDP blob → sends it to the signaling server → Bob receives it → Bob calls <code>set_remote_description("offer", sdp)</code> → Bob's WebRTC generates an answer → Bob sends the answer → Alice calls <code>set_remote_description("answer", sdp)</code>. Now both sides know what the other supports.</div>
+<div class="step-card"><span class="step-num">WHO IS THE OFFERER?</span>
+In WebRTC, one peer creates the offer and one creates the answer. The offerer is whoever joins second (or whoever your signaling server designates). In the code on the right, the signaling server sends a <code>peer_joined</code> message to existing peers when a new peer joins — existing peers become offerers.<br><br>
+Why does it matter? It mostly does not, as long as it is consistent. Both sides must agree on who offers and who answers. Using peer ID comparison (<code>my_id > their_id</code> → I offer) is a clean deterministic rule.</div>
+<div class="step-card"><span class="step-num">AFTER SDP — THE GODOT PEER JUST WORKS</span>
+Once the SDP exchange completes and ICE candidates are exchanged (next lesson), <code>WebRTCMultiplayerPeer</code> fires <code>peer_connected(id)</code> just like ENet does. From that point, every RPC you have written works identically. The handshake complexity is isolated entirely inside the signaling client. The game code never knows the difference.</div>
+<div class="tip">Your signaling server does not need to be a production-grade distributed system. It literally just needs to read <code>{"type":"offer","to":42,"sdp":"..."}</code> and forwards it to the peer with ID 42. A 50-line Node.js or Python WebSocket server is enough. For a jam: host it on a $5 VPS, or use a free WebSocket relay service like <code>piesocket.com</code>.</div>`,
+},
+{
+title:"ICE, STUN &amp; TURN",
+subtitle:"17 — NAT Traversal Without Crying",
+vizLabel:"▶ ICE candidate negotiation",
+viz:"nattraversal",
+snippet:`<span class="cm"># ICE candidates — the possible routes between two peers.</span>
+<span class="cm"># WebRTC discovers them automatically and tries each one.</span>
+
+<span class="cm"># Three types of ICE candidates:</span>
+<span class="cm">#</span>
+<span class="cm"># 1. HOST candidate — your LAN IP (works when on same network)</span>
+<span class="cm">#    e.g. 192.168.1.42:54321</span>
+<span class="cm">#</span>
+<span class="cm"># 2. SRFLX candidate (server-reflexive) — your PUBLIC IP</span>
+<span class="cm">#    discovered via a STUN server. Works when both peers</span>
+<span class="cm">#    are behind "full cone" NAT (~70% of home routers).</span>
+<span class="cm">#    e.g. 203.0.113.5:54321</span>
+<span class="cm">#</span>
+<span class="cm"># 3. RELAY candidate — traffic routed via TURN server.</span>
+<span class="cm">#    Always works. Costs bandwidth. Used as last resort.</span>
+<span class="cm">#    e.g. yourturnserver.com:3478</span>
+
+<span class="cm"># Configuring both STUN and TURN in Godot:</span>
+<span class="kw">var</span> ice_config = {
+    <span class="st">"iceServers"</span>: [
+        <span class="cm"># STUN: free, tells you your public IP</span>
+        {<span class="st">"urls"</span>: [<span class="st">"stun:stun.l.google.com:19302"</span>]},
+        {<span class="st">"urls"</span>: [<span class="st">"stun:stun1.l.google.com:19302"</span>]},
+        <span class="cm"># TURN: relay fallback — needs credentials</span>
+        {
+            <span class="st">"urls"</span>: [
+                <span class="st">"turn:yourturn.example.com:3478"</span>,      <span class="cm"># UDP</span>
+                <span class="st">"turn:yourturn.example.com:3478?transport=tcp"</span>  <span class="cm"># TCP fallback</span>
+            ],
+            <span class="st">"username"</span>: <span class="st">"lemur"</span>,
+            <span class="st">"credential"</span>: <span class="st">"verysecret"</span>
+        }
+    ]
+}
+
+<span class="cm"># ICE trickle — candidates arrive over ~1-2 seconds after offer</span>
+<span class="cm"># Each arrives via the ice_candidate_created signal and must be</span>
+<span class="cm"># forwarded through the signaling server to the remote peer.</span>
+<span class="cm"># The remote peer adds them with add_ice_candidate().</span>
+
+<span class="cm"># Setting up coturn (Linux) in 5 commands:</span>
+<span class="cm"># sudo apt install coturn</span>
+<span class="cm"># sudo nano /etc/turnserver.conf</span>
+<span class="cm">#   listening-port=3478</span>
+<span class="cm">#   fingerprint</span>
+<span class="cm">#   lt-cred-mech</span>
+<span class="cm">#   user=lemur:verysecret</span>
+<span class="cm">#   realm=yourdomain.com</span>
+<span class="cm"># sudo systemctl enable --now coturn</span>
+<span class="cm"># Open UDP/TCP port 3478 in your firewall. Done.</span>`,
+body:`<p>The SDP exchange told both peers what they support. Now they need to figure out how to actually reach each other through the labyrinth of routers and firewalls that separate every home internet connection from the open internet. That is ICE's job.</p>
+<div class="step-card"><span class="step-num">NAT — THE PROBLEM ICE IS SOLVING</span>
+Your home router runs NAT (Network Address Translation). Your machine has a private IP (192.168.x.x). Your router has one public IP shared by all devices in the house. Inbound packets from the internet need to know which internal device to reach — but the internet only sees the router's IP.<br><br>
+When you send a packet out, your router makes a note: "machine 192.168.1.42:54321 sent to the internet, remember that." For a short window, replies to that external IP:port get routed back to your machine. This is how most P2P works — both sides poke holes simultaneously and hope the holes align. "NAT hole punching." Works maybe 70% of the time.</div>
+<div class="step-card"><span class="step-num">STUN — DISCOVERING YOUR OWN PUBLIC ADDRESS</span>
+You know your LAN IP. You do not know your public IP or what port your router assigned when you sent that last packet. A STUN server solves this: you send it a packet, it replies with "you came from 203.0.113.5:54321." That is your server-reflexive (SRFLX) ICE candidate.<br><br>
+Google's public STUN servers (<code>stun.l.google.com:19302</code>) handle this for free. They see your public IP and bounce it back. STUN servers have zero involvement in your game traffic — they just answer "what is my public address?" and go back to sleep.</div>
+<div class="step-card"><span class="step-num">TURN — THE RELAY OF LAST RESORT</span>
+About 30% of connections fail direct hole punching — usually "symmetric NAT" routers that assign a different external port for every destination, making prediction impossible. For those players, you need a TURN server: traffic relays through it, solving NAT completely at the cost of server bandwidth.<br><br>
+TURN is not optional if you care about all players connecting. Run <strong>coturn</strong> on the same VPS as your signaling server. It is free software, handles thousands of simultaneous relayed sessions on a cheap box, and takes fifteen minutes to configure. The config in the snippet is a complete working setup.</div>
+<div class="step-card"><span class="step-num">ICE CANDIDATE TRICKLE — THE ASYNC PART</span>
+ICE candidates do not all arrive at once. WebRTC discovers them over ~1–2 seconds as it probes STUN and TURN servers. Each candidate fires the <code>ice_candidate_created</code> signal on the <code>WebRTCPeerConnection</code>. You must forward each one through the signaling server to the remote peer, who calls <code>add_ice_candidate()</code>. Meanwhile WebRTC is already testing the candidates that arrived early.<br><br>
+ICE picks the best working route automatically — direct LAN if available, STUN hole-punch if possible, TURN relay as last resort. You do not pick; you just feed it candidates and let it race.</div>
+<div class="step-card"><span class="step-num">WHAT CAN STILL GO WRONG</span>
+Corporate firewalls that block UDP entirely → TURN with TCP transport fixes this (add <code>?transport=tcp</code> to your TURN URL).<br>
+Symmetric NAT on both sides → TURN relay is the only answer.<br>
+TURN credentials exposed in client code → Use time-limited tokens generated server-side (TURN REST API). Do not hardcode production credentials in your game binary.<br>
+ICE candidates arriving after the connection already succeeded → Fine, WebRTC just ignores the extras.</div>
+<div class="tip">Test your TURN server before you need it. Go to <code>https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/</code>, enter your TURN credentials, click Gather. You should see SRFLX and RELAY candidates within 2–3 seconds. No RELAY candidates = your TURN server is broken or port 3478 is firewalled. Find this out in development, not when a player reports they cannot connect at 11pm on launch day.</div>`,
+},
+{
+title:"Full WebRTC in Godot",
+subtitle:"18 — Wiring It All Together",
+vizLabel:"▶ complete connection lifecycle",
+viz:"webrtcfull",
+snippet:`<span class="cm"># The complete picture: signaling server (Node.js) + Godot client</span>
+<span class="cm"># This is a working skeleton — adapt names to your game.</span>
+
+<span class="cm"># --- signal_server.js (Node.js, ~40 lines) ---</span>
+<span class="cm"># const wss = new WebSocket.Server({ port: 9000 });</span>
+<span class="cm"># const peers = new Map();  // id -> websocket</span>
+<span class="cm">#</span>
+<span class="cm"># wss.on('connection', ws => {</span>
+<span class="cm">#   const id = crypto.randomInt(100000);</span>
+<span class="cm">#   peers.set(id, ws);</span>
+<span class="cm">#   ws.send(JSON.stringify({type:'your_id', id}));</span>
+<span class="cm">#   // tell everyone else a new peer arrived</span>
+<span class="cm">#   broadcast({type:'peer_joined', id}, id);</span>
+<span class="cm">#   // tell the newcomer about existing peers</span>
+<span class="cm">#   peers.forEach((_, pid) => {</span>
+<span class="cm">#     if(pid !== id) ws.send(JSON.stringify({type:'peer_joined', id:pid}));</span>
+<span class="cm">#   });</span>
+<span class="cm">#   ws.on('message', raw => {</span>
+<span class="cm">#     const msg = JSON.parse(raw);</span>
+<span class="cm">#     if(msg.to &amp;&amp; peers.has(msg.to)) {</span>
+<span class="cm">#       msg.from = id;</span>
+<span class="cm">#       peers.get(msg.to).send(JSON.stringify(msg));</span>
+<span class="cm">#     }</span>
+<span class="cm">#   });</span>
+<span class="cm">#   ws.on('close', () => { peers.delete(id); broadcast({type:'peer_left', id}); });</span>
+<span class="cm"># });</span>
+
+<span class="cm"># --- WebRTCManager.gd (autoload singleton) ---</span>
+<span class="kw">extends</span> Node
+
+<span class="kw">signal</span> <span class="sig">connected_to_room</span>
+<span class="kw">signal</span> <span class="sig">peer_joined</span>(id: <span class="kw">int</span>)
+<span class="kw">signal</span> <span class="sig">peer_left</span>(id: <span class="kw">int</span>)
+
+<span class="kw">var</span> my_id: <span class="kw">int</span> = <span class="nm">0</span>
+<span class="kw">var</span> _ws  := WebSocketPeer.<span class="fn">new</span>()
+<span class="kw">var</span> _rtc := WebRTCMultiplayerPeer.<span class="fn">new</span>()
+<span class="kw">var</span> _conns: <span class="kw">Dictionary</span> = {}
+
+<span class="kw">func</span> <span class="fn">join_room</span>(signal_url: <span class="kw">String</span>):
+    _rtc.<span class="fn">create_mesh</span>()          <span class="cm"># P2P mesh — no server peer</span>
+    multiplayer.multiplayer_peer = _rtc
+    _rtc.peer_connected.<span class="fn">connect</span>(<span class="kw">func</span>(id): <span class="fn">emit_signal</span>(<span class="st">"peer_joined"</span>, id))
+    _rtc.peer_disconnected.<span class="fn">connect</span>(<span class="kw">func</span>(id): <span class="fn">emit_signal</span>(<span class="st">"peer_left"</span>, id))
+    _ws.<span class="fn">connect_to_url</span>(signal_url)
+
+<span class="kw">func</span> <span class="fn">_process</span>(_d):
+    _ws.<span class="fn">poll</span>()
+    <span class="kw">match</span> _ws.<span class="fn">get_ready_state</span>():
+        WebSocketPeer.STATE_OPEN:
+            <span class="kw">while</span> _ws.<span class="fn">get_available_packet_count</span>() > <span class="nm">0</span>:
+                <span class="kw">var</span> m = JSON.<span class="fn">parse_string</span>(_ws.<span class="fn">get_packet</span>().<span class="fn">get_string_from_utf8</span>())
+                <span class="fn">_handle</span>(m)
+        WebSocketPeer.STATE_CLOSED:
+            <span class="fn">print</span>(<span class="st">"Signal server disconnected"</span>)
+
+<span class="kw">func</span> <span class="fn">_handle</span>(m: <span class="kw">Dictionary</span>):
+    <span class="kw">match</span> m.get(<span class="st">"type"</span>, <span class="st">""</span>):
+        <span class="st">"your_id"</span>:
+            my_id = m[<span class="st">"id"</span>]
+            <span class="fn">emit_signal</span>(<span class="st">"connected_to_room"</span>)
+        <span class="st">"peer_joined"</span>:
+            <span class="fn">_make_conn</span>(m[<span class="st">"id"</span>], my_id < m[<span class="st">"id"</span>])  <span class="cm"># lower ID offers</span>
+        <span class="st">"peer_left"</span>:
+            _conns.<span class="fn">erase</span>(m[<span class="st">"id"</span>])
+        <span class="st">"offer"</span>:
+            <span class="kw">if not</span> _conns.<span class="fn">has</span>(m[<span class="st">"from"</span>]): <span class="fn">_make_conn</span>(m[<span class="st">"from"</span>], <span class="kw">false</span>)
+            _conns[m[<span class="st">"from"</span>]].<span class="fn">set_remote_description</span>(<span class="st">"offer"</span>, m[<span class="st">"sdp"</span>])
+        <span class="st">"answer"</span>:
+            _conns[m[<span class="st">"from"</span>]].<span class="fn">set_remote_description</span>(<span class="st">"answer"</span>, m[<span class="st">"sdp"</span>])
+        <span class="st">"ice"</span>:
+            _conns[m[<span class="st">"from"</span>]].<span class="fn">add_ice_candidate</span>(m[<span class="st">"media"</span>], m[<span class="st">"index"</span>], m[<span class="st">"sdp"</span>])
+
+<span class="kw">func</span> <span class="fn">_make_conn</span>(peer_id: <span class="kw">int</span>, i_offer: <span class="kw">bool</span>):
+    <span class="kw">var</span> c := WebRTCPeerConnection.<span class="fn">new</span>()
+    c.<span class="fn">initialize</span>({<span class="st">"iceServers"</span>:[{<span class="st">"urls"</span>:[<span class="st">"stun:stun.l.google.com:19302"</span>]}]})
+    c.session_description_created.<span class="fn">connect</span>(
+        <span class="kw">func</span>(t,s): c.<span class="fn">set_local_description</span>(t,s); <span class="fn">_sig</span>({<span class="st">"type"</span>:t,<span class="st">"to"</span>:peer_id,<span class="st">"sdp"</span>:s})
+    )
+    c.ice_candidate_created.<span class="fn">connect</span>(
+        <span class="kw">func</span>(m,i,s): <span class="fn">_sig</span>({<span class="st">"type"</span>:<span class="st">"ice"</span>,<span class="st">"to"</span>:peer_id,<span class="st">"media"</span>:m,<span class="st">"index"</span>:i,<span class="st">"sdp"</span>:s})
+    )
+    _rtc.<span class="fn">add_peer</span>(c, peer_id)
+    _conns[peer_id] = c
+    <span class="kw">if</span> i_offer: c.<span class="fn">create_offer</span>()
+
+<span class="kw">func</span> <span class="fn">_sig</span>(msg: <span class="kw">Dictionary</span>): _ws.<span class="fn">send_text</span>(JSON.<span class="fn">stringify</span>(msg))`,
+body:`<p>Lessons 15–17 were the theory. This is the complete working implementation. One GDScript autoload, one 40-line Node.js signaling server, and your existing game RPC code works unchanged.</p>
+<div class="step-card"><span class="step-num">create_mesh() vs create_server()</span>
+For WebRTC P2P you call <code>_rtc.create_mesh()</code> instead of <code>create_server()</code>. Mesh mode means no peer has special authority as "the server" — all peers are equal. This is true P2P: every peer connects directly to every other peer.<br><br>
+The implication: there is no peer with ID 1. <code>multiplayer.is_server()</code> is meaningless. If you need one peer to be authoritative (for game logic or anti-cheat), designate one explicitly — typically whoever was first to join — and store their ID manually. Your RPCs can still use <code>rpc_id(designated_authority, ...)</code>.</div>
+<div class="step-card"><span class="step-num">THE SIGNALING SERVER — WHAT IT ACTUALLY DOES</span>
+Look at the Node.js server in the snippet. It does four things:<br>
+1. Assigns a random ID to each new WebSocket connection<br>
+2. Tells new arrivals about existing peers (and existing peers about the newcomer)<br>
+3. Forwards any message with a <code>"to"</code> field to the named recipient<br>
+4. Broadcasts departure when a peer disconnects<br><br>
+That is the entire signaling server. 40 lines. It never touches game logic, never parses SDP, never routes game packets. It is a dumb mailbox.</div>
+<div class="step-card"><span class="step-num">THE OFFER RULE — WHO OFFERS?</span>
+In <code>_handle()</code>, the rule is <code>my_id &lt; peer_id → I am the offerer</code>. This deterministically assigns the offerer role based on ID comparison. Both peers evaluate the same condition locally and arrive at opposite answers. No coordination needed, no race condition, no ambiguity. You can use any consistent rule you want — this one is clean.</div>
+<div class="step-card"><span class="step-num">POLLING — THE WEBSOCKET PEER NEEDS _process</span>
+Unlike ENet which runs on threads, <code>WebSocketPeer</code> must be polled manually. Call <code>_ws.poll()</code> every <code>_process</code> frame. If you forget, incoming signaling messages accumulate but never fire. This is the most common WebRTC-in-Godot bug: "the connection never completes" is usually a missing <code>poll()</code> call.</div>
+<div class="step-card"><span class="step-num">FROM WEBRTC CONNECTED → GAME STARTS</span>
+When <code>WebRTCMultiplayerPeer</code> finishes its ICE negotiation, it fires <code>peer_connected(id)</code> just like ENet does. At that point every @rpc function, every MultiplayerSpawner, every MultiplayerSynchronizer works identically to the ENet lessons. The complexity stops at the boundary of <code>WebRTCManager.gd</code>.</div>
+<div class="challenge">Run the Node.js signaling server locally. Export to HTML5. Open two browser tabs. Connect them. Then open the dev console (F12 → Console) on one tab and watch the ICE negotiation happen in real time. You will see which candidate type actually gets used: host (LAN), srflx (internet direct), or relay (TURN). That one experiment tells you more about your networking situation than three days of reading documentation.</div>`,
+},
+{
+title:"A Complete Working Setup",
+subtitle:"19 — Real Scene, Real Code",
+vizLabel:"▶ full multiplayer scene tree",
+viz:"scenetree",
+snippet:`<span class="cm"># Main.gd — complete lobby-to-game wiring</span>
+<span class="kw">extends</span> Node
+
+<span class="kw">const</span> PORT = <span class="nm">7000</span>
+<span class="kw">const</span> MAX_PEERS = <span class="nm">8</span>
+<span class="kw">const</span> PlayerScene = <span class="fn">preload</span>(<span class="st">"res://player.tscn"</span>)
+
+<span class="kw">func</span> <span class="fn">host_game</span>():
+    <span class="kw">var</span> peer = ENetMultiplayerPeer.<span class="fn">new</span>()
+    peer.<span class="fn">create_server</span>(PORT, MAX_PEERS)
+    multiplayer.multiplayer_peer = peer
+    multiplayer.peer_connected.<span class="fn">connect</span>(<span class="fn">_spawn_player</span>)
+    multiplayer.peer_disconnected.<span class="fn">connect</span>(<span class="fn">_remove_player</span>)
+    <span class="fn">_spawn_player</span>(multiplayer.<span class="fn">get_unique_id</span>())
+
+<span class="kw">func</span> <span class="fn">join_game</span>(address: <span class="kw">String</span>):
+    <span class="kw">var</span> peer = ENetMultiplayerPeer.<span class="fn">new</span>()
+    peer.<span class="fn">create_client</span>(address, PORT)
+    multiplayer.multiplayer_peer = peer
+    multiplayer.connected_to_server.<span class="fn">connect</span>(<span class="fn">_on_connected</span>)
+
+<span class="kw">func</span> <span class="fn">_on_connected</span>():
+    <span class="fn">print</span>(<span class="st">"Connected! My ID: "</span>, multiplayer.<span class="fn">get_unique_id</span>())
+
+<span class="kw">func</span> <span class="fn">_spawn_player</span>(id: <span class="kw">int</span>):
+    <span class="kw">var</span> p = PlayerScene.<span class="fn">instantiate</span>()
+    p.name = <span class="kw">str</span>(id)  <span class="cm"># name by ID so RPCs route correctly</span>
+    p.<span class="fn">set_multiplayer_authority</span>(id)
+    $Players.<span class="fn">add_child</span>(p, <span class="kw">true</span>)  <span class="cm"># true = force readable name</span>
+
+<span class="kw">func</span> <span class="fn">_remove_player</span>(id: <span class="kw">int</span>):
+    <span class="kw">var</span> node = $Players.<span class="fn">get_node_or_null</span>(<span class="kw">str</span>(id))
+    <span class="kw">if</span> node: node.<span class="fn">queue_free</span>()`,
+body:`<p>Enough theory. Here is a complete working multiplayer skeleton in Godot 4. Copy this, rename things to match your game, and you have a functional foundation. Every project you build on Godot multiplayer starts here.</p>
+<div class="step-card"><span class="step-num">SCENE TREE LAYOUT</span>
+<code>Main</code> — handles connections and spawning<br>
+<code>Main/Players</code> — parent for all player nodes (put MultiplayerSpawner here)<br>
+<code>Main/World</code> — static environment, same on all peers, no replication needed<br>
+<code>Main/GameState</code> — scores, timers, rules — authority = 1 (server-owned)<br>
+<code>Main/UI</code> — local only, never replicated<br><br>
+Naming player nodes by peer ID lets you look them up instantly with <code>get_node(str(id))</code>.</div>
+<div class="step-card"><span class="step-num">THE BOOT SEQUENCE</span>
+1. Show lobby UI<br>
+2. Host clicks "Host" → <code>create_server()</code> → wait<br>
+3. Others click "Join" → <code>create_client(ip)</code><br>
+4. Server fires <code>peer_connected</code> → spawns their player node with correct authority<br>
+5. Each player's <code>_physics_process</code> reads input only when <code>is_multiplayer_authority()</code></div>
+<div class="step-card"><span class="step-num">PRE-SHIP CHECKLIST</span>
+☐ Server validates all gameplay-affecting inputs<br>
+☐ Clients send only inputs — never outcomes<br>
+☐ Peer disconnect handled gracefully at any moment<br>
+☐ Node names are deterministic and ID-based<br>
+☐ Tested with 150ms artificial latency + 3% packet loss<br>
+☐ Tested with sudden host disconnect<br><br>
+Use Project Settings → Network → Debugger to add artificial latency without leaving the editor.</div>
+<div class="challenge">Actually build it. Two circles. Two Godot instances. Each circle moves independently. Add a chat box — one reliable RPC. That is it. That is a shipped multiplayer game. Everything after this lesson is polish, optimisation, and scale. Get the skeleton working first, then add complexity. Most jam games ship with this exact architecture and it is fine.</div>`
+},
+{
+title:"Security &amp; Anti-Cheat",
+subtitle:"20 — Never Trust Anyone",
+vizLabel:"▶ server authority validation",
+viz:"security",
+snippet:`<span class="cm"># Clients send INPUTS only. Server decides OUTCOMES.</span>
+
+<span class="cm"># BAD — client reports their own hit. Never do this.</span>
+<span class="dc">@rpc</span>(<span class="st">"any_peer"</span>, <span class="st">"call_remote"</span>, <span class="st">"reliable"</span>)
+<span class="kw">func</span> <span class="fn">i_hit_player</span>(victim_id: <span class="kw">int</span>):
+    <span class="cm"># Anyone can call this with any victim. Instant cheat.</span>
+    <span class="fn">get_player</span>(victim_id).<span class="fn">take_damage</span>(<span class="nm">999</span>)
+
+<span class="cm"># GOOD — client reports their shot, server validates the hit.</span>
+<span class="dc">@rpc</span>(<span class="st">"any_peer"</span>, <span class="st">"call_remote"</span>, <span class="st">"reliable"</span>)
+<span class="kw">func</span> <span class="fn">client_fired</span>(from_pos: <span class="kw">Vector2</span>, aim_dir: <span class="kw">Vector2</span>):
+    <span class="kw">if not</span> multiplayer.<span class="fn">is_server</span>(): <span class="kw">return</span>
+
+    <span class="kw">var</span> shooter_id = multiplayer.<span class="fn">get_remote_sender_id</span>()
+    <span class="kw">var</span> shooter = <span class="fn">get_player</span>(shooter_id)
+
+    <span class="cm"># Was the shooter actually near that position?</span>
+    <span class="kw">if</span> shooter.position.<span class="fn">distance_to</span>(from_pos) &gt; <span class="nm">64.0</span>:
+        <span class="fn">print</span>(<span class="st">"Suspicious: peer "</span>, shooter_id)
+        <span class="kw">return</span>
+
+    <span class="cm"># Server does its own raycast — ignores client's claimed result</span>
+    <span class="kw">var</span> hit = <span class="fn">server_raycast</span>(from_pos, aim_dir)
+    <span class="kw">if</span> hit: hit.<span class="fn">take_damage</span>(<span class="nm">25</span>)
+
+<span class="cm"># Rate limiting: prevent RPC flood exploits</span>
+<span class="kw">var</span> _last_fire_ms: <span class="kw">int</span> = <span class="nm">0</span>
+<span class="kw">func</span> <span class="fn">_can_fire</span>() -> <span class="kw">bool</span>:
+    <span class="kw">var</span> now = Time.<span class="fn">get_ticks_msec</span>()
+    <span class="kw">if</span> now - _last_fire_ms &lt; <span class="nm">200</span>: <span class="kw">return false</span>
+    _last_fire_ms = now
+    <span class="kw">return true</span>`,
+body:`<p>Uncomfortable fact: every player who downloads your game has a copy of your client binary. Someone <em>will</em> open it with Cheat Engine. Someone <em>will</em> intercept the network traffic. Someone <em>will</em> call your RPCs directly from a modified client. Security in multiplayer is not about preventing this — it is about making sure it does not matter because the server is always in charge.</p>
+<div class="step-card"><span class="step-num">THE CARDINAL RULE — SERVER COMPUTES OUTCOMES</span>
+The server never accepts "I won" from a client. The server accepts only inputs. The server runs the game. The server determines outcomes.<br><br>
+RPCs from clients should only ever contain: direction pressed, button pressed, target clicked — never "I scored a kill", "I picked up the item", "I won the round".</div>
+<div class="step-card"><span class="step-num">RATE LIMITING — THROTTLE THE SHOUTERS</span>
+A client can call RPCs as fast as their CPU allows unless you stop them. Without rate limiting, a cheater floods your server with 1000 fire RPCs per second — your server either crashes or spawns 1000 bullets. A 200ms minimum between fire RPCs costs nothing for legitimate players.</div>
+<div class="step-card"><span class="step-num">VALIDATE POSITIONS — TELEPORTING IS A FLAG</span>
+When a client sends a position hint, check: could they have moved that far in the available time? Last known position (0,0), claimed position (10000,0), 16ms elapsed — that is a speed hack. Reset them. Log it. Three violations = kick.</div>
+<div class="step-card"><span class="step-num">get_remote_sender_id() — ALWAYS KNOW WHO IS TALKING</span>
+Inside any <code>@rpc("any_peer")</code> function on the server: call <code>multiplayer.get_remote_sender_id()</code> to find who sent the RPC. Never trust a <code>peer_id</code> parameter from the client — they will pass someone else's ID. Always verify the real sender.</div>
+<div class="tip">For a jam: the authority system alone stops 90% of casual cheating. Shipped competitive game: add server-side hit detection, input rate validation, and a reporting system. Full anti-cheat is an arms race you will never fully win — the architecture just determines how expensive cheating is. Make it expensive. Ship it. See what players actually do before over-engineering the defense.</div>`
+}
+]; // end LESSONS
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let currentLesson = 0;
+let animId = null;
+let startTime = Date.now();
+let packets=[], rpcBalls=[], events2=[];
+
+const canvas = document.getElementById('viz-out');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas(){
+  const a = canvas.parentElement;
+  canvas.width  = a.clientWidth  || 600;
+  canvas.height = a.clientHeight || 260;
+}
+
+function lerp(a,b,t){ return a+(b-a)*t; }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+// ─────────────────────────────────────────────
+// VISUALIZATIONS
+// ─────────────────────────────────────────────
+function vizPackets(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  if(packets.length<10&&Math.random()<0.05){
+    const cols=['#3ecfff','#7fff6b','#ff6b9d','#ffd080','#c09fff'];
+    const lbls=['POS','INP','EVT','RPC'];
+    packets.push({x:50,y:75+Math.random()*60,speed:1.3+Math.random()*1.8,
+      color:cols[Math.floor(Math.random()*cols.length)],
+      lbl:lbls[Math.floor(Math.random()*lbls.length)],
+      lost:Math.random()<0.09,dead:false,born:Date.now()});
+  }
+  ctx.fillStyle='#0c1820';ctx.fillRect(8,H/2-50,92,100);
+  ctx.strokeStyle='rgba(62,207,255,0.4)';ctx.lineWidth=1;ctx.strokeRect(8,H/2-50,92,100);
+  ctx.fillStyle='#3ecfff';ctx.font='bold 9px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('CLIENT',54,H/2-28);ctx.fillStyle='#4a6070';ctx.font='7px Space Mono,monospace';
+  ctx.fillText('ID: 98765',54,H/2-14);ctx.fillText('ping: ~72ms',54,H/2-1);
+  ctx.fillStyle='#081820';ctx.fillRect(W-100,H/2-50,92,100);
+  ctx.strokeStyle='rgba(127,255,107,0.4)';ctx.lineWidth=1;ctx.strokeRect(W-100,H/2-50,92,100);
+  ctx.fillStyle='#7fff6b';ctx.font='bold 9px Space Mono,monospace';
+  ctx.fillText('SERVER',W-54,H/2-28);ctx.fillStyle='#4a6070';ctx.font='7px Space Mono,monospace';
+  ctx.fillText('ID: 1',W-54,H/2-14);ctx.fillText('port:7000',W-54,H/2-1);
+  ctx.strokeStyle='rgba(62,207,255,0.07)';ctx.lineWidth=1.5;ctx.setLineDash([5,9]);
+  ctx.beginPath();ctx.moveTo(100,H/2);ctx.lineTo(W-100,H/2);ctx.stroke();ctx.setLineDash([]);
+  packets=packets.filter(p=>{
+    if(p.dead)return false;
+    p.x+=p.speed;
+    if((Date.now()-p.born)/1000>7||p.x>W+20)return false;
+    const midX=W/2;
+    if(p.lost&&p.x>midX-10&&p.x<midX+10){
+      ctx.fillStyle='rgba(255,80,50,0.8)';ctx.beginPath();ctx.arc(p.x,p.y,12,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#ff5030';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+      ctx.fillText('LOST',p.x,p.y+18);p.dead=true;return false;
+    }
+    ctx.fillStyle=p.color;ctx.shadowBlur=8;ctx.shadowColor=p.color;
+    ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle=p.color;ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(p.lbl,p.x,p.y-10);return true;
+  });
+  ctx.fillStyle='#2a3a4a';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('reliable = retransmit on loss  |  unreliable = fast, can drop',W/2,H-8);
+}
+
+function vizTopology(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const half=W/2;
+  function node(x,y,lbl,color,r=18){
+    ctx.fillStyle=color+'28';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle=color;ctx.font='8px Space Mono,monospace';ctx.textAlign='center';ctx.fillText(lbl,x,y+3);
+  }
+  function edge(x1,y1,x2,y2,c,on){
+    ctx.strokeStyle=on?c:c+'28';ctx.lineWidth=on?1.8:1;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  }
+  function dot(x1,y1,x2,y2,c,ph){
+    const f=ph%1;const px=lerp(x1,x2,f),py=lerp(y1,y2,f);
+    ctx.fillStyle=c;ctx.shadowBlur=6;ctx.shadowColor=c;
+    ctx.beginPath();ctx.arc(px,py,3.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  }
+  // Left: Client-Server
+  ctx.fillStyle='rgba(62,207,255,0.03)';ctx.fillRect(0,0,half,H);
+  ctx.fillStyle='#3ecfff';ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('CLIENT-SERVER',half/2,16);
+  const sx=half/2,sy=H/2-8;
+  node(sx,sy,'SRV','#7fff6b',22);
+  const cpts=[[half*.15,H*.3],[half*.85,H*.3],[half*.15,H*.72],[half*.85,H*.72]];
+  const aIdx=Math.floor(t*1.8)%4;
+  cpts.forEach(([cx,cy],i)=>{
+    edge(sx,sy,cx,cy,'#3ecfff',i===aIdx);
+    if(i===aIdx)dot(sx,sy,cx,cy,'#3ecfff',t*1.8);
+    node(cx,cy,`C${i+1}`,'#3ecfff');
+  });
+  ctx.fillStyle='#2a3a4a';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('all traffic via server',half/2,H-8);
+  // Right: P2P
+  ctx.fillStyle='rgba(127,255,107,0.03)';ctx.fillRect(half,0,half,H);
+  ctx.fillStyle='#7fff6b';ctx.font='bold 8px Space Mono,monospace';
+  ctx.fillText('PEER-TO-PEER',half+half/2,16);
+  const peers=[[half+half*.15,H*.3],[half+half*.85,H*.3],[half+half*.15,H*.72],[half+half*.85,H*.72]];
+  const pairs=[[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
+  const pIdx=Math.floor(t*1.2)%6;
+  pairs.forEach(([a,b],i)=>{
+    edge(peers[a][0],peers[a][1],peers[b][0],peers[b][1],'#7fff6b',i===pIdx);
+    if(i===pIdx)dot(peers[a][0],peers[a][1],peers[b][0],peers[b][1],'#7fff6b',t*1.2);
+  });
+  peers.forEach(([px,py],i)=>node(px,py,`P${i+1}`,'#7fff6b'));
+  ctx.fillStyle='#2a3a4a';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('direct connections',half+half/2,H-8);
+  ctx.strokeStyle='#192030';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(half,0);ctx.lineTo(half,H);ctx.stroke();
+}
+
+function vizApimap(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  function box(x,y,w,h,lbl,sub,color){
+    ctx.fillStyle=color+'18';ctx.fillRect(x,y,w,h);
+    ctx.strokeStyle=color+'66';ctx.lineWidth=1;ctx.strokeRect(x,y,w,h);
+    ctx.fillStyle=color;ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(lbl,x+w/2,y+h/2+(sub?-2:4));
+    if(sub){ctx.fillStyle=color+'88';ctx.font='7px Space Mono,monospace';ctx.fillText(sub,x+w/2,y+h/2+10);}
+  }
+  function ln(x1,y1,x2,y2,c){
+    ctx.strokeStyle=c+'55';ctx.lineWidth=1;ctx.setLineDash([3,5]);
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.setLineDash([]);
+  }
+  const cx=W/2;
+  box(cx-76,12,152,34,'MultiplayerAPI','scene-wide singleton','#3ecfff');
+  box(cx-66,72,132,30,'ENetMultiplayerPeer','UDP transport','#ffd080');
+  ln(cx,46,cx,72,'#3ecfff');
+  const sigs=['peer_connected','peer_disconnected','connected','failed'];
+  const sc=['#7fff6b','#ff6b9d','#3ecfff','#ffd080'];
+  sigs.forEach((s,i)=>{
+    const x=14+i*(W-28)/4+(W-28)/8;
+    const y=136+Math.sin(t+i*0.8)*3;
+    box(x-38,y,76,24,s,'signal',sc[i]);
+    ln(cx,102,x,y,sc[i]);
+  });
+  box(cx-120,208,104,30,'Multiplayer\nSpawner','auto-spawn','#7fff6b');
+  box(cx+16,208,104,30,'Multiplayer\nSynchronizer','auto-sync','#c09fff');
+  ln(cx,102,cx-68,208,'#7fff6b');ln(cx,102,cx+68,208,'#c09fff');
+  const pulse=Math.sin(t*2)*0.35+0.65;
+  ctx.strokeStyle=`rgba(62,207,255,${pulse*0.4})`;ctx.lineWidth=1.5;ctx.strokeRect(cx-78,10,156,38);
+  ctx.fillStyle='#4a6070';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('server = ID 1  |  is_server() / get_unique_id() / get_peers()',W/2,H-8);
+}
+
+function vizRpc(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  if(rpcBalls.length<6&&Math.random()<0.04){
+    const opts=[
+      {lbl:'sync_position',c:'#3ecfff',rel:false},
+      {lbl:'take_damage',c:'#ff6b9d',rel:true},
+      {lbl:'player_fired',c:'#ffd080',rel:true},
+      {lbl:'chat_msg',c:'#7fff6b',rel:true},
+      {lbl:'recv_snapshot',c:'#c09fff',rel:false},
+    ];
+    const o=opts[Math.floor(Math.random()*opts.length)];
+    rpcBalls.push({x:90,y:75+Math.random()*70,tx:W-90,ty:75+Math.random()*70,
+      t2:0,speed:0.007+Math.random()*0.006,color:o.c,lbl:o.lbl,rel:o.rel});
+  }
+  ctx.fillStyle='#0c1820';ctx.fillRect(10,H/2-65,110,130);
+  ctx.strokeStyle='#3ecfff44';ctx.lineWidth=1;ctx.strokeRect(10,H/2-65,110,130);
+  ctx.fillStyle='#3ecfff';ctx.font='bold 9px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('SENDER',65,H/2-42);ctx.fillStyle='#4a6070';ctx.font='7px Space Mono,monospace';
+  ctx.fillText('calls .rpc(args)',65,H/2-28);ctx.fillText('or .rpc_id(peer,args)',65,H/2-14);
+  ctx.fillStyle='#0c1820';ctx.fillRect(W-120,H/2-65,110,130);
+  ctx.strokeStyle='#ff6b9d44';ctx.lineWidth=1;ctx.strokeRect(W-120,H/2-65,110,130);
+  ctx.fillStyle='#ff6b9d';ctx.font='bold 9px Space Mono,monospace';
+  ctx.fillText('RECEIVER',W-65,H/2-42);ctx.fillStyle='#4a6070';ctx.font='7px Space Mono,monospace';
+  ctx.fillText('function body',W-65,H/2-28);ctx.fillText('runs HERE',W-65,H/2-14);
+  ctx.strokeStyle='rgba(62,207,255,0.06)';ctx.lineWidth=1.5;ctx.setLineDash([5,10]);
+  ctx.beginPath();ctx.moveTo(120,H/2);ctx.lineTo(W-120,H/2);ctx.stroke();ctx.setLineDash([]);
+  rpcBalls=rpcBalls.filter(b=>{
+    b.t2+=b.speed;if(b.t2>1)return false;
+    const px=lerp(b.x,b.tx,b.t2),py=lerp(b.y,b.ty,b.t2);
+    ctx.fillStyle=b.color;ctx.shadowBlur=8;ctx.shadowColor=b.color;
+    ctx.beginPath();ctx.arc(px,py,6,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle=b.color;ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(b.lbl,px,py-12);
+    ctx.fillStyle=b.rel?'#7fff6b':'#ffd080';ctx.font='6px Space Mono,monospace';
+    ctx.fillText(b.rel?'reliable':'unreliable',px,py+14);return true;
+  });
+  ctx.fillStyle='#2a3a4a';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('@rpc controls who can call it and how it is delivered',W/2,H-8);
+}
+
+function vizAuthority(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const peers=[{id:'ID:1',tag:'HOST/SRV',color:'#7fff6b'},{id:'ID:42',tag:'Client A',color:'#3ecfff'},{id:'ID:91',tag:'Client B',color:'#ff6b9d'}];
+  const rows=['Player_42 node','Player_91 node','GameState node','World/Env'];
+  const owners=[1,2,0,0];
+  ctx.fillStyle='#ccd8e0';ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('WHICH PEER HAS AUTHORITY OVER WHICH NODE',W/2,14);
+  const colX=[W*.32,W*.56,W*.80];
+  peers.forEach((p,pi)=>{
+    ctx.fillStyle=p.color;ctx.font='bold 7px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(p.id,colX[pi],28);ctx.fillStyle=p.color+'88';ctx.font='6px Space Mono,monospace';
+    ctx.fillText(p.tag,colX[pi],38);
+  });
+  rows.forEach((row,ri)=>{
+    const y=46+ri*44;
+    ctx.fillStyle='#2a3a4a';ctx.font='7px Space Mono,monospace';ctx.textAlign='left';
+    ctx.fillText(row,6,y+16);
+    peers.forEach((p,pi)=>{
+      const x=colX[pi];const mine=pi===owners[ri];
+      ctx.fillStyle=mine?p.color+'28':'#0a0e16';ctx.fillRect(x-34,y,68,26);
+      ctx.strokeStyle=mine?p.color+'88':'#192030';ctx.lineWidth=mine?1.5:1;
+      ctx.strokeRect(x-34,y,68,26);
+      ctx.fillStyle=mine?p.color:'#2a3a4a';ctx.font=mine?'bold 8px Space Mono,monospace':'7px Space Mono,monospace';
+      ctx.textAlign='center';ctx.fillText(mine?'AUTHORITY':'puppet',x,y+16);
+    });
+  });
+  const pulse=Math.sin(t*2.5)*0.4+0.6;
+  ctx.strokeStyle=`rgba(127,255,107,${pulse*0.5})`;ctx.lineWidth=2;
+  ctx.strokeRect(colX[0]-36,46-2,72,30);
+  ctx.fillStyle='#4a6070';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('each peer controls their player · server controls shared state',W/2,H-6);
+}
+
+function vizLatency(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const rtt=65+Math.sin(t*0.4)*22,pxpm=W*0.68/300,t0=W*0.14,tlY=H*0.44;
+  ctx.strokeStyle='#192030';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(W*0.12,tlY);ctx.lineTo(W*0.88,tlY);ctx.stroke();
+  const evts=[
+    {off:0,lbl:['INPUT','PRESSED'],col:'#3ecfff',side:-1},
+    {off:rtt*.5,lbl:['SERVER','RECEIVES'],col:'#7fff6b',side:1},
+    {off:rtt*1.0,lbl:['SERVER','RESPONDS'],col:'#ffd080',side:-1},
+    {off:rtt*1.5,lbl:['CLIENT','SEES IT'],col:'#ff6b9d',side:1},
+  ];
+  evts.forEach(ev=>{
+    const x=t0+ev.off*pxpm;
+    ctx.fillStyle=ev.col;ctx.shadowBlur=6;ctx.shadowColor=ev.col;
+    ctx.beginPath();ctx.arc(x,tlY,6,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    const yBase=ev.side===-1?tlY-48:tlY+16;
+    ctx.strokeStyle=ev.col+'55';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(x,tlY+(ev.side===-1?-7:7));ctx.lineTo(x,yBase+(ev.side===1?0:22));ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=ev.col;ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+    ev.lbl.forEach((l,li)=>ctx.fillText(l,x,yBase+li*11));
+  });
+  const brY=tlY+70,brX=t0,brX2=t0+rtt*1.5*pxpm;
+  ctx.strokeStyle='#ff6b9d66';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(brX,brY);ctx.lineTo(brX2,brY);ctx.stroke();
+  [brX,brX2].forEach(x=>{ctx.beginPath();ctx.moveTo(x,brY-4);ctx.lineTo(x,brY+4);ctx.stroke();});
+  ctx.fillStyle='#ff6b9d';ctx.font='8px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText(`RTT ≈ ${Math.round(rtt*1.5)}ms`,lerp(brX,brX2,0.5),brY+15);
+  const barY=H*.76;
+  ['without prediction','with prediction'].forEach((lbl,bi)=>{
+    const y=barY+bi*26;
+    ctx.fillStyle='#0a0e16';ctx.fillRect(W*.1,y-5,W*.8,13);
+    const xP=((t*50+bi*14)%(W*.8));
+    ctx.fillStyle=bi===0?'#ff6b9d':'#3ecfff';
+    ctx.shadowBlur=bi===1?8:0;ctx.shadowColor='#3ecfff';
+    ctx.fillRect(W*.1+Math.max(0,xP-2),y-4,11,11);ctx.shadowBlur=0;
+    ctx.fillStyle=bi===0?'#ff6b9d':'#3ecfff';ctx.font='7px Space Mono,monospace';ctx.textAlign='left';
+    ctx.fillText(lbl,W*.1,y-9);
+  });
+}
+
+function vizStatesync(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const hH=H/2;
+  ctx.fillStyle='rgba(62,207,255,0.03)';ctx.fillRect(0,0,W,hH-3);
+  ctx.fillStyle='#3ecfff';ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('SNAPSHOTS — unreliable_ordered, 20/sec',8,15);
+  ctx.fillStyle='#4a6070';ctx.font='7px Space Mono,monospace';
+  ctx.fillText('full state broadcast; stale packets discarded automatically',8,26);
+  const snapW=W/5.5;
+  for(let i=0;i<8;i++){
+    const xOff=(t*snapW*.7)%snapW;
+    const x=i*snapW-xOff+16;
+    if(x<-10||x>W+10)continue;
+    const a=clamp(1-(x-W*.76)/(W*.22),0,1);
+    ctx.fillStyle=`rgba(62,207,255,${0.1*a})`;ctx.fillRect(x,34,snapW-7,hH-46);
+    ctx.strokeStyle=`rgba(62,207,255,${0.32*a})`;ctx.lineWidth=1;ctx.strokeRect(x,34,snapW-7,hH-46);
+    ctx.fillStyle=`rgba(62,207,255,${0.6*a})`;ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+    ['pos','vel','hp','anim'].forEach((k,ki)=>ctx.fillText(k,x+snapW/2-3,47+ki*11));
+  }
+  ctx.fillStyle='rgba(127,255,107,0.03)';ctx.fillRect(0,hH+3,W,hH-3);
+  ctx.fillStyle='#7fff6b';ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('EVENTS — reliable, on-demand only',8,hH+17);
+  ctx.fillStyle='#4a6070';ctx.font='7px Space Mono,monospace';
+  ctx.fillText('sent only when something happens — must never be dropped',8,hH+28);
+  const evCols={FIRE:'#ff6b9d',JUMP:'#3ecfff',HIT:'#ffd080',DIED:'#ff4444',SPAWN:'#7fff6b'};
+  const evKeys=Object.keys(evCols);
+  if(events2.length<8&&Math.random()<0.015)
+    events2.push({x:20,y:hH+44+Math.random()*(hH-60),type:evKeys[Math.floor(Math.random()*evKeys.length)],speed:1.5+Math.random()*2});
+  events2=events2.filter(ev=>{
+    ev.x+=ev.speed;
+    const c=evCols[ev.type];
+    ctx.fillStyle=c;ctx.shadowBlur=4;ctx.shadowColor=c;
+    ctx.beginPath();ctx.arc(ev.x,ev.y,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle=c;ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(ev.type,ev.x,ev.y-10);return ev.x<W+20;
+  });
+  ctx.strokeStyle='#192030';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,hH);ctx.lineTo(W,hH);ctx.stroke();
+}
+
+function vizPrediction(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const groundY=H*.52,speed=50;
+  const serverX=80+(t*speed%(W-120));
+  const predictX=80+((t+0.09)*speed%(W-120));
+  ctx.fillStyle='#0a0e16';ctx.fillRect(60,groundY+16,W-100,5);
+  ctx.fillStyle='#4a6070';ctx.font='7px Space Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('▸ Client predicts input immediately — zero perceived delay',8,14);
+  ctx.fillText('▸ Server truth arrives ~50ms later — compare and correct',8,24);
+  ctx.fillText('▸ Mismatch triggers reconcile: snap to server + replay inputs',8,34);
+  ctx.fillStyle='rgba(127,255,107,0.22)';ctx.beginPath();ctx.arc(serverX,groundY,15,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#7fff6b55';ctx.lineWidth=1;ctx.beginPath();ctx.arc(serverX,groundY,15,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='#7fff6b';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('SERVER',serverX,groundY+3);ctx.fillText('TRUTH',serverX,groundY+12);
+  ctx.fillStyle='rgba(62,207,255,0.9)';ctx.shadowBlur=10;ctx.shadowColor='#3ecfff';
+  ctx.beginPath();ctx.arc(predictX,groundY,15,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle='#000';ctx.font='bold 7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('CLIENT',predictX,groundY+3);ctx.fillText('PRED.',predictX,groundY+12);
+  const err=Math.abs(predictX-serverX);
+  if(err>3){
+    ctx.strokeStyle='#ffd08077';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(serverX,groundY-22);ctx.lineTo(predictX,groundY-22);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#ffd080';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(`error: ${Math.round(err)}px`,lerp(serverX,predictX,.5),groundY-28);
+  }
+  const cp=t%4.5;
+  if(cp>3.8){
+    const a=clamp(1-(cp-3.8)/.7,0,1);
+    ctx.fillStyle=`rgba(255,100,50,${a})`;ctx.font='bold 10px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('⚡ RECONCILE: snap + replay inputs',W/2,groundY-52);
+  }
+  ctx.fillStyle='#7fff6b';ctx.font='7px Space Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('▪ ghost = server truth (delayed)',8,H-16);
+  ctx.fillStyle='#3ecfff';ctx.fillText('▪ solid = client prediction (instant)',8,H-5);
+}
+
+function vizRollback(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const N=12,tickW=(W-50)/N,tlY=H*.44,phase=t%7;
+  ctx.strokeStyle='#3ecfff33';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(22,tlY);ctx.lineTo(W-22,tlY);ctx.stroke();
+  for(let i=0;i<N;i++){
+    const x=25+i*tickW+tickW/2;
+    const late=i===7,rb=phase>2.5&&i>=7;
+    ctx.strokeStyle=late?'#ffd080':rb?'#ff6b9d':'#3ecfff55';
+    ctx.lineWidth=late||rb?2:1;
+    ctx.beginPath();ctx.moveTo(x,tlY-8);ctx.lineTo(x,tlY+8);ctx.stroke();
+    ctx.fillStyle=late?'#ffd080':rb?'#ff6b9d':'#4a6070';
+    ctx.font='7px Space Mono,monospace';ctx.textAlign='center';ctx.fillText(`T${i+1}`,x,tlY+20);
+  }
+  for(let i=0;i<N;i++){
+    const x=25+i*tickW+tickW/2;
+    const saved=phase<2?i<Math.floor(phase/2*N):i<8;
+    ctx.fillStyle=saved?'#7fff6b':'#192030';ctx.shadowBlur=saved?4:0;ctx.shadowColor='#7fff6b';
+    ctx.beginPath();ctx.arc(x,tlY,4.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  }
+  const lateX=25+7*tickW+tickW/2;
+  if(phase>1.8){
+    const a=clamp((phase-1.8)/.6,0,1);
+    ctx.fillStyle=`rgba(255,208,128,${a})`;ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('LATE INPUT — for tick T8',lateX,tlY-44);
+    ctx.strokeStyle=`rgba(255,208,128,${a})`;ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(lateX,tlY-30);ctx.lineTo(lateX,tlY-12);
+    ctx.moveTo(lateX-5,tlY-16);ctx.lineTo(lateX,tlY-10);ctx.lineTo(lateX+5,tlY-16);ctx.stroke();
+  }
+  if(phase>3.5){
+    const a=clamp((phase-3.5)/.6,0,1);
+    const endX=25+(N-1)*tickW+tickW/2;
+    ctx.strokeStyle=`rgba(255,107,157,${a})`;ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(endX,tlY+36);ctx.lineTo(lateX,tlY+36);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(lateX+7,tlY+30);ctx.lineTo(lateX,tlY+36);ctx.lineTo(lateX+7,tlY+42);ctx.stroke();
+    ctx.fillStyle=`rgba(255,107,157,${a})`;ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('← ROLLBACK',lerp(lateX,endX,.5),tlY+50);
+  }
+  if(phase>5){
+    const a=clamp((phase-5)/.5,0,1);
+    for(let i=7;i<N;i++){
+      const x=25+i*tickW+tickW/2;
+      ctx.fillStyle=`rgba(192,159,255,${a})`;ctx.beginPath();ctx.arc(x,tlY,4.5,0,Math.PI*2);ctx.fill();
+    }
+    ctx.fillStyle=`rgba(192,159,255,${a})`;ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('RESIMULATE →',25+9*tickW,tlY-24);
+  }
+  ctx.fillStyle='#7fff6b';ctx.font='7px Space Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('▪ green=saved state  ',8,H-8);
+  ctx.fillStyle='#ffd080';ctx.fillText('▪ orange=late input  ',120,H-8);
+  ctx.fillStyle='#ff6b9d';ctx.fillText('▪ pink=rollback zone',242,H-8);
+}
+
+function vizWebrtc(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  function nd(x,y,lbl,sub,color,r=22){
+    ctx.fillStyle=color+'1e';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle=color;ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(lbl,x,y+(sub?-2:4));
+    if(sub){ctx.fillStyle=color+'88';ctx.font='6px Space Mono,monospace';ctx.fillText(sub,x,y+10);}
+  }
+  function eln(x1,y1,x2,y2,c,dash){
+    ctx.strokeStyle=c+'55';ctx.lineWidth=1.2;
+    ctx.setLineDash(dash?[4,5]:[]);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.setLineDash([]);
+  }
+  const sigX=W/2,sigY=H*.2,alX=W*.2,alY=H*.7,boX=W*.8,boY=H*.7,stunX=W*.5,stunY=H*.88;
+  nd(sigX,sigY,'SIGNAL','server','#ffd080',26);
+  nd(alX,alY,'ALICE','peer','#3ecfff',22);
+  nd(boX,boY,'BOB','peer','#ff6b9d',22);
+  nd(stunX,stunY,'STUN','helper','#c09fff',16);
+  const phases=['1: Alice sends SDP offer via signal server',
+    '2: Signal relays offer to Bob','3: Bob creates SDP answer',
+    '4: Signal relays answer to Alice','5: ICE candidates exchanged',
+    '6: STUN discovers public addresses','✓ Direct P2P connection open'];
+  const ph=Math.floor(t*.8)%phases.length;
+  const activeCol=['#ffd080','#ffd080','#ff6b9d','#ff6b9d','#3ecfff','#c09fff','#7fff6b'][ph];
+  eln(sigX,sigY+26,alX,alY-22,'#ffd080',ph<2);
+  eln(sigX,sigY+26,boX,boY-22,'#ffd080',ph>=2&&ph<5);
+  if(ph>=4)eln(alX,alY,boX,boY,'#7fff6b',false);
+  if(ph>=5)eln(lerp(alX,boX,.3),lerp(alY,boY,.3),stunX,stunY,'#c09fff',true);
+  ctx.fillStyle=activeCol;ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText(phases[ph],W/2,32);
+  if(ph<6){
+    const fx=ph<4?lerp(sigX,ph<2?alX:boX,(t*.8%1)):lerp(alX,stunX,(t*.8%1));
+    const fy=ph<4?lerp(sigY+26,ph<2?alY-22:boY-22,(t*.8%1)):lerp(alY,stunY,(t*.8%1));
+    ctx.fillStyle=activeCol;ctx.shadowBlur=8;ctx.shadowColor=activeCol;
+    ctx.beginPath();ctx.arc(fx,fy,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  }
+}
+
+function vizScenetree(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  function box(x,y,w,h,lbl,sub,color){
+    ctx.fillStyle=color+'1a';ctx.fillRect(x,y,w,h);
+    ctx.strokeStyle=color+'66';ctx.lineWidth=1;ctx.strokeRect(x,y,w,h);
+    ctx.fillStyle=color;ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(lbl,x+w/2,y+h/2+(sub?-2:4));
+    if(sub){ctx.fillStyle=color+'88';ctx.font='6px Space Mono,monospace';ctx.fillText(sub,x+w/2,y+h/2+9);}
+  }
+  function line(x1,y1,x2,y2,c){
+    ctx.strokeStyle=c+'55';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.setLineDash([]);
+  }
+  const cx=W/2,pulse=Math.sin(t*2)*0.3+0.7;
+  box(cx-55,8,110,28,'Main','Node','#ffd080');
+  const children=[
+    {lbl:'Players',sub:'MultiplayerSpawner',c:'#3ecfff',x:W*.22},
+    {lbl:'World',sub:'environment',c:'#7fff6b',x:W*.5},
+    {lbl:'GameState',sub:'auth=server',c:'#ff6b9d',x:W*.78},
+  ];
+  children.forEach(ch=>{
+    box(ch.x-48,54,96,28,ch.lbl,ch.sub,ch.c);
+    line(cx,36,ch.x,54,ch.c);
+  });
+  const players=[{id:'ID:1',c:'#7fff6b'},{id:'ID:42',c:'#3ecfff'},{id:'ID:91',c:'#ff6b9d'}];
+  players.forEach((p,pi)=>{
+    const x=W*.22-40+pi*40,y=104;
+    box(x-16,y,36,22,p.id,'','',);
+    ctx.fillStyle=p.c+'18';ctx.fillRect(x-16,y,36,22);
+    ctx.strokeStyle=p.c+'66';ctx.lineWidth=1;ctx.strokeRect(x-16,y,36,22);
+    ctx.fillStyle=p.c;ctx.font='7px Space Mono,monospace';ctx.textAlign='center';ctx.fillText(p.id,x+2,y+13);
+    line(W*.22,82,x+2,y,p.c);
+    ctx.strokeStyle=`${p.c}${Math.round(pulse*60).toString(16).padStart(2,'0')}`;
+    ctx.lineWidth=1.5;ctx.strokeRect(x-18,y-2,40,26);
+  });
+  ctx.fillStyle='#4a6070';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('player nodes named by peer ID · authority set to matching peer',W/2,H*.65);
+  ctx.fillStyle='#3ecfff';ctx.font='8px Space Mono,monospace';
+  ctx.fillText('multiplayer.peer_connected → spawn   peer_disconnected → queue_free',W/2,H*.78);
+  ctx.fillStyle='#ffd080';ctx.font='8px Space Mono,monospace';
+  ctx.fillText('host_game() / join_game() → ENetMultiplayerPeer → multiplayer_peer',W/2,H*.9);
+}
+
+function vizSecurity(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const srX=W/2,srY=H*.4;
+  // Shield
+  ctx.fillStyle='rgba(127,255,107,0.12)';ctx.beginPath();ctx.arc(srX,srY,36,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#7fff6b';ctx.lineWidth=2;ctx.beginPath();ctx.arc(srX,srY,36,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='#7fff6b';ctx.font='bold 11px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('SERVER',srX,srY-4);ctx.fillStyle='#7fff6b66';ctx.font='8px Space Mono,monospace';
+  ctx.fillText('VALIDATES',srX,srY+9);
+  // Clients
+  const clients=[
+    {x:W*.12,y:H*.3,color:'#3ecfff',lbl:'Client A',ok:true},
+    {x:W*.12,y:H*.6,color:'#c09fff',lbl:'Client B',ok:true},
+    {x:W*.88,y:H*.45,color:'#ff6b9d',lbl:'CHEATER',ok:false},
+  ];
+  clients.forEach((cl,ci)=>{
+    ctx.fillStyle=cl.color+'18';ctx.fillRect(cl.x-34,cl.y-14,68,28);
+    ctx.strokeStyle=cl.color+(cl.ok?'66':'cc');ctx.lineWidth=cl.ok?1:2;
+    ctx.strokeRect(cl.x-34,cl.y-14,68,28);
+    ctx.fillStyle=cl.color;ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(cl.lbl,cl.x,cl.y+3);
+    // Packet animation
+    const ph=(t*.9+ci*.6)%1;
+    const px=lerp(cl.x,srX,ph),py=lerp(cl.y,srY,ph);
+    if(!cl.ok&&ph>.62){
+      ctx.fillStyle='rgba(255,80,50,0.9)';ctx.font='bold 10px Space Mono,monospace';ctx.textAlign='center';
+      ctx.fillText('✕ BLOCKED',lerp(cl.x,srX,.7),lerp(cl.y,srY,.7)-14);
+    } else {
+      ctx.fillStyle=cl.ok?cl.color:'#ff5030';ctx.shadowBlur=6;ctx.shadowColor=cl.color;
+      ctx.beginPath();ctx.arc(px,py,4.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+      ctx.fillStyle=cl.ok?cl.color:'#ff5030';ctx.font='6px Space Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(cl.ok?'input only':'i_won_rpc',px,py-10);
+    }
+  });
+  ctx.fillStyle='#4a6070';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('get_remote_sender_id() inside @rpc — always know who is talking',W/2,H-8);
+}
+
+// ─────────────────────────────────────────────
+// RENDER LOOP
+// ─────────────────────────────────────────────
+// ══ VIZ: TICK LOOP ══
+function vizTickloop(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const fps=60,tickHz=60,barH=22;
+  // Real frames (variable)
+  ctx.fillStyle='#3ecfff22';ctx.fillRect(0,30,W,barH);
+  ctx.strokeStyle='#3ecfff44';ctx.lineWidth=1;ctx.strokeRect(0,30,W,barH);
+  ctx.fillStyle='#3ecfff';ctx.font='7px Space Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('RENDER FRAMES (variable delta)',6,24);
+  const frameDurations=[16,17,15,33,16,16,14,17,16,16,22,15];
+  let rx=0;
+  frameDurations.forEach((dur,i)=>{
+    const fw=dur/100*W*.9;
+    const col=dur>20?'#ff6b9d':dur<14?'#ffd080':'#3ecfff';
+    ctx.fillStyle=col+'55';ctx.fillRect(rx+2,31,fw-2,barH-2);
+    ctx.strokeStyle=col+'88';ctx.lineWidth=1;ctx.strokeRect(rx+2,31,fw-2,barH-2);
+    ctx.fillStyle=col;ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(dur+'ms',rx+fw/2,31+barH/2+3);
+    rx+=fw;
+  });
+  // Tick marks (fixed)
+  ctx.fillStyle='#7fff6b22';ctx.fillRect(0,72,W,barH);
+  ctx.strokeStyle='#7fff6b44';ctx.lineWidth=1;ctx.strokeRect(0,72,W,barH);
+  ctx.fillStyle='#7fff6b';ctx.font='7px Space Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('TICK LOOP (fixed 16.67ms always)',6,66);
+  const nTicks=Math.floor(W*0.9/17);
+  for(let i=0;i<nTicks;i++){
+    const tx2=i*(W*.9/nTicks);
+    ctx.fillStyle='#7fff6b44';ctx.fillRect(tx2+2,73,W*.9/nTicks-3,barH-2);
+    ctx.strokeStyle='#7fff6b55';ctx.lineWidth=1;ctx.strokeRect(tx2+2,73,W*.9/nTicks-3,barH-2);
+    ctx.fillStyle='#7fff6b';ctx.font='6px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('T'+(i+1),tx2+W*.9/nTicks/2,73+barH/2+3);
+  }
+  // Accumulator animation
+  const accY=118;
+  ctx.fillStyle='#ccd8e0';ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('TICK ACCUMULATOR',6,accY-4);
+  const accPhase=(t*.8)%1;
+  const accVal=(accPhase*34)%17;
+  const maxW=W-60;
+  ctx.fillStyle='#0a0e16';ctx.fillRect(6,accY,maxW,16);
+  ctx.fillStyle=accVal>14?'#ff6b9d55':'#7fff6b55';ctx.fillRect(6,accY,accVal/17*maxW,16);
+  ctx.strokeStyle='#7fff6b55';ctx.lineWidth=1;ctx.strokeRect(6,accY,maxW,16);
+  ctx.strokeStyle='#7fff6b';ctx.setLineDash([3,3]);
+  const threshX=6+17/17*maxW;
+  ctx.beginPath();ctx.moveTo(threshX,accY-4);ctx.lineTo(threshX,accY+20);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#7fff6b';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('TICK_DELTA',threshX,accY+28);
+  ctx.fillStyle='#ffd080';ctx.textAlign='right';
+  ctx.fillText(`accum: ${accVal.toFixed(1)}ms`,W-6,accY+28);
+  if(accVal>14){
+    ctx.fillStyle='rgba(255,107,157,0.8)';ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('⚡ FIRE TICK',W/2,accY+28);
+  }
+  // Interpolation
+  const intY=H*.72;
+  ctx.fillStyle='#ccd8e0';ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('RENDER INTERPOLATION  alpha = accum / TICK_DELTA',6,intY-4);
+  const alpha=accVal/17;
+  const p1=W*.15,p2=W*.85;
+  ctx.strokeStyle='#192030';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(p1,intY+10);ctx.lineTo(p2,intY+10);ctx.stroke();
+  ctx.fillStyle='#7fff6b66';ctx.beginPath();ctx.arc(p1,intY+10,7,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#7fff6b';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';ctx.fillText('last tick',p1,intY+24);
+  ctx.fillStyle='#3ecfff66';ctx.beginPath();ctx.arc(p2,intY+10,7,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#3ecfff';ctx.fillText('next tick',p2,intY+24);
+  const renderX=lerp(p1,p2,alpha);
+  ctx.fillStyle='#ffd080';ctx.shadowBlur=8;ctx.shadowColor='#ffd080';
+  ctx.beginPath();ctx.arc(renderX,intY+10,6,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle='#ffd080';ctx.fillText(`render (α=${alpha.toFixed(2)})`,renderX,intY+24);
+}
+
+// ══ VIZ: STATE SERIALIZE ══
+function vizStateserialize(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const fields=[
+    {k:'position',v:'(142.3, 80.1)',c:'#3ecfff'},
+    {k:'velocity',v:'(2.4, 0.0)',c:'#3ecfff'},
+    {k:'health',v:'85',c:'#7fff6b'},
+    {k:'facing',v:'1 (right)',c:'#7fff6b'},
+    {k:'anim_frame',v:'3',c:'#ffd080'},
+    {k:'anim_progress',v:'0.42',c:'#ffd080'},
+    {k:'attack_cooldown',v:'12',c:'#ff6b9d'},
+    {k:'is_invincible',v:'false',c:'#c09fff'},
+    {k:'jumps_remaining',v:'1',c:'#c09fff'},
+  ];
+  const MAX_ROLLBACK=8;
+  const ph=Math.floor(t*.5)%MAX_ROLLBACK;
+  // History column headers
+  ctx.fillStyle='#ccd8e0';ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('STATE HISTORY BUFFER (last '+MAX_ROLLBACK+' ticks)',W/2,12);
+  const colW=Math.min((W-140)/MAX_ROLLBACK,38),startX=138;
+  for(let i=0;i<MAX_ROLLBACK;i++){
+    const x=startX+i*colW+colW/2;
+    ctx.fillStyle=i===ph?'#ff6b9d':'#4a6070';
+    ctx.font='6px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(`T-${MAX_ROLLBACK-i}`,x,22);
+  }
+  ctx.fillStyle='#3ecfff';ctx.font='bold 7px Space Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('← restore here on rollback',startX+ph*colW-2,22);
+  fields.forEach((f,fi)=>{
+    const y=30+fi*((H-36)/fields.length);
+    ctx.fillStyle='#0a0e16';ctx.fillRect(2,y,128,14);
+    ctx.strokeStyle=f.c+'44';ctx.lineWidth=1;ctx.strokeRect(2,y,128,14);
+    ctx.fillStyle=f.c;ctx.font='7px Space Mono,monospace';ctx.textAlign='left';
+    ctx.fillText(f.k,6,y+10);
+    for(let i=0;i<MAX_ROLLBACK;i++){
+      const x=startX+i*colW;
+      const isActive=i===ph;
+      ctx.fillStyle=isActive?f.c+'28':'#0c1018';ctx.fillRect(x,y,colW-2,14);
+      ctx.strokeStyle=isActive?f.c+'66':'#192030';ctx.lineWidth=isActive?1.5:1;
+      ctx.strokeRect(x,y,colW-2,14);
+      ctx.fillStyle=isActive?f.c:'#2a3a4a';ctx.font='6px Space Mono,monospace';ctx.textAlign='center';
+      if(i===MAX_ROLLBACK-1) ctx.fillText(f.v.split(' ')[0],x+colW/2,y+10);
+      else ctx.fillText('...',x+colW/2,y+10);
+    }
+  });
+  ctx.fillStyle='#4a6070';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('entity.save_state() → Dictionary   |   entity.load_state(snapshot) → restore',W/2,H-6);
+}
+
+// ══ VIZ: INPUT SYNC ══
+function vizInputsync(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const ph=(t*0.5)%1;
+  const TICKS=10,tickW=(W-80)/TICKS;
+  const peerY=[H*.28,H*.60];
+  const peerCol=['#3ecfff','#ff6b9d'];
+  const peerLbl=['LOCAL (you)','REMOTE (peer)'];
+  const localInputs=[1,1,0,1,1,0,0,1,1,0];
+  const remoteInputs=[1,0,1,1,0,0,1,1,0,1];
+  const remoteDelay=3;
+  const curTick=Math.floor(t*4)%TICKS;
+  peerY.forEach((py,pi)=>{
+    ctx.fillStyle=peerCol[pi];ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='left';
+    ctx.fillText(peerLbl[pi],8,py-10);
+    ctx.strokeStyle=peerCol[pi]+'33';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(40,py);ctx.lineTo(W-10,py);ctx.stroke();
+    for(let i=0;i<TICKS;i++){
+      const x=40+i*tickW+tickW/2;
+      const inputs=pi===0?localInputs:remoteInputs;
+      const isArrived=pi===0 ? i<=curTick : i<=(curTick-remoteDelay);
+      const isPredicted=pi===1 && i>curTick-remoteDelay && i<=curTick;
+      const hasInput=inputs[i%inputs.length]>0;
+      let col=isArrived?peerCol[pi]:isPredicted?'#ffd080':'#192030';
+      ctx.fillStyle=col+(isArrived?'':'44');ctx.shadowBlur=isArrived?5:0;ctx.shadowColor=col;
+      ctx.beginPath();ctx.arc(x,py,8,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+      ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.strokeRect(x-11,py-20,22,12);
+      ctx.fillStyle=col;ctx.font='bold 7px Space Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(hasInput?'▶':'—',x,py-12);
+      ctx.fillStyle='#4a6070';ctx.font='6px Space Mono,monospace';ctx.textAlign='center';
+      ctx.fillText('T'+(i+1),x,py+20);
+      if(isPredicted){
+        ctx.fillStyle='#ffd080';ctx.font='6px Space Mono,monospace';ctx.textAlign='center';
+        ctx.fillText('GUESS',x,py+30);
+      }
+    }
+  });
+  // Delay bracket
+  const bracketX=40+(curTick-remoteDelay)*tickW+tickW/2;
+  const bracketX2=40+curTick*tickW+tickW/2;
+  if(bracketX<bracketX2){
+    const by=H*.44;
+    ctx.strokeStyle='#ffd08066';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(bracketX,by);ctx.lineTo(bracketX2,by);ctx.stroke();
+    [bracketX,bracketX2].forEach(x=>{ctx.beginPath();ctx.moveTo(x,by-4);ctx.lineTo(x,by+4);ctx.stroke();});
+    ctx.fillStyle='#ffd080';ctx.font='8px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(`~${remoteDelay*16}ms delay`,lerp(bracketX,bracketX2,.5),by+14);
+  }
+  // Legend
+  ctx.fillStyle='#3ecfff';ctx.font='7px Space Mono,monospace';ctx.textAlign='left';ctx.fillText('▪ arrived',8,H-26);
+  ctx.fillStyle='#ffd080';ctx.fillText('▪ predicted (guessed)',80,H-26);
+  ctx.fillStyle='#192030';ctx.strokeStyle='#192030';
+  ctx.fillStyle='#4a6070';ctx.fillText('▪ future',230,H-26);
+  ctx.fillStyle='#4a6070';ctx.fillText('redundancy: each packet contains last 3 frames → survives packet loss',8,H-12);
+}
+
+// ══ VIZ: ROLLBACK FLOW ══
+function vizRollbackflow(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const phase=Math.floor(t*.7)%7;
+  const steps=[
+    {lbl:'1. Read\nlocal input',c:'#3ecfff',x:.12},
+    {lbl:'2. Predict\nremote',c:'#ffd080',x:.27},
+    {lbl:'3. Save\nstate',c:'#7fff6b',x:.42},
+    {lbl:'4. Simulate\ntick',c:'#c09fff',x:.57},
+    {lbl:'5. Send\ninput',c:'#ff9d6b',x:.72},
+    {lbl:'6. Cleanup\nhistory',c:'#4a6070',x:.87},
+  ];
+  const nodeY=H*.45;
+  steps.forEach((s,i)=>{
+    const x=s.x*W;
+    const active=i===phase%6;
+    ctx.fillStyle=active?s.c+'28':'#0a0e16';
+    ctx.strokeStyle=active?s.c:s.c+'44';ctx.lineWidth=active?2:1;
+    ctx.beginPath();ctx.arc(x,nodeY,28,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle=active?s.c:'#4a6070';ctx.font=active?'bold 7px Space Mono,monospace':'6px Space Mono,monospace';
+    ctx.textAlign='center';
+    s.lbl.split('\n').forEach((l,li)=>ctx.fillText(l,x,nodeY+(li===0?-5:8)));
+    if(i<steps.length-1){
+      const nx=steps[i+1].x*W;
+      ctx.strokeStyle=i<phase%6?s.c+'88':'#192030';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(x+28,nodeY);ctx.lineTo(nx-28,nodeY);ctx.stroke();
+    }
+  });
+  // Moving dot
+  if(phase<6){
+    const curS=steps[phase],nxtS=steps[Math.min(phase+1,5)];
+    const frac=(t*.7%1);
+    const px=lerp(curS.x*W,nxtS.x*W,frac);
+    ctx.fillStyle=curS.c;ctx.shadowBlur=8;ctx.shadowColor=curS.c;
+    ctx.beginPath();ctx.arc(px,nodeY,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  }
+  // Rollback branch
+  const rollY=H*.78;
+  ctx.strokeStyle='#ff6b9d55';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(steps[3].x*W,nodeY+28);ctx.lineTo(steps[3].x*W,rollY);
+  ctx.lineTo(steps[2].x*W,rollY);ctx.lineTo(steps[2].x*W,nodeY+28);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(steps[2].x*W+5,nodeY+34);ctx.lineTo(steps[2].x*W,nodeY+28);ctx.lineTo(steps[2].x*W-5,nodeY+34);ctx.stroke();
+  ctx.fillStyle='#ff6b9d';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('rollback path: late input → restore → resimulate',lerp(steps[2].x,steps[3].x,0.5)*W,rollY+14);
+  ctx.fillStyle='#ccd8e0';ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('NORMAL TICK LOOP (runs 60× per second)',W/2,18);
+  if(phase===6){
+    ctx.fillStyle='rgba(255,107,157,0.85)';ctx.font='bold 9px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('⚡ LATE INPUT — ROLLING BACK',W/2,nodeY-48);
+  }
+}
+
+// ══ VIZ: DESYNC ══
+function vizDesync(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const ph=(t*.25)%1;
+  const INTERVAL=15,TICKS=30,tickW=(W-60)/TICKS;
+  // Two machines
+  const machineY=[H*.32,H*.62];
+  const machineCol=['#3ecfff','#7fff6b'];
+  const machineLbl=['MACHINE A (you)','MACHINE B (peer)'];
+  // Desync appears at tick 19
+  const desyncAt=19;
+  const curTick=Math.floor(t*3.5)%TICKS;
+  machineY.forEach((my,mi)=>{
+    ctx.fillStyle=machineCol[mi];ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='left';
+    ctx.fillText(machineLbl[mi],8,my-10);
+    ctx.strokeStyle=machineCol[mi]+'22';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(28,my);ctx.lineTo(W-8,my);ctx.stroke();
+    for(let i=0;i<TICKS;i++){
+      const x=28+i*tickW+tickW/2;
+      const simulated=i<=curTick;
+      const isCheck=i%INTERVAL===0&&simulated;
+      const desynced=i>=desyncAt&&mi===1;
+      const col=desynced&&simulated?'#ff6b9d':machineCol[mi];
+      if(simulated){
+        ctx.fillStyle=col+(isCheck?'':'44');ctx.shadowBlur=isCheck?6:0;ctx.shadowColor=col;
+        ctx.beginPath();ctx.arc(x,my,isCheck?8:4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+        if(isCheck){
+          ctx.strokeStyle=desynced?'#ff6b9d':col;ctx.lineWidth=1.5;
+          ctx.beginPath();ctx.arc(x,my,12,0,Math.PI*2);ctx.stroke();
+          ctx.fillStyle=desynced?'#ff6b9d':col;ctx.font='6px Space Mono,monospace';ctx.textAlign='center';
+          ctx.fillText(desynced?'HASH\nBAD':'HASH\nOK',x,my+(desynced?-22:-22));
+        }
+      }
+    }
+  });
+  // Mismatch callout
+  const desx=28+desyncAt*tickW+tickW/2;
+  if(curTick>=desyncAt){
+    const a=clamp((curTick-desyncAt)/5,0,1);
+    ctx.strokeStyle=`rgba(255,107,157,${a*.6})`;ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(desx,machineY[0]+12);ctx.lineTo(desx,machineY[1]-12);ctx.stroke();
+    ctx.fillStyle=`rgba(255,107,157,${a})`;ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('DESYNC',desx,H*.47);ctx.font='7px Space Mono,monospace';
+    ctx.fillText('checksums differ',desx,H*.47+12);
+  }
+  // Checksum intervals
+  ctx.strokeStyle='#ffd08033';ctx.lineWidth=1;ctx.setLineDash([2,4]);
+  for(let i=0;i<TICKS;i+=INTERVAL){
+    const x=28+i*tickW+tickW/2;
+    ctx.beginPath();ctx.moveTo(x,machineY[0]-18);ctx.lineTo(x,machineY[1]+18);ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.fillStyle='#ffd080';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('checksum broadcast every '+INTERVAL+' ticks',W/2,H-18);
+  ctx.fillStyle='#4a6070';ctx.fillText('non-deterministic element caused state divergence at T'+desyncAt,W/2,H-6);
+}
+
+// ══ VIZ: BROWSER COMPAT ══
+function vizBrowsercompat(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const cols=['#3ecfff','#7fff6b','#ff6b9d'];
+  const browsers=['Native\n(Desktop)','WebSocket\n(Browser)','WebRTC\n(Browser)'];
+  const techs=['ENet','WebSocket','WebRTC P2P','STUN/TURN'];
+  const support=[[1,0,0,0],[1,1,0,0],[1,1,1,1]]; // 1=yes 0=no per tech
+  const bW=(W-60)/3,rowH=32,startY=56;
+  // Header
+  ctx.fillStyle='#ccd8e0';ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('WHICH TRANSPORT WORKS WHERE',W/2,14);
+  browsers.forEach((b,bi)=>{
+    const x=30+bi*bW+bW/2;
+    ctx.fillStyle=cols[bi];ctx.font='bold 7px Space Mono,monospace';ctx.textAlign='center';
+    b.split('\n').forEach((l,li)=>ctx.fillText(l,x,30+li*11));
+  });
+  techs.forEach((tech,ti)=>{
+    const y=startY+ti*rowH;
+    ctx.fillStyle='#0a0e16';ctx.fillRect(4,y,50,rowH-2);
+    ctx.strokeStyle='#192030';ctx.lineWidth=1;ctx.strokeRect(4,y,50,rowH-2);
+    ctx.fillStyle='#9ab0c0';ctx.font='7px Space Mono,monospace';ctx.textAlign='left';
+    ctx.fillText(tech,7,y+rowH/2+3);
+    browsers.forEach((_,bi)=>{
+      const x=30+bi*bW;const ok=support[bi][ti]===1;
+      ctx.fillStyle=ok?cols[bi]+'28':'#ff6b9d18';ctx.fillRect(x+4,y,bW-8,rowH-2);
+      ctx.strokeStyle=ok?cols[bi]+'55':'#ff6b9d44';ctx.lineWidth=1;ctx.strokeRect(x+4,y,bW-8,rowH-2);
+      ctx.fillStyle=ok?cols[bi]:'#ff6b9d';ctx.font='bold 11px Space Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(ok?'✓':'✗',x+bW/2,y+rowH/2+4);
+    });
+  });
+  // Recommendation
+  const recY=startY+techs.length*rowH+14;
+  ctx.fillStyle='#7fff6b';ctx.font='7px Space Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('▸ Desktop only?  Use ENet. End of story.',8,recY);
+  ctx.fillStyle='#3ecfff';ctx.fillText('▸ Browser + server?  Use WebSocket.',8,recY+14);
+  ctx.fillStyle='#ff6b9d';ctx.fillText('▸ Browser + no server costs?  Use WebRTC (lessons 16–18).',8,recY+28);
+}
+
+// ══ VIZ: SDP ══
+function vizSdp(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const phase=Math.floor(t*0.6)%6;
+  const steps=[
+    {from:'ALICE',to:'SIGNAL',msg:'create_offer()',color:'#3ecfff'},
+    {from:'SIGNAL',to:'BOB',msg:'forward offer SDP',color:'#ffd080'},
+    {from:'BOB',to:'SIGNAL',msg:'create_answer()',color:'#ff6b9d'},
+    {from:'SIGNAL',to:'ALICE',msg:'forward answer SDP',color:'#ffd080'},
+    {from:'ALICE',to:'BOB',msg:'ICE candidates (via signal)',color:'#c09fff'},
+    {from:'BOB',to:'ALICE',msg:'ICE candidates (via signal)',color:'#c09fff'},
+  ];
+  const nodes={
+    ALICE:{x:W*.12,y:H*.5,c:'#3ecfff'},
+    SIGNAL:{x:W*.5,y:H*.2,c:'#ffd080'},
+    BOB:{x:W*.88,y:H*.5,c:'#ff6b9d'},
+  };
+  // Draw nodes
+  Object.entries(nodes).forEach(([name,n])=>{
+    ctx.fillStyle=n.c+'20';ctx.beginPath();ctx.arc(n.x,n.y,26,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=n.c;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(n.x,n.y,26,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle=n.c;ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(name,n.x,n.y+4);
+  });
+  // Draw completed steps
+  steps.forEach((s,i)=>{
+    if(i>=phase)return;
+    const fn=nodes[s.from],tn=nodes[s.to];
+    ctx.strokeStyle=s.color+'44';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+    ctx.beginPath();ctx.moveTo(fn.x,fn.y);ctx.lineTo(tn.x,tn.y);ctx.stroke();ctx.setLineDash([]);
+  });
+  // Animate current step
+  if(phase<steps.length){
+    const s=steps[phase];
+    const fn=nodes[s.from],tn=nodes[s.to];
+    const frac=(t*0.6%1);
+    const px=lerp(fn.x,tn.x,frac),py=lerp(fn.y,tn.y,frac);
+    ctx.strokeStyle=s.color;ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(fn.x,fn.y);ctx.lineTo(tn.x,tn.y);ctx.stroke();
+    ctx.fillStyle=s.color;ctx.shadowBlur=8;ctx.shadowColor=s.color;
+    ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle=s.color;ctx.font='bold 7px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(s.msg,lerp(fn.x,tn.x,.5),lerp(fn.y,tn.y,.5)-10);
+  }
+  // P2P connection after step 4
+  if(phase>=5){
+    ctx.strokeStyle='#7fff6b';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(nodes.ALICE.x+26,nodes.ALICE.y);ctx.lineTo(nodes.BOB.x-26,nodes.BOB.y);ctx.stroke();
+    ctx.fillStyle='#7fff6b';ctx.font='bold 8px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('✓ DIRECT P2P',W/2,nodes.ALICE.y+16);
+  }
+  // Step label
+  const labels=['1. Alice creates offer SDP','2. Signal forwards to Bob','3. Bob creates answer SDP','4. Signal forwards to Alice','5. ICE trickle begins','6. Best route selected — connected!'];
+  ctx.fillStyle='#ccd8e0';ctx.font='8px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText(labels[Math.min(phase,5)],W/2,H-12);
+}
+
+// ══ VIZ: NAT TRAVERSAL ══
+function vizNattraversal(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  // Diagram: Alice | NAT A | INTERNET | NAT B | Bob | STUN | TURN
+  function box(x,y,w,h,lbl,sub,c){
+    ctx.fillStyle=c+'18';ctx.fillRect(x,y,w,h);
+    ctx.strokeStyle=c+'66';ctx.lineWidth=1;ctx.strokeRect(x,y,w,h);
+    ctx.fillStyle=c;ctx.font='bold 7px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(lbl,x+w/2,y+h/2+(sub?-3:4));
+    if(sub){ctx.fillStyle=c+'88';ctx.font='6px Space Mono,monospace';ctx.fillText(sub,x+w/2,y+h/2+8);}
+  }
+  const ph=Math.floor(t*0.5)%4;
+  const phLabel=['Candidate: HOST (LAN)','Candidate: SRFLX (STUN → public IP)','ICE probing direct routes...','Fallback: TURN relay'];
+  const bH=30;
+  box(2,H*.35,55,bH,'ALICE','peer','#3ecfff');
+  box(62,H*.35,50,bH,'NAT A','router','#ffd080');
+  box(W/2-40,H*.35,80,bH,'INTERNET','','#4a6070');
+  box(W-115,H*.35,50,bH,'NAT B','router','#ffd080');
+  box(W-62,H*.35,58,bH,'BOB','peer','#ff6b9d');
+  box(W/2-28,H*.72,56,bH,'STUN','public IP','#c09fff');
+  box(W/2-28,H*.9,56,bH,'TURN','relay','#ff9d6b');
+  // Candidate lines based on phase
+  const dotX=(t*80%W);
+  if(ph===0){ // HOST
+    ctx.strokeStyle='#3ecfff66';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(57,H*.35+bH/2);ctx.lineTo(112,H*.35+bH/2);ctx.stroke();
+    ctx.fillStyle='#3ecfff';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('192.168.1.42:5000',82,H*.35-6);
+    ctx.fillStyle='#7fff6b';ctx.font='7px Space Mono,monospace';
+    ctx.fillText('✓ works on LAN',W/2,H*.2);
+  } else if(ph===1){ // SRFLX via STUN
+    ctx.strokeStyle='#c09fff66';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(82,H*.35+bH);ctx.lineTo(W/2,H*.72);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#c09fff';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('203.0.113.5:7432',W/2-60,H*.55);
+    ctx.fillText('← your public IP',W/2,H*.2);
+  } else if(ph===2){ // direct probe
+    ctx.strokeStyle='#ffd08055';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(112,H*.35+bH/2);ctx.lineTo(W-115,H*.35+bH/2);ctx.stroke();
+    const dotP=t*1.5%1;
+    const dpx=lerp(112,W-115,dotP);
+    ctx.fillStyle='#ffd080';ctx.shadowBlur=6;ctx.shadowColor='#ffd080';
+    ctx.beginPath();ctx.arc(dpx,H*.35+bH/2,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle='#ffd080';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('testing direct route...',W/2,H*.2);
+  } else { // TURN relay
+    ctx.strokeStyle='#ff9d6b66';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(57,H*.35+bH/2);ctx.lineTo(W/2,H*.9+bH/2);
+    ctx.moveTo(W/2,H*.9+bH/2);ctx.lineTo(W-62,H*.35+bH/2);ctx.stroke();
+    const dotP=t*0.8%1;
+    const dpx=dotP<.5?lerp(57,W/2,dotP*2):lerp(W/2,W-62,(dotP-.5)*2);
+    const dpy=dotP<.5?lerp(H*.35+bH/2,H*.9+bH/2,dotP*2):lerp(H*.9+bH/2,H*.35+bH/2,(dotP-.5)*2);
+    ctx.fillStyle='#ff9d6b';ctx.shadowBlur=6;ctx.shadowColor='#ff9d6b';
+    ctx.beginPath();ctx.arc(dpx,dpy,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle='#ff9d6b';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('TURN relay (~30% of users need this)',W/2,H*.2);
+  }
+  ctx.fillStyle='#ccd8e0';ctx.font='8px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText(phLabel[ph],W/2,H-8);
+}
+
+// ══ VIZ: WEBRTC FULL LIFECYCLE ══
+function vizWebrtcfull(){
+  const W=canvas.width,H=canvas.height,t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#040608';ctx.fillRect(0,0,W,H);
+  const phases=[
+    {lbl:'ws.connect\n(signal svr)',c:'#ffd080'},
+    {lbl:'peer_joined\n→ create conn',c:'#3ecfff'},
+    {lbl:'create_offer\n→ SDP',c:'#3ecfff'},
+    {lbl:'signal fwd\noffer',c:'#ffd080'},
+    {lbl:'set_remote\ncreate answer',c:'#ff6b9d'},
+    {lbl:'signal fwd\nanswer',c:'#ffd080'},
+    {lbl:'ICE\ntrickle',c:'#c09fff'},
+    {lbl:'peer_connected\n→ GAME ON',c:'#7fff6b'},
+  ];
+  const ph=Math.floor(t*0.55)%phases.length;
+  const nodeW=(W-30)/phases.length;
+  const nodeY=H*.48;
+  phases.forEach((p,i)=>{
+    const x=15+i*nodeW+nodeW/2;
+    const active=i===ph,done=i<ph;
+    ctx.fillStyle=done?p.c+'20':active?p.c+'30':'#0a0e16';
+    ctx.strokeStyle=done?p.c+'55':active?p.c:'#192030';
+    ctx.lineWidth=active?2:1;ctx.beginPath();ctx.arc(x,nodeY,22,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle=done?p.c+'88':active?p.c:'#2a3a4a';
+    ctx.font=(active?'bold ':'')+'6px Space Mono,monospace';ctx.textAlign='center';
+    p.lbl.split('\n').forEach((l,li)=>ctx.fillText(l,x,nodeY+(li===0?-4:7)));
+    if(i>0){
+      const px=15+(i-1)*nodeW+nodeW/2+22;const nx=x-22;
+      ctx.strokeStyle=done?phases[i-1].c+'66':'#192030';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(px,nodeY);ctx.lineTo(nx,nodeY);ctx.stroke();
+    }
+  });
+  // Moving dot
+  if(ph<phases.length-1){
+    const cur=phases[ph],curX=15+ph*nodeW+nodeW/2;
+    const nxtX=15+(ph+1)*nodeW+nodeW/2;
+    const frac=t*0.55%1;
+    const dpx=lerp(curX+22,nxtX-22,frac);
+    ctx.fillStyle=cur.c;ctx.shadowBlur=6;ctx.shadowColor=cur.c;
+    ctx.beginPath();ctx.arc(dpx,nodeY,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  }
+  // Phase label
+  const descs=[
+    'Connect WebSocketPeer to signaling server',
+    'Signal sends peer_joined → create WebRTCPeerConnection',
+    'Lower ID peer calls create_offer() → SDP generated',
+    'Signal server relays SDP offer to remote peer',
+    'Remote peer set_remote_description() → generates answer',
+    'Signal relays answer back → set_remote_description()',
+    'ICE candidates trickle via signal, add_ice_candidate()',
+    '🎉 WebRTCMultiplayerPeer fires peer_connected! RPCs work.',
+  ];
+  ctx.fillStyle=phases[ph].c;ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText(descs[ph],W/2,H*.82);
+  // Poll reminder
+  ctx.fillStyle='#4a6070';ctx.font='7px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('⚠ _ws.poll() must be called every _process() or nothing fires',W/2,H*.94);
+}
+
+const VIZ_FNS = {
+  packets:vizPackets, topology:vizTopology, apimap:vizApimap,
+  rpc:vizRpc, authority:vizAuthority, latency:vizLatency,
+  statesync:vizStatesync, prediction:vizPrediction, rollback:vizRollback,
+  tickloop:vizTickloop, stateserialize:vizStateserialize, inputsync:vizInputsync,
+  rollbackflow:vizRollbackflow, desync:vizDesync,
+  browsercompat:vizBrowsercompat, sdp:vizSdp, nattraversal:vizNattraversal,
+  webrtcfull:vizWebrtcfull, webrtc:vizWebrtc,
+  scenetree:vizScenetree, security:vizSecurity
+};
+
+function startViz(key){
+  if(animId) cancelAnimationFrame(animId);
+  packets=[]; rpcBalls=[]; events2=[];
+  startTime=Date.now();
+  const fn=VIZ_FNS[key];
+  function loop(){ resizeCanvas(); fn(); animId=requestAnimationFrame(loop); }
+  loop();
+}
+
+// ─────────────────────────────────────────────
+// LESSON LOADING
+// ─────────────────────────────────────────────
+function loadLesson(idx){
+  currentLesson=idx;
+  const L=LESSONS[idx];
+  document.getElementById('lesson-text').innerHTML=
+    `<div class="lesson-number">${L.subtitle}</div>
+     <h2 class="lesson-title">${L.title}</h2>
+     <div class="lesson-body">${L.body}</div>`;
+  document.getElementById('viz-label').textContent=L.vizLabel;
+  document.getElementById('code-snippet').innerHTML=L.snippet;
+  document.getElementById('copy-btn').textContent='⎘ COPY';
+  document.getElementById('copy-btn').className='copy-btn';
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  document.getElementById('progress').style.width=`${((idx+1)/LESSONS.length)*100}%`;
+  startViz(L.viz);
+  document.getElementById('lesson-text').scrollTop=0;
+}
+
+function copySnippet(){
+  const raw=document.getElementById('code-snippet').textContent;
+  navigator.clipboard.writeText(raw).catch(()=>{});
+  const btn=document.getElementById('copy-btn');
+  btn.textContent='✓ COPIED'; btn.className='copy-btn done';
+  setTimeout(()=>{ btn.textContent='⎘ COPY'; btn.className='copy-btn'; },1800);
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+function init(){
+  const nav=document.getElementById('lesson-nav');
+  LESSONS.forEach((L,i)=>{
+    const b=document.createElement('button');
+    b.className='nav-btn'; b.textContent=L.subtitle;
+    b.onclick=()=>loadLesson(i); nav.appendChild(b);
+  });
+  // Hero canvas
+  const hc=document.getElementById('hero');
+  const hctx=hc.getContext('2d');
+  function heroResize(){ hc.width=hc.parentElement.offsetWidth; hc.height=hc.parentElement.offsetHeight; }
+  heroResize(); window.addEventListener('resize',heroResize);
+  const nodes=Array.from({length:22},(_,i)=>({
+    x:Math.random()*hc.width,y:Math.random()*hc.height,
+    vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4
+  }));
+  function heroLoop(){
+    hc.width=hc.parentElement.offsetWidth;hc.height=hc.parentElement.offsetHeight;
+    hctx.fillStyle='rgba(8,11,15,0.25)';hctx.fillRect(0,0,hc.width,hc.height);
+    nodes.forEach(n=>{
+      n.x+=n.vx;n.y+=n.vy;
+      if(n.x<0||n.x>hc.width)n.vx*=-1;
+      if(n.y<0||n.y>hc.height)n.vy*=-1;
+    });
+    nodes.forEach((a,i)=>nodes.forEach((b,j)=>{
+      if(j<=i)return;
+      const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<130){
+        hctx.strokeStyle=`rgba(62,207,255,${(1-d/130)*.3})`;hctx.lineWidth=1;
+        hctx.beginPath();hctx.moveTo(a.x,a.y);hctx.lineTo(b.x,b.y);hctx.stroke();
+      }
+    }));
+    nodes.forEach(n=>{
+      hctx.fillStyle='rgba(62,207,255,0.6)';hctx.beginPath();hctx.arc(n.x,n.y,1.8,0,Math.PI*2);hctx.fill();
+    });
+    requestAnimationFrame(heroLoop);
+  }
+  heroLoop();
+  loadLesson(0);
+  window.addEventListener('resize',()=>{ resizeCanvas(); });
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>

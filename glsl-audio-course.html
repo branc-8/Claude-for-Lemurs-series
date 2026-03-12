@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GLSL Audio for Lemurs 🎧 — Sound & Shaders</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap');
+:root{
+  --bg:#0a0a0f;--panel:#111118;--border:#1e1e2e;
+  --accent:#ff6b9d;--accent2:#6bc5ff;--accent3:#ffe16b;
+  --text:#e0e0f0;--muted:#666688;--code-bg:#0d0d15;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+header{padding:3rem 2rem 2rem;text-align:center;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+header canvas#hero{position:absolute;inset:0;width:100%;height:100%;opacity:.35;pointer-events:none;}
+header .inner{position:relative;z-index:1;}
+.tagline-chip{display:inline-block;background:var(--accent);color:#000;font-family:'Space Mono',monospace;font-size:.65rem;padding:.25rem .75rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem;}
+h1{font-size:clamp(2.2rem,5vw,4.5rem);font-weight:800;line-height:1;letter-spacing:-.02em;}
+h1 span{color:var(--accent);}
+.subtitle{font-family:'Space Mono',monospace;font-size:.85rem;color:var(--muted);margin-top:.75rem;}
+.progress-bar{height:2px;background:var(--border);}
+.progress-fill{height:100%;background:var(--accent);transition:width .4s ease;}
+nav{display:flex;gap:.4rem;padding:1rem 1.5rem;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:100;scrollbar-width:none;}
+nav::-webkit-scrollbar{display:none;}
+.nav-btn{flex-shrink:0;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:.7rem;padding:.4rem .8rem;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nav-btn.active{background:var(--accent);color:#000;border-color:var(--accent);}
+main{display:grid;grid-template-columns:1fr 1fr;gap:0;height:calc(100vh - 200px);min-height:500px;}
+@media(max-width:900px){main{grid-template-columns:1fr;height:auto;}}
+.lesson-panel{padding:2rem;overflow-y:auto;border-right:1px solid var(--border);scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.lesson-number{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.5rem;}
+.lesson-title{font-size:1.8rem;font-weight:800;line-height:1.1;margin-bottom:1rem;}
+.lesson-body{font-family:'Space Mono',monospace;font-size:.78rem;line-height:1.9;color:#b0b0cc;}
+.lesson-body p{margin-bottom:1rem;}
+.lesson-body strong{color:var(--accent);font-weight:700;}
+.lesson-body em{color:var(--accent2);font-style:normal;}
+.lesson-body .tip{background:#1a1a2e;border-left:3px solid var(--accent);padding:.75rem 1rem;margin:1rem 0;color:#d0d0e8;}
+.lesson-body .tip::before{content:'🎧 LISTEN TIP: ';color:var(--accent);font-weight:700;}
+.lesson-body .step-card{background:#0f0f1e;border:1px solid var(--border);border-left:3px solid var(--accent2);padding:.75rem 1rem;margin:.6rem 0;}
+.lesson-body .step-card .step-num{color:var(--accent2);font-weight:700;font-size:.65rem;letter-spacing:.15em;display:block;margin-bottom:.25rem;}
+.lesson-body .challenge{background:#160d1e;border:1px solid var(--accent3);padding:.75rem 1rem;margin:.6rem 0;}
+.lesson-body .challenge::before{content:'⚡ CHALLENGE: ';color:var(--accent3);font-weight:700;}
+.lesson-body code{background:#1a1a2e;color:var(--accent2);padding:.1em .4em;font-size:.85em;}
+/* ── EDITOR PANEL ── */
+.editor-panel{display:flex;flex-direction:column;background:var(--code-bg);}
+.canvas-area{flex:0 0 220px;position:relative;background:#000;border-bottom:1px solid var(--border);}
+canvas#shader-output{width:100%;height:100%;display:block;}
+.canvas-label{position:absolute;top:.5rem;left:.75rem;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.error-overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(255,80,80,.9);color:#fff;font-family:'Space Mono',monospace;font-size:.65rem;padding:.5rem .75rem;display:none;white-space:pre-wrap;line-height:1.5;max-height:80px;overflow-y:auto;}
+/* ── AUDIO TOOLBAR ── */
+#audio-toolbar{display:flex;align-items:center;gap:.4rem;padding:.45rem .75rem;background:#0c0c18;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.abtn{background:none;border:1px solid var(--muted);color:var(--muted);font-family:'Space Mono',monospace;font-size:.62rem;padding:.28rem .65rem;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.abtn:hover{border-color:var(--accent);color:var(--accent);}
+.abtn.on{background:var(--accent);color:#000;border-color:var(--accent);}
+#audio-status{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#fft-mini{flex-shrink:0;image-rendering:pixelated;border:1px solid var(--border);}
+#audio-file-input{display:none;}
+/* ── CODE TOOLBAR ── */
+.code-toolbar{display:flex;justify-content:space-between;align-items:center;padding:.5rem .75rem;border-bottom:1px solid var(--border);background:var(--panel);}
+.code-toolbar span{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.1em;}
+.run-btn{background:var(--accent);color:#000;border:none;font-family:'Space Mono',monospace;font-size:.7rem;font-weight:700;padding:.35rem 1rem;cursor:pointer;transition:opacity .15s;letter-spacing:.05em;}
+.run-btn:hover{opacity:.85;}
+.code-editor{flex:1;overflow:auto;position:relative;}
+textarea#glsl-code{width:100%;height:100%;background:var(--code-bg);color:#c8f0c0;font-family:'Space Mono',monospace;font-size:.72rem;line-height:1.7;border:none;outline:none;padding:1rem;resize:none;tab-size:2;}
+</style>
+</head>
+<body>
+
+<header>
+  <canvas id="hero"></canvas>
+  <div class="inner">
+    <div class="tagline-chip">🎧 Audio Shader School</div>
+    <h1>Sound &amp; <span>Shaders</span></h1>
+    <p class="subtitle">// Web Audio API → FFT → GPU → visuals that actually dance</p>
+  </div>
+</header>
+
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<nav id="lesson-nav"></nav>
+
+<main>
+  <div class="lesson-panel" id="lesson-text"></div>
+  <div class="editor-panel">
+    <div class="canvas-area">
+      <span class="canvas-label">▶ live output</span>
+      <canvas id="shader-output"></canvas>
+      <div class="error-overlay" id="error-box"></div>
+    </div>
+    <div id="audio-toolbar">
+      <button class="abtn" id="btn-mic">🎤 Mic</button>
+      <button class="abtn" id="btn-synth">🎵 Synth</button>
+      <button class="abtn" id="btn-file">📁 File</button>
+      <button class="abtn" id="btn-stop">■ Stop</button>
+      <input type="file" id="audio-file-input" accept="audio/*">
+      <span id="audio-status">no source — pick one above</span>
+      <canvas id="fft-mini" width="96" height="20"></canvas>
+    </div>
+    <div class="code-toolbar">
+      <span>FRAGMENT SHADER — ⌘/Ctrl+Enter to run</span>
+      <button class="run-btn" onclick="compileAndRun()">▶ RUN</button>
+    </div>
+    <div class="code-editor">
+      <textarea id="glsl-code" spellcheck="false"></textarea>
+    </div>
+  </div>
+</main>
+
+<script>
+const LESSONS = [
+
+// ─── 1 ───────────────────────────────────────────
+{
+title: "How Audio Reaches Your Shader",
+subtitle: "01 — The Pipeline",
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+// u_fft: 128 frequency bins, 0.0 (silent) to 1.0 (loud)
+// Bin 0 = deepest bass. Bin 1.0 = highest treble.
+uniform sampler2D u_fft;
+
+float fft(float bin){
+  return texture2D(u_fft, vec2(clamp(bin,0.,1.), 0.5)).r;
+}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+
+  // Each column samples one frequency bin
+  // Left side = bass, right side = treble
+  float amp = fft(uv.x);
+
+  // Draw a bar that fills up to the amplitude
+  float bar = step(uv.y, amp);
+
+  // Color shifts warm (bass) to cool (treble)
+  vec3 col = mix(vec3(1.0, 0.15, 0.05), vec3(0.1, 0.6, 1.0), uv.x);
+  vec3 color = mix(vec3(0.04, 0.02, 0.08), col, bar);
+
+  // Bright cap at the top of each bar
+  float cap = smoothstep(amp-0.008, amp, uv.y)
+            * smoothstep(amp+0.004, amp, uv.y);
+  color += col * cap * 3.0;
+
+  gl_FragColor = vec4(color, 1.0);
+}`,
+body: `
+<p>The whole pipeline in one sentence: <strong>audio source → AnalyserNode → 128 floats → 1D texture → your shader samples it every frame.</strong></p>
+<p>Hit <strong>🎵 Synth</strong> above the canvas. You'll see the bars respond immediately. That's real FFT data from the Web Audio API arriving as <code>u_fft</code> — a 128×1 texture where each pixel's red channel is one frequency bin's amplitude, 0.0 to 1.0.</p>
+<div class="step-card"><span class="step-num">THE CHAIN</span>AudioContext → AnalyserNode (fftSize=256) → getByteFrequencyData() → 128 Uint8 values → normalized to Float32 → uploaded as LUMINANCE texture → uniform sampler2D u_fft</div>
+<p>Sample any bin: <code>texture2D(u_fft, vec2(bin, 0.5)).r</code> — the 0.5 Y keeps us on the single row. <code>bin</code> is 0.0 (bass) to 1.0 (treble).</p>
+<p>No audio = flat bars. That's correct. The visuals are <em>driven entirely by sound</em>, not faked with time. If it looks dead when silent, you've built a real audio-reactive shader.</p>
+<div class="tip">The FFT is like a graphic equalizer frozen each frame. 128 bars. You can average groups of bars into "bass", "mids", "treble" — or sample individual bins for fine-grained reactivity. Each bar is independent.</div>
+<div class="challenge">Change uv.x to uv.x * 0.3 in the fft() call. You'll zoom into just the bass region. Watch what happens when the synth plays — bass bins jump hard. Try 0.7 to bias toward treble.</div>
+`},
+
+// ─── 2 ───────────────────────────────────────────
+{
+title: "Frequency Bands",
+subtitle: "02 — Bass, Mids, Treble",
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform sampler2D u_fft;
+
+float fft(float b){ return texture2D(u_fft,vec2(clamp(b,0.,1.),0.5)).r; }
+
+// Average a range of bins into one value
+float band(float lo, float hi){
+  float s = 0.0;
+  s += fft(lo);
+  s += fft(lo+(hi-lo)*0.25);
+  s += fft(lo+(hi-lo)*0.5);
+  s += fft(lo+(hi-lo)*0.75);
+  s += fft(hi);
+  return s / 5.0;
+}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  vec2 c  = uv * 2.0 - 1.0;
+  c.x    *= u_resolution.x / u_resolution.y;
+
+  // Three bands — each drives one visual element
+  float bass   = band(0.0,  0.05);  // kick drum, sub bass
+  float mids   = band(0.05, 0.30);  // vocals, snare, guitars
+  float treble = band(0.30, 1.00);  // hi-hat, cymbals, air
+
+  vec3 color = vec3(0.0);
+
+  // BASS: circle radius grows with low end
+  float r = length(c);
+  float bassRing = abs(r - (0.2 + bass * 0.5));
+  color += vec3(1.0, 0.1, 0.05) * 0.01 / (bassRing + 0.005) * (bass + 0.1);
+
+  // MIDS: spokes that extend outward with mid energy
+  float angle = atan(c.y, c.x);
+  float spokes = abs(sin(angle * 6.0));
+  float spokeLen = mids * 0.8;
+  color += vec3(0.1, 0.6, 1.0) * smoothstep(spokeLen, 0.0, r) * spokes * mids;
+
+  // TREBLE: outer halo that shimmers with high freq
+  float halo = smoothstep(0.05, 0.0, abs(r - (0.8 + treble * 0.15)));
+  color += vec3(0.8, 1.0, 0.3) * halo * treble * 2.0;
+
+  // Label zones (top strip: shows which band is which)
+  if(uv.y > 0.88){
+    float zone = floor(uv.x * 3.0);
+    float val = (zone < 0.5) ? bass : (zone < 1.5) ? mids : treble;
+    vec3 zc   = (zone < 0.5) ? vec3(1.,.1,.05) : (zone < 1.5) ? vec3(.1,.6,1.) : vec3(.8,1.,.3);
+    color = mix(vec3(0.05), zc * 0.4, 0.9) + zc * val;
+  }
+
+  color = color / (1.0 + color);
+  gl_FragColor = vec4(color, 1.0);
+}`,
+body: `
+<p>128 raw bins is too granular to drive most effects. The trick: <strong>average groups of bins into bands</strong>. You get one number representing the energy in that part of the spectrum.</p>
+<p>Standard splits: <strong>bass</strong> (0.0–0.05 of the spectrum) captures kick drum and sub bass. <strong>Mids</strong> (0.05–0.30) is vocals, snare, guitars. <strong>Treble</strong> (0.30–1.0) is hi-hats, cymbals, air.</p>
+<div class="step-card"><span class="step-num">WHY AVERAGE?</span>A single bin is noisy and unstable. Averaging 5 bins across the range gives a smooth, responsive value. The <code>smoothingTimeConstant</code> on the AnalyserNode also helps — set to 0.8 by default, it smooths between frames.</div>
+<div class="tip">Bass bins are the most dramatic. Kick drums hit bins 0–6 with a sharp spike every beat. Mids are broader and steadier. Treble is noisier — good for texture effects but bad for driving precise pulses. Match your visual to the frequency's personality.</div>
+<div class="challenge">The bass threshold is 0.0–0.05. But sub-bass (kick) and bass guitar are different. Try splitting bass into sub (0.0–0.02) and bass (0.02–0.08) — drive the ring color differently for each. Sub = red, bass guitar = orange.</div>
+`},
+
+// ─── 3 ───────────────────────────────────────────
+{
+title: "Beat Detection",
+subtitle: "03 — Kick Drums & Onsets",
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform sampler2D u_fft;
+
+float fft(float b){ return texture2D(u_fft,vec2(clamp(b,0.,1.),0.5)).r; }
+float band(float lo,float hi){
+  return (fft(lo)+fft((lo+hi)*.5)+fft(hi))/3.;
+}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  vec2 c  = uv * 2.0 - 1.0;
+  c.x    *= u_resolution.x / u_resolution.y;
+
+  // Sub-bass captures kick drum specifically
+  float sub  = band(0.0, 0.025);
+  float bass = band(0.0, 0.06);
+
+  // Simple beat envelope: decays over the frame
+  // The analyser's smoothing (0.8) already creates a natural decay.
+  // When sub is loud, it's a beat. When sub is quiet, it's between beats.
+  float beat = sub;
+
+  // Concentric flash rings that expand on beat
+  float r = length(c);
+  vec3 color = vec3(0.02, 0.01, 0.04);
+
+  // Three rings at different expansion phases
+  for(int i = 1; i <= 5; i++){
+    float fi = float(i);
+    // Each ring phase-shifts by a small amount
+    // beat drives the base radius outward
+    float rr = beat * (0.3 + fi * 0.15);
+    float ring = abs(r - rr);
+    float glow = 0.008 / (ring + 0.004);
+    vec3 rc = mix(vec3(1.,.1,.0), vec3(.4,.0,1.), fi/5.);
+    color += rc * glow * beat * 2.0;
+  }
+
+  // Screen flash on strong beat
+  float flash = smoothstep(0.3, 0.7, beat);
+  vec2 edge = abs(uv*2.-1.);
+  color += vec3(1.,.3,.05)*flash*.3*smoothstep(.4,1.,max(edge.x,edge.y));
+
+  // Background pulse
+  color += vec3(.06,.01,.12) * bass;
+
+  color = color / (1.0 + color);
+  gl_FragColor = vec4(color, 1.0);
+}`,
+body: `
+<p>A "beat" in audio terms is just the sub-bass bin spiking sharply. The Web Audio analyser's <strong>smoothingTimeConstant</strong> (default 0.8) creates a natural decay — the spike ramps down smoothly between frames, which gives you a free envelope.</p>
+<p>True beat <em>detection</em> (knowing exactly when a beat happens) requires comparing current energy to a rolling average. But for most visuals, <strong>just using raw sub-bass amplitude works</strong> — when the kick hits, it's loud; between hits, it's quiet. The visual naturally pulses on tempo.</p>
+<div class="step-card"><span class="step-num">SMOOTHING CONSTANT</span>analyser.smoothingTimeConstant = 0.8 means: new value = 0.2 × raw + 0.8 × previous. Higher = smoother but laggier. Lower = snappier but jittery. 0.6–0.8 is the sweet spot for beat visuals.</div>
+<div class="step-card"><span class="step-num">TRUE ONSET DETECTION</span>Track a rolling average energy. When current energy exceeds 1.5× the average → beat. This works in JS: keep an array of the last 43 FFT frames (1 second at 60fps), average them, compare. The shader just receives a uniform float u_beat that you update in JS.</div>
+<div class="tip">Kick drums live in bins 0–8. Snares have a complex spectrum — both a thud (100-300Hz) and a crack (2kHz+). Hi-hats are almost pure noise above 8kHz. To react to just snares: sample the mid-bass AND high-treble simultaneously and multiply them.</div>
+<div class="challenge">Currently the rings all expand from the same center. Make each ring's center drift based on its index: vec2 center = vec2(cos(fi*1.3)*beat*.3, sin(fi*0.9)*beat*.2). The rings scatter on each kick!</div>
+`},
+
+// ─── 4 ───────────────────────────────────────────
+{
+title: "The Waveform Uniform",
+subtitle: "04 — Time Domain Signal",
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform sampler2D u_fft;
+// u_waveform: raw audio samples over time
+// .r maps 0.0-1.0 where 0.5 = silence
+// Use wave() to get a -1 to +1 value
+uniform sampler2D u_waveform;
+
+float fft(float b)  { return texture2D(u_fft,     vec2(clamp(b,0.,1.),0.5)).r; }
+float wave(float x) { return texture2D(u_waveform,vec2(clamp(x,0.,1.),0.5)).r * 2.0 - 1.0; }
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+
+  // === TOP HALF: OSCILLOSCOPE (waveform) ===
+  if(uv.y > 0.52){
+    float ly    = (uv.y - 0.52) / 0.48;
+    float waveY = wave(uv.x) * 0.42 + 0.5;
+    float line  = smoothstep(0.014, 0.0, abs(ly - waveY));
+    float zero  = smoothstep(0.003, 0.0, abs(ly - 0.5)) * 0.12;
+    float strength = abs(wave(uv.x));
+    vec3 col = mix(vec3(0.1,0.9,0.3), vec3(1.0,0.9,0.1), strength);
+    gl_FragColor = vec4(vec3(0.02,0.04,0.06) + col*line + 0.12*zero, 1.0);
+    return;
+  }
+
+  // Divider
+  if(uv.y > 0.49){
+    float e = (fft(0.0)+fft(0.1)+fft(0.2)+fft(0.3))/4.;
+    gl_FragColor = vec4(mix(vec3(.06,.08,.18),vec3(.9,.4,.1),e*2.),1.); return;
+  }
+
+  // === BOTTOM HALF: SPECTRUM (FFT) ===
+  float ly   = uv.y / 0.49;
+  float amp  = fft(uv.x);
+  float barH = amp * 0.95;
+  float inBar= step(ly, barH);
+  vec3 bc    = mix(vec3(1.0,0.1,0.0), vec3(0.0,0.55,1.0), pow(uv.x,.5));
+  vec3 color = vec3(0.02,0.01,0.06);
+  color      = mix(color, bc*mix(.5,1.,ly/max(barH,.01)), inBar*.95);
+  float cap  = smoothstep(barH-.01,barH,ly)*smoothstep(barH+.004,barH,ly);
+  color     += bc * cap * 3.5;
+  gl_FragColor = vec4(clamp(color,0.,1.),1.0);
+}`,
+body: `
+<p>Besides <code>u_fft</code>, the pipeline also gives you <code>u_waveform</code> — the raw audio signal sampled 128 times across the current buffer. This is the <strong>time domain</strong>: amplitude over time, not frequency.</p>
+<p>The FFT tells you <em>what pitches are loud</em>. The waveform tells you <em>what the signal actually looks like</em> right now — the oscilloscope view. Same data, different perspective.</p>
+<div class="step-card"><span class="step-num">WAVEFORM vs FFT</span>Waveform: heart monitor. Useful for oscilloscope visuals, detecting sharp transients, drawing the actual audio shape. FFT: equalizer. Useful for frequency-specific reactions — bass pulses, treble sparkles. Most shaders use FFT. Waveform is underused and looks great.</div>
+<div class="step-card"><span class="step-num">TEXTURE FORMAT</span>u_waveform stores values 0.0–1.0 where 0.5 = silence. Silence isn't zero — it's the midpoint. Convert: wave(x) = texture.r * 2.0 - 1.0 gives you -1 to +1. A flat 0.5 line means silence. Clapping creates spiky excursions.</div>
+<div class="tip">Waveform is perfect for Lissajous figures (L/R channel XY plot), oscilloscope visuals, and detecting silence vs. sound without caring about frequency. Speak into the mic — watch how vowels make clean periodic waves and consonants make chaotic spikes.</div>
+<div class="challenge">Make the waveform line thickness react to overall loudness. Replace the 0.014 smoothstep threshold with: float thick = 0.008 + abs(wave(uv.x)) * 0.025. Loud sections get a fatter line!</div>
+`},
+
+// ─── 5 ───────────────────────────────────────────
+{
+title: "Frequency to Color",
+subtitle: "05 — Spectral Mapping",
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform sampler2D u_fft;
+
+float fft(float b){ return texture2D(u_fft,vec2(clamp(b,0.,1.),0.5)).r; }
+
+// Map a frequency bin 0-1 to a perceptually nice color
+// Mirrors how light spectrum works: bass=red, mid=green, treble=violet
+vec3 freqColor(float bin){
+  // Red → Yellow → Green → Cyan → Blue → Violet
+  float h = bin; // hue 0-1
+  vec3 c;
+  if(h < 0.17)      c = mix(vec3(1.,0.,0.),   vec3(1.,1.,0.),   h/0.17);
+  else if(h < 0.33) c = mix(vec3(1.,1.,0.),   vec3(0.,1.,0.),   (h-.17)/.16);
+  else if(h < 0.50) c = mix(vec3(0.,1.,0.),   vec3(0.,1.,1.),   (h-.33)/.17);
+  else if(h < 0.67) c = mix(vec3(0.,1.,1.),   vec3(0.,0.,1.),   (h-.50)/.17);
+  else              c = mix(vec3(0.,0.,1.),    vec3(.6,0.,.8),   (h-.67)/.33);
+  return c;
+}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  vec2 c  = uv * 2.0 - 1.0;
+  c.x    *= u_resolution.x / u_resolution.y;
+
+  float r   = length(c);
+  float ang = atan(c.y, c.x);
+
+  vec3 color = vec3(0.0);
+
+  // Radial spectrum: each angle = one frequency bin
+  // Wrap angle from -pi..pi → 0..1
+  float bin = (ang / 6.28318) + 0.5;
+  float amp = fft(bin);
+
+  // Bar from center outward, length = amplitude
+  float barLen = 0.15 + amp * 0.7;
+  float inBar  = step(r, barLen) * step(0.12, r);
+
+  // Color = the frequency's spectral color, brightness = amplitude
+  vec3 fc = freqColor(bin);
+  color  += fc * inBar * (0.5 + amp);
+
+  // Glow at bar tip
+  float tip = smoothstep(0.02, 0.0, abs(r - barLen)) * amp;
+  color     += fc * tip * 2.0;
+
+  // Center orb: overall loudness
+  float loud = 0.0;
+  for(int i=0;i<8;i++) loud += fft(float(i)/8.);
+  loud /= 8.;
+  color += vec3(.5,.3,1.) * smoothstep(.14,.0,r) * loud * 1.5;
+
+  color = color / (1.0 + color);
+  gl_FragColor = vec4(color, 1.0);
+}`,
+body: `
+<p>Frequencies map naturally to colors — this is how spectrum analyzers work, and it's how your eyes perceive light. <strong>Bass is red</strong> (long wavelength, low frequency). Moving up: yellow, green, cyan, blue, violet. Treble = violet.</p>
+<p>This correspondence isn't just aesthetic — it's mnemonic. When you write <code>vec3(1.,0.,0.)*bass</code> (red × bass), you're wiring color to matching frequency intuitively. Viewers read it immediately.</p>
+<div class="step-card"><span class="step-num">POLAR SPECTRUM</span>This shader maps the full spectrum radially — each angle is a frequency bin, radius is amplitude. It's the classic "circular EQ" you see in music visualizers. Rotate it by adding u_time to ang before computing bin.</div>
+<div class="step-card"><span class="step-num">PERCEPTUAL LINEARITY</span>Human hearing is logarithmic — we're far more sensitive to differences at low frequencies than high. The raw FFT bins are linearly spaced, so bass gets just a few bins and treble gets hundreds. To map perceptually, remap: float logBin = pow(uv.x, 2.0) maps more screen space to bass where our ears care most.</div>
+<div class="tip">The best-looking audio shaders usually pick ONE dominant color per frequency band and drive that color's intensity with the band's energy. Resist the urge to make every pixel rainbow — restrained mapping looks more intentional and professional.</div>
+<div class="challenge">The radial bars are all the same width. Make the bar angular width scale with 1.0/float(numBars) * amp — so loud frequencies take up more arc. You get a "fatness" visual where the dominant frequency dominates the circle too.</div>
+`},
+
+// ─── 6 ───────────────────────────────────────────
+{
+title: "Noise + Audio",
+subtitle: "06 — Organic Reactivity",
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform sampler2D u_fft;
+
+float fft(float b){ return texture2D(u_fft,vec2(clamp(b,0.,1.),0.5)).r; }
+float band(float lo,float hi){ return (fft(lo)+fft((lo+hi)*.5)+fft(hi))/3.; }
+
+float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5); }
+float noise(vec2 p){
+  vec2 i=floor(p),f=fract(p),u=f*f*(3.-2.*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),u.x),
+             mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),u.x),u.y);
+}
+float fbm(vec2 p){
+  float v=0.,a=.5;
+  for(int i=0;i<4;i++){v+=a*noise(p);p*=2.;a*=.5;}
+  return v;
+}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  vec2 c  = uv * 2.0 - 1.0;
+  c.x    *= u_resolution.x / u_resolution.y;
+
+  float bass   = band(0.0, 0.05);
+  float mids   = band(0.05, 0.30);
+  float treble = band(0.30, 1.0);
+
+  // Audio drives the noise SPEED and SCALE — not just brightness
+  // This is the key to organic reactivity: let audio warp the math
+  float noiseSpeed = 0.1 + mids * 1.5;
+  float noiseScale = 2.5 + bass * 3.0;   // bass inflates the noise
+
+  // Domain-warped FBM — the noise warps itself
+  vec2 warpUV = uv * noiseScale + u_time * noiseSpeed;
+  vec2 warp   = vec2(fbm(warpUV), fbm(warpUV + vec2(3.7, 1.3)));
+  float n     = fbm(uv * noiseScale + warp * (0.3 + treble * 0.8));
+
+  // Map noise to color, tinted by frequency
+  vec3 cold = mix(vec3(.04,.05,.18), vec3(.1,.3,.8), n);
+  vec3 warm = mix(vec3(.15,.02,.06), vec3(.9,.3,.1), n);
+  // Cross-fade between cold and warm with mids
+  vec3 color = mix(cold, warm, mids);
+
+  // Bass adds bright "explosions" in the noise
+  color += vec3(1.,.3,.05) * smoothstep(.7, 1., n) * bass * 2.0;
+
+  // Treble adds fine sparkle on noise peaks
+  color += vec3(.8,1.,.3) * step(.85, n) * treble * 1.5;
+
+  color = color / (1.0 + color);
+  gl_FragColor = vec4(color, 1.0);
+}`,
+body: `
+<p>Most beginner audio shaders just multiply brightness by amplitude. That looks reactive but mechanical. The pro move: <strong>use audio to drive the parameters of your math</strong> — noise speed, warp strength, scale — not just the final color.</p>
+<p>When bass increases the <em>scale</em> of the noise, the whole texture appears to inflate and breathe. When mids control warp <em>speed</em>, quiet sections feel still and loud sections feel turbulent. The visual matches the audio's emotional quality, not just its volume.</p>
+<div class="step-card"><span class="step-num">DOMAIN WARPING</span>The most powerful noise technique: sample noise at position p, use that as an offset to sample noise again. Two levels of self-referencing noise creates organic, flowing shapes that look like fire, clouds, or plasma. Audio makes it live.</div>
+<div class="step-card"><span class="step-num">PARAMETER MAPPING TABLE</span>
+Bass → scale, pulse radius, shake amount<br>
+Mids → speed, warp strength, rotation rate<br>
+Treble → fine detail, sparkle, edge sharpness<br>
+Beat → sudden jumps, flash, camera punch</div>
+<div class="tip">The secret to good audio-reactive design: map each audio feature to a parameter that has the same "personality". Bass is big and slow → map it to large-scale parameters. Treble is fast and fine → map it to detail-level parameters. When the visual's motion matches the audio's frequency, it feels coherent.</div>
+<div class="challenge">Currently noiseScale is driven by bass. Try adding a second noise layer at a much smaller scale driven by treble: float n2 = noise(uv*20.+u_time*3.)*treble*0.15. Add it to the final color as a fine shimmer.</div>
+`},
+
+// ─── 7 ───────────────────────────────────────────
+{
+title: "Particles & Audio",
+subtitle: "07 — Analytic Particle Systems",
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform sampler2D u_fft;
+
+float fft(float b){ return texture2D(u_fft,vec2(clamp(b,0.,1.),0.5)).r; }
+float band(float lo,float hi){ return (fft(lo)+fft((lo+hi)*.5)+fft(hi))/3.; }
+float hash1(float n){ return fract(sin(n*127.1)*43758.5); }
+
+void main(){
+  vec2 uv  = gl_FragCoord.xy / u_resolution;
+  vec2 uvN = uv;
+  uv = uv * 2.0 - 1.0;
+  uv.x *= u_resolution.x / u_resolution.y;
+
+  float bass   = band(0.0, 0.05);
+  float mids   = band(0.05, 0.3);
+  float treble = band(0.3, 1.0);
+  float beat   = band(0.0, 0.025);
+
+  vec3 color = vec3(0.02, 0.01, 0.05);
+
+  // ── BEAT PARTICLES ──
+  // Emitted from center on each beat, fly outward
+  // Using kinematic equations: pos = emitPos + velocity * age
+  int N = 48;
+  for(int i = 0; i < 48; i++){
+    float fi  = float(i);
+    // Each particle has a unique angle and speed
+    float ang = hash1(fi) * 6.2832;
+    float spd = 0.4 + hash1(fi+100.) * 0.6;
+    // Age cycles continuously, scaled by beat energy
+    float age = mod(u_time * (0.5 + beat * 1.5) - hash1(fi+200.) * 2.0, 2.5);
+    // Position: fly outward along angle
+    vec2 pos  = vec2(cos(ang), sin(ang)) * spd * age;
+    // Fade as particle ages
+    float fade= 1.0 - age / 2.5;
+    // Color: bin corresponding to this particle's "frequency"
+    float bin = fi / float(N);
+    float binAmp = fft(bin);
+    vec3 pc   = mix(vec3(1.,.2,.0), vec3(.1,.5,1.), bin);
+    float d   = length(uv - pos);
+    // Size proportional to its FFT bin amplitude
+    float size = 0.003 + binAmp * 0.006;
+    color += pc * clamp(size/(d+0.001)*fade, 0., 1.) * (0.5 + binAmp);
+  }
+
+  // ── ORBITING MIDS PARTICLES ──
+  for(int i = 0; i < 20; i++){
+    float fi  = float(i);
+    float ang = fi * 0.3142 + u_time * (0.4 + mids * 1.2);
+    float r   = 0.5 + fft(fi/20.*.3 + .05) * 0.4;
+    vec2 pos  = vec2(cos(ang), sin(ang)) * r;
+    float d   = length(uv - pos);
+    color += vec3(.2,.6,1.) * .003/(d*d+.0008) * mids * 2.0;
+  }
+
+  // ── TREBLE SPARKLE ──
+  for(int i = 0; i < 16; i++){
+    float fi   = float(i);
+    float bin2 = 0.4 + fi/16.*.5;
+    float amp  = fft(bin2);
+    float ang2 = fi * 0.3927 + u_time * 0.6;
+    vec2 pos2  = vec2(cos(ang2),sin(ang2))*(0.7+amp*.3);
+    float d2   = length(uv-pos2);
+    color += vec3(.7,1.,.3)*amp*.004/(d2*d2+.0006);
+  }
+
+  color = color/(1.+color)*1.2;
+  gl_FragColor = vec4(color,1.0);
+}`,
+body: `
+<p>Analytic particles: no simulation state, no ping-pong. Each particle's position is a <strong>pure function of time and its unique ID</strong>. You can run 50 particles in a single fragment shader — each pixel checks its distance to every particle and adds glow.</p>
+<p>The key formula: <code>pos = direction * speed * age</code>. With <code>age = mod(time - offset, period)</code> you get continuously recycled particles that appear to emit and fly outward. No particle buffer. No JS updates. Pure math.</p>
+<div class="step-card"><span class="step-num">AUDIO WIRING</span>Each particle can sample its own specific FFT bin — so particle 12 responds to mid-frequency bin 12/48, particle 40 responds to a treble bin. The whole particle system becomes a 3D visualizer where each particle represents a frequency.</div>
+<div class="step-card"><span class="step-num">PERFORMANCE</span>Each particle = one dot-product + one division per pixel. 48 particles = 48 divides per pixel. Fragment shaders can handle hundreds. Keep the inner loop tight: no branching, no texture reads inside the loop (besides u_fft which is cached).</div>
+<div class="tip">The classic mistake is making all particles the same size driven by overall loudness. Instead, give each particle its own FFT bin: amp = fft(fi / float(N)). Now the particle swarm literally IS the spectrum — you can read individual frequencies from the particle positions.</div>
+<div class="challenge">Add gravity to the beat particles: the Y velocity decreases over time. Change the Y component of pos to: sin(ang)*spd*age - 0.3*age*age. The particles arc up then fall, like a firework burst on each kick.</div>
+`},
+
+// ─── 8 ───────────────────────────────────────────
+{
+title: "SDF + Audio",
+subtitle: "08 — Shapes That React",
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform sampler2D u_fft;
+
+float fft(float b){ return texture2D(u_fft,vec2(clamp(b,0.,1.),0.5)).r; }
+float band(float lo,float hi){ return (fft(lo)+fft((lo+hi)*.5)+fft(hi))/3.; }
+
+// SDF primitives
+float sdCircle(vec2 p,float r){ return length(p)-r; }
+float sdBox(vec2 p,vec2 b,float r){ vec2 q=abs(p)-b; return length(max(q,0.))+min(max(q.x,q.y),0.)-r; }
+float sdLine(vec2 p,vec2 a,vec2 b,float r){
+  vec2 pa=p-a,ba=b-a;
+  float h=clamp(dot(pa,ba)/dot(ba,ba),0.,1.);
+  return length(pa-ba*h)-r;
+}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  vec2 c  = uv * 2.0 - 1.0;
+  c.x    *= u_resolution.x / u_resolution.y;
+
+  float bass   = band(0.0, 0.05);
+  float mids   = band(0.05, 0.30);
+  float treble = band(0.30, 1.0);
+  float beat   = band(0.0, 0.025);
+
+  vec3 color = vec3(0.02, 0.01, 0.06);
+
+  // ── CIRCLES: radius grows with bass ──
+  for(int i = 1; i <= 5; i++){
+    float fi = float(i);
+    float r  = fi * 0.18 + bass * 0.22;     // bass inflates all rings
+    float d  = sdCircle(c, r);
+    // Ring: only glow near the edge, not fill
+    float ring = 0.006 / (abs(d) + 0.003);
+    color += vec3(1.,.1,.05) * ring * bass * 1.5;
+  }
+
+  // ── ROTATING RECTANGLE: rotates with mids ──
+  float rot = u_time * 0.8 + mids * 3.0;   // mids add rotation speed burst
+  vec2 rotC = vec2(c.x*cos(rot)-c.y*sin(rot),
+                   c.x*sin(rot)+c.y*cos(rot));
+  vec2 boxSize = vec2(0.4 + mids * 0.3, 0.25 + mids * 0.2);
+  float boxD = sdBox(rotC, boxSize, 0.04);
+  color += vec3(.1,.5,1.) * 0.006 / (abs(boxD) + 0.003) * (mids + 0.1);
+
+  // ── TREBLE CROSS LINES: thickness pulses with treble ──
+  float lineW = 0.004 + treble * 0.018;
+  float hLine = sdLine(c, vec2(-1.,0.), vec2(1.,0.), lineW);
+  float vLine = sdLine(c, vec2(0.,-1.), vec2(0.,1.), lineW);
+  float cross = min(hLine, vLine);
+  color += vec3(.7,1.,.2) * smoothstep(0., -lineW*.5, cross) * treble;
+
+  // ── BEAT: sudden scale flash ──
+  // SDF values shift with beat — objects appear to jump outward
+  float beatPush = beat * 0.08;
+  float bigCirc = sdCircle(c, 0.85 + beatPush);
+  color += vec3(1.,.4,.1) * 0.012/(abs(bigCirc)+.006) * beat * 2.0;
+
+  color = color/(1.0+color)*1.3;
+  gl_FragColor = vec4(color,1.0);
+}`,
+body: `
+<p>SDFs (signed distance fields) are the cleanest way to draw audio-reactive shapes. A shape's SDF gives you the exact distance to its edge — and distance is all you need to draw glowing outlines, fills, or animated deformations.</p>
+<p>The pattern: <strong>audio changes an SDF parameter</strong> (radius, rotation angle, size, position) rather than just color. When bass changes the <em>radius</em> of a circle, the circle physically breathes with the music.</p>
+<div class="step-card"><span class="step-num">AUDIO → SDF PARAMETERS</span>
+sdCircle(p, r + bass*0.3) → circle breathes with bass<br>
+rotation += mids * burst → box spins faster on mids<br>
+sdBox(p, size + treble*0.1) → box grows with treble<br>
+translate(p, beat*direction) → jump on kick</div>
+<div class="step-card"><span class="step-num">GLOW FROM SDF</span>Instead of hard fill (step(0.,d)), use: 0.01/(abs(d)+0.005). This gives an infinite glow that falls off with distance from the shape edge. Layer multiple with different colors for neon effects.</div>
+<div class="tip">The most satisfying audio-reactive SDF effect: smooth-minimum (smin) between shapes. Drive the blend radius with bass. The shapes physically merge and un-merge with the music — the geometry "melts" into itself on big beats, then separates in the silence.</div>
+<div class="challenge">Add smin between the rotating box and the innermost circle. Use: float blend = smin(boxD, sdCircle(c, 0.18+bass*.2), 0.1+bass*.15). When bass hits, they merge into one glowing blob. Color it vec3(1., 0.2, 0.5).</div>
+`},
+
+// ─── 9 ───────────────────────────────────────────
+{
+title: "Raymarching to Music",
+subtitle: "09 — 3D Audio Scenes",
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform sampler2D u_fft;
+
+float fft(float b){ return texture2D(u_fft,vec2(clamp(b,0.,1.),0.5)).r; }
+float band(float lo,float hi){ return (fft(lo)+fft((lo+hi)*.5)+fft(hi))/3.; }
+float smin(float a,float b,float k){ float h=clamp(.5+.5*(b-a)/k,0.,1.); return mix(b,a,h)-k*h*(1.-h); }
+
+float sdSphere(vec3 p,float r){ return length(p)-r; }
+float sdBox3(vec3 p,vec3 b){ vec3 q=abs(p)-b; return length(max(q,0.))+min(max(q.x,max(q.y,q.z)),0.); }
+float sdTorus(vec3 p,vec2 t){ return length(vec2(length(p.xz)-t.x,p.y))-t.y; }
+
+float scene(vec3 p){
+  float bass   = band(0.0, 0.05);
+  float mids   = band(0.05, 0.30);
+  float treble = band(0.30, 1.0);
+
+  // Central sphere pulses with bass
+  float sphere = sdSphere(p, 0.3 + bass * 0.35);
+
+  // Orbiting smaller spheres driven by individual FFT bins
+  float orb = 1e6;
+  for(int i = 0; i < 6; i++){
+    float fi  = float(i);
+    float bin = fi / 6.0 * 0.6 + 0.05;
+    float amp = fft(bin);
+    float ang = fi * 1.047 + u_time * (0.6 + amp * 1.2);
+    float orR = 0.65 + amp * 0.25;
+    vec3 op   = p - vec3(cos(ang)*orR, sin(fi*.9+u_time*.3)*.3, sin(ang)*orR);
+    orb = min(orb, sdSphere(op, 0.08 + amp * 0.1));
+  }
+
+  // Torus ring scales with mids
+  float tor = sdTorus(p, vec2(0.7 + mids * 0.2, 0.06));
+
+  // Ground plane
+  float gnd = p.y + 0.8;
+
+  float d = smin(sphere, orb, 0.08 + bass * 0.1);
+  d = min(d, tor);
+  d = min(d, gnd);
+  return d;
+}
+
+vec3 normal(vec3 p){
+  float e=.001;
+  return normalize(vec3(scene(p+vec3(e,0,0))-scene(p-vec3(e,0,0)),
+                        scene(p+vec3(0,e,0))-scene(p-vec3(0,e,0)),
+                        scene(p+vec3(0,0,e))-scene(p-vec3(0,0,e))));
+}
+
+void main(){
+  vec2 uv = (gl_FragCoord.xy/u_resolution)*2.-1.;
+  uv.x   *= u_resolution.x/u_resolution.y;
+
+  float bass = band(0.0,.05);
+  float beat = band(0.0,.025);
+
+  // Camera orbits scene, FOV punches on beat
+  float ca = u_time*.25;
+  vec3 ro = vec3(sin(ca)*2.2, .4+bass*.3, cos(ca)*2.2);
+  vec3 fw = normalize(vec3(0.,.0,0.)-ro);
+  vec3 ri = normalize(cross(vec3(0,1,0),fw));
+  float fovLen = 1.4 - beat*.2;
+  vec3 rd = normalize(fw*fovLen + ri*uv.x + cross(fw,ri)*uv.y);
+
+  vec3 skyCol = mix(vec3(.02,.02,.08), vec3(.06,.02,.12), bass*.4);
+  vec3 color  = skyCol;
+
+  float t=0.;
+  bool hit=false;
+  for(int i=0;i<80;i++){
+    float d=scene(ro+rd*t);
+    if(d<.002){hit=true;break;}
+    t+=d; if(t>12.)break;
+  }
+
+  if(hit){
+    vec3 p=ro+rd*t, n=normal(p);
+    vec3 L=normalize(vec3(1.5,2.,1.));
+    float diff=max(dot(n,L),0.);
+    float b2=band(0.,.05), m=band(.05,.3), tr=band(.3,1.);
+    vec3 col=mix(vec3(.3,.5,.9),vec3(.9,.3,.1),b2);
+    col=mix(col,vec3(.2,.9,.4),m*.4);
+    color=col*(0.1+diff*.9);
+    vec3 h2=normalize(L-rd);
+    color+=.4*pow(max(dot(h2,n),0.),.4)*vec3(.9,.95,1.);
+    color=mix(color,skyCol,t*.08);
+  }
+
+  vec2 vig=gl_FragCoord.xy/u_resolution*2.-1.;
+  color*=1.-dot(vig*.5,vig*.5);
+  color=color/(1.+color)*1.3;
+  gl_FragColor=vec4(clamp(color,0.,1.),1.);
+}`,
+body: `
+<p>Everything from the 2D lessons works in 3D — just wire audio to SDF parameters inside your scene function. The raymarcher doesn't care if the sphere radius came from a uniform or an FFT sample.</p>
+<p>The critical insight: in a raymarched scene, the <strong>SDF is called ~80 times per pixel</strong>. Any audio-driven parameter in the SDF gets evaluated many times per frame. Keep FFT lookups to a minimum inside the SDF — sample once at the top of main() and pass as a constant to the scene.</p>
+<div class="step-card"><span class="step-num">PERFORMANCE NOTE</span>Never call fft() or band() inside scene() or normal(). The normal() function calls scene() 6 times. If scene() calls fft() (a texture lookup), that's 6 texture reads per pixel just for normals × 80 march steps = very slow. Sample FFT once in main() and use the results as constants.</div>
+<div class="step-card"><span class="step-num">CAMERA TRICKS</span>Beat → FOV punch (fovLen -= beat*0.2): camera zooms in on every kick.<br>Bass → camera height oscillates: ro.y += sin(time)*bass*0.3<br>Mids → camera roll: rotate the up vector by mids*0.1<br>These feel "right" because the camera movement matches the audio energy.</div>
+<div class="tip">The orbiting spheres in this shader each sample their own FFT bin. This means 6 spheres act as a mini frequency analyzer — the sphere at bin 0.05 jumps when bass hits, the one at bin 0.5 jumps when mids hit. The whole scene IS the FFT, spatially arranged.</div>
+<div class="challenge">Add a second light source: vec3 L2 = normalize(vec3(-1., 0.5, -1.)); Drive its color with treble: vec3 lightCol2 = vec3(0.1,0.4,1.)*treble. Add a second diffuse term. The scene gets cool-tinted backlighting that shimmers with high frequencies.</div>
+`},
+
+// ─── 10 ───────────────────────────────────────────
+{
+title: "Spatial Audio Concepts",
+subtitle: "10 — PannerNode & HRTF",
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform sampler2D u_fft;
+
+float fft(float b){ return texture2D(u_fft,vec2(clamp(b,0.,1.),0.5)).r; }
+float band(float lo,float hi){ return (fft(lo)+fft((lo+hi)*.5)+fft(hi))/3.; }
+float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5); }
+
+// Analytic sphere intersection
+float hitSphere(vec3 ro,vec3 rd,vec3 cen,float r){
+  vec3 oc=ro-cen; float b=dot(oc,rd),c2=dot(oc,oc)-r*r,d=b*b-c2;
+  return d>0.0 ? -b-sqrt(d) : -1.0;
+}
+
+void main(){
+  vec2 sc=(gl_FragCoord.xy/u_resolution)*2.-1.;
+  sc.x*=u_resolution.x/u_resolution.y;
+  vec2 uvN=gl_FragCoord.xy/u_resolution;
+
+  // Listener orbits the scene (like moving your head)
+  float la=u_time*.2;
+  vec3 listener=vec3(sin(la)*.5,0.,cos(la)*.5);
+  vec3 ro=listener+vec3(0.,.4,2.5);
+  vec3 fw=normalize(vec3(0.)-ro);
+  vec3 ri=normalize(cross(vec3(0,1,0),fw));
+  vec3 rd=normalize(fw*1.5+ri*sc.x+cross(fw,ri)*sc.y);
+
+  vec3 color=vec3(0.02,0.01,0.06);
+
+  // 5 sound sources — each samples its own FFT band
+  float hitT=100.; int hitI=-1;
+  for(int i=0;i<5;i++){
+    float fi=float(i);
+    float spd=0.35+fi*.1;
+    float ang=fi*1.257+u_time*spd;
+    vec3 spos=vec3(cos(ang)*.85, sin(fi*1.9+u_time*.5)*.4, sin(ang)*.85);
+
+    // Perceived volume: inverse-square law from listener position
+    float dist=length(spos-listener);
+    float heard=clamp(1./(1.+dist*dist*.6),0.,1.);
+    // Modulate by this source's frequency band
+    float binLo=fi/5.*.7;
+    heard *= (0.3 + fft(binLo+.05)*.7);
+
+    // Sound wave rings (3D expanding spheres projected onto screen)
+    for(int ring=0;ring<3;ring++){
+      float fr=float(ring);
+      float rr=mod(u_time*heard*.9+fr*.4,1.8)+.05;
+      float ct=dot(spos-ro,rd);
+      if(ct>0.){
+        float ringD=abs(length(ro+rd*ct-spos)-rr);
+        color+=mix(vec3(1.,.2,.0),vec3(.1,.4,1.),fi/4.)*.003/(ringD+.001)*heard*.5/max(fr,1.);
+      }
+    }
+
+    float t2=hitSphere(ro,rd,spos,0.07+heard*.12);
+    if(t2>0.&&t2<hitT){hitT=t2;hitI=i;}
+  }
+
+  if(hitI>=0){
+    float fi=float(hitI);
+    float ang=fi*1.257+u_time*(0.35+fi*.1);
+    vec3 sp2=vec3(cos(ang)*.85,sin(fi*1.9+u_time*.5)*.4,sin(ang)*.85);
+    vec3 hp=ro+rd*hitT;
+    vec3 n=normalize(hp-sp2);
+    vec3 L=normalize(vec3(1,2,1));
+    vec3 bc=mix(vec3(1.,.2,0.),vec3(.1,.4,1.),fi/4.);
+    color=bc*(0.12+max(dot(n,L),0.)*.88);
+    color+=.4*pow(max(dot(normalize(L-rd),n),0.),32.);
+  }
+
+  // Listener dot (your ear position)
+  color+=exp(-length(sc-listener.xz*.38)*70.)*.7*vec3(.4,1.,.2);
+
+  vec2 vig=uvN*2.-1.;
+  color*=1.-dot(vig*.5,vig*.5);
+  color=color/(color+.7)*1.3;
+  gl_FragColor=vec4(clamp(color,0.,1.),1.);
+}`,
+body: `
+<p>Spatial audio positions sound in 3D space so headphone listeners perceive direction. The Web Audio <strong>PannerNode + HRTF</strong> (Head-Related Transfer Function) simulates how your ears filter sound differently from left, right, above, and behind — using measurements of a real human head.</p>
+<div class="step-card"><span class="step-num">REAL CODE</span>const ctx = new AudioContext();<br>const pan = ctx.createPanner();<br>pan.panningModel = 'HRTF';<br>pan.positionX.value = x;<br>pan.positionY.value = y;<br>pan.positionZ.value = z;<br>ctx.listener.positionX.value = camX;</div>
+<p>In this shader: the glowing dot is the listener. The 5 spheres are sound sources. Sphere brightness = perceived loudness = <em>inverse-square law</em> from the listener. As the listener orbits, the same source sounds closer (brighter) then farther (dimmer).</p>
+<div class="step-card"><span class="step-num">INVERSE SQUARE LAW</span>Sound energy drops with distance squared. heard = 1.0 / (1.0 + dist * dist * falloff). This is physically accurate. Falloff controls how fast the sound fades — higher = more intimate space (small room), lower = outdoor/reverberant.</div>
+<div class="tip">HRTF is "raymarching for ears." The HRTF database is a set of impulse responses — one per direction, measured at the eardrums of a dummy head. The browser convolves your audio with the correct impulse for the source direction. Result: sound from above sounds high, from behind sounds behind. Set headphones on and orbit the listener to hear it.</div>
+<div class="challenge">Wire the listener position to your mouse. Add a uniform vec2 u_mouse (update in JS), then: listener = vec3(u_mouse.x*1.2-0.6, 0., u_mouse.y*1.2-0.6). Move the mouse to steer your virtual ear around the sound sources.</div>
+`},
+
+// ─── 11 ───────────────────────────────────────────
+{
+title: "Procedural Synth in JS",
+subtitle: "11 — Sound From Code",
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform sampler2D u_fft;
+// Tracker uniforms: updated every tick by JS
+uniform float u_bpm;
+uniform float u_step;    // current pattern step 0-15
+uniform float u_note0;   // channel 0 frequency (Hz), 0 = rest
+uniform float u_note1;   // channel 1 frequency (Hz)
+uniform float u_note2;   // channel 2 frequency (Hz, bass)
+uniform float u_env0;    // channel 0 envelope 0-1
+uniform float u_env1;
+uniform float u_env2;
+
+float fft(float b){ return texture2D(u_fft,vec2(clamp(b,0.,1.),0.5)).r; }
+
+float noteToY(float freq){
+  if(freq < 1.) return -1.0;
+  return clamp((log(freq)-log(55.))/(log(2200.)-log(55.)), 0., 1.);
+}
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  vec2 c  = uv*2.-1.; c.x*=u_resolution.x/u_resolution.y;
+  vec3 color = vec3(0.02,0.03,0.06);
+
+  // ── STEP GRID (top 18%) ──
+  if(uv.y > 0.82){
+    float s16 = floor(uv.x * 16.);
+    float isActive = step(s16, u_step+.5)*step(u_step-.5,s16);
+    float isBeat   = 1.-step(.5,mod(s16,4.));
+    color = mix(vec3(.06,.08,.14), vec3(.1,.14,.24), isBeat);
+    color = mix(color, vec3(.9,.9,.1), isActive);
+    color -= step(.96, fract(uv.x*16.))*.04;
+    gl_FragColor=vec4(color,1.); return;
+  }
+
+  // ── OSCILLOSCOPES (20%-82%) ──
+  if(uv.y > 0.20){
+    float sy = (uv.y-.20)/.62;
+    float ch = floor(sy*3.);
+    float ly = fract(sy*3.);
+    if(fract(sy*3.) < .025){gl_FragColor=vec4(.05,.07,.12,1.);return;}
+    float freq=(ch<.5)?u_note0:(ch<1.5)?u_note1:u_note2;
+    float env =(ch<.5)?u_env0 :(ch<1.5)?u_env1 :u_env2;
+    vec3 cc=(ch<.5)?vec3(1.,.3,.1):(ch<1.5)?vec3(.2,.7,1.):vec3(.4,1.,.3);
+    if(freq > 1.0){
+      float phase=uv.x*6.2832*(freq/440.)*2.+u_time*6.2832*freq*.0015;
+      float waveY=sin(phase)*env*.38+.5;
+      float line=smoothstep(.022,0.,abs(ly-waveY))*env;
+      color=vec3(.02,.03,.07)+cc*line;
+    } else {
+      color=vec3(.02,.03,.07);
+    }
+    gl_FragColor=vec4(color,1.);return;
+  }
+
+  // ── SPECTRUM (bottom 20%) ──
+  {
+    float ly=uv.y/.20;
+    float amp=fft(uv.x);
+    float barH=amp*.95;
+    float inBar=step(ly,barH);
+    vec3 bc=mix(vec3(1.,.1,0.),vec3(.2,.8,.3),uv.x);
+    color=mix(vec3(.02,.03,.06),bc*.8,inBar*.9);
+    float cap=smoothstep(barH-.006,barH,ly)*smoothstep(barH+.003,barH,ly);
+    color+=bc*cap*3.;
+    gl_FragColor=vec4(clamp(color,0.,1.),1.);
+  }
+}`,
+body: `
+<p>The most demoscene-authentic approach: <strong>generate the audio entirely in JavaScript</strong> using the Web Audio API oscillator graph. No audio files. The synth IS the instrument. This is how 4KB and 64KB demo productions make music.</p>
+<p>The pattern is a 16-step sequencer running in JS. Each tick (every beat / 4 steps), the JS updates shader uniforms: which step is active, what frequency each channel is playing, and the envelope value (how far into the note's attack/release we are).</p>
+<div class="step-card"><span class="step-num">THE TRACKER CONCEPT</span>A grid of 16 columns × N channels. Each cell = note + instrument. JS reads the current column, creates oscillators at the right frequency, connects them to a gain envelope. The shader visualizes this internal state — the "score" animates as it plays.</div>
+<div class="step-card"><span class="step-num">ENVELOPE</span>A note's "envelope" (ADSR) controls volume over time: Attack (fade in) → Decay (drop to sustain level) → Sustain (hold) → Release (fade out). In Web Audio: gainNode.gain.setValueAtTime(0, now); gainNode.gain.linearRampToValueAtTime(1, now+attack); etc. The u_env uniforms carry the current envelope value so the shader can show which notes are active.</div>
+<div class="tip">The Synth button in this course IS this system in miniature — 4 chords on channel 0, a bass line on channel 2, a kick on sub-bass. The u_step, u_note0, u_note1, u_note2, u_env0-2 uniforms are live. Watch the oscilloscope channels — the waveform amplitude and frequency are the exact oscillator state.</div>
+<div class="challenge">The step grid shows one row. Extend it to 3 rows (one per channel) by sampling each channel's note array. For each row, color the active cell with that channel's color (red/blue/green). Dead steps are dark. You'll have a real-time piano roll display.</div>
+`},
+
+// ─── 12 ───────────────────────────────────────────
+{
+title: "Post-Processing Audio Effects",
+subtitle: "12 — Camera, Glitch & Bloom",
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform sampler2D u_fft;
+
+float fft(float b){ return texture2D(u_fft,vec2(clamp(b,0.,1.),0.5)).r; }
+float band(float lo,float hi){ return (fft(lo)+fft((lo+hi)*.5)+fft(hi))/3.; }
+float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5); }
+float noise(vec2 p){ vec2 i=floor(p),f=fract(p),u=f*f*(3.-2.*f); return mix(mix(hash(i),hash(i+vec2(1,0)),u.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),u.x),u.y); }
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  float bass   = band(0.0, 0.05);
+  float mids   = band(0.05, 0.30);
+  float treble = band(0.30, 1.0);
+  float beat   = band(0.0, 0.025);
+
+  // ── 1. CAMERA SHAKE ──
+  // Offset UV by small amount driven by beat
+  float shakeAmt = beat * 0.018;
+  vec2 shake = vec2(
+    sin(u_time*73.1)*shakeAmt,
+    cos(u_time*51.7)*shakeAmt
+  );
+
+  // ── 2. CHROMATIC ABERRATION ──
+  // RGB channels sampled at slightly different UV offsets
+  // Offset scales with bass energy
+  float caStr = 0.004 + bass * 0.018;
+  vec2 caOffset = normalize(uv - 0.5) * caStr;
+
+  // Evaluate a base scene (simple radial spectrum for demo)
+  // In real use, this would be a texture from a previous pass
+  vec2 uvR = uv + shake + caOffset;
+  vec2 uvG = uv + shake;
+  vec2 uvB = uv + shake - caOffset;
+
+  // Base scene: radial spectrum bars
+  vec2 cR=uvR*2.-1.; cR.x*=u_resolution.x/u_resolution.y;
+  vec2 cG=uvG*2.-1.; cG.x*=u_resolution.x/u_resolution.y;
+  vec2 cB=uvB*2.-1.; cB.x*=u_resolution.x/u_resolution.y;
+
+  float angR=atan(cR.y,cR.x)/(6.28318)+.5;
+  float angG=atan(cG.y,cG.x)/(6.28318)+.5;
+  float angB=atan(cB.y,cB.x)/(6.28318)+.5;
+
+  float ampR=fft(angR)*(0.2+bass*.8);
+  float ampG=fft(angG)*(0.2+mids*.8);
+  float ampB=fft(angB)*(0.2+treble*.8);
+
+  float rVal = step(length(cR), ampR*.7+.05) * ampR;
+  float gVal = step(length(cG), ampG*.7+.05) * ampG;
+  float bVal = step(length(cB), ampB*.7+.05) * ampB;
+
+  vec3 color = vec3(rVal, gVal, bVal);
+
+  // ── 3. SCANLINES ──
+  float scan = sin(uv.y * u_resolution.y * 1.5) * .5 + .5;
+  color *= mix(0.85, 1.0, pow(scan, 0.3));
+
+  // ── 4. VIGNETTE ──
+  vec2 vig = uv * 2.0 - 1.0;
+  color *= 1.0 - dot(vig * 0.55, vig * 0.55);
+
+  // ── 5. GLITCH EFFECT ──
+  // On beat: horizontal slices shift left/right
+  float glitchLine = floor(uv.y * 40.0);
+  float glitchAmt  = hash(vec2(glitchLine, floor(u_time*8.)))*beat*.06;
+  // Shift the red channel horizontally by glitch amount
+  float glitchR = fft(fract(angR + glitchAmt));
+  color.r = mix(color.r, glitchR*ampR, beat*.6);
+
+  // ── 6. EDGE FLASH on beat ──
+  color += beat * 0.2 * vec3(1.,.3,.05) * smoothstep(.4,1.,max(abs(vig.x),abs(vig.y)));
+
+  // ── 7. TONE MAPPING ──
+  color = color / (1.0 + color) * 1.4;
+
+  gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
+}`,
+body: `
+<p>Post-processing effects — applied after you've rendered your scene — are where audio reactivity really shines. These are screen-space operations: they take the rendered image as input and modify it based on audio, requiring no knowledge of the underlying scene.</p>
+<div class="step-card"><span class="step-num">CHROMATIC ABERRATION</span>RGB channels sampled at slightly offset UV coordinates. Creates the "digital glitch" lens fringe effect. Wire the offset magnitude to bass or beat: caStr = beat * 0.02. On kick, the image briefly splits into its color channels.</div>
+<div class="step-card"><span class="step-num">CAMERA SHAKE</span>Add a small random offset to UV, scaled by beat amplitude. Use different-frequency sines for X and Y so it doesn't feel repetitive: shake = vec2(sin(time*73.1), cos(time*51.7)) * beatAmt. The prime frequencies prevent aliasing.</div>
+<div class="step-card"><span class="step-num">SCANLINES</span>sin(uv.y * resolution.y * density) creates horizontal bands. Multiply the scene color by this to add CRT texture. Audio can drive density or depth: scanDepth = mix(0.9, 0.7, treble).</div>
+<div class="step-card"><span class="step-num">BLOOM</span>True bloom requires multiple passes (render → blur → add back). In a single-pass shader, fake it: for a given point, sample neighboring UV positions and accumulate their brightness. Expensive but workable for a few sample points driven by strong bass.</div>
+<div class="tip">Apply post-processing in this order: (1) render scene, (2) chromatic aberration (operates on scene), (3) bloom (operates on bright pixels), (4) scanlines (aesthetics), (5) vignette (frame), (6) tone mapping (last always). Doing them out of order produces wrong results.</div>
+<div class="challenge">Add color grading: shift the hue of the rendered image toward warm colors on bass and cool on treble. Do this after tone mapping: color = mix(color, color*vec3(1.2,0.9,0.7), bass*0.4) + mix(vec3(0.), color*vec3(0.7,0.9,1.2), treble*0.3).</div>
+`},
+
+// ─── 13 ───────────────────────────────────────────
+{
+title: "🎧 Grand Finale",
+subtitle: "13 — The Full Concert",
+shader: `// ═══════════════════════════════════════════════════
+// 🎧 GRAND FINALE — Full Audio Concert Shader
+// Everything: FFT, waveform, particles, SDF, noise,
+// post-processing, beat detection — all wired.
+// Hit Synth and let it run.
+// ═══════════════════════════════════════════════════
+precision mediump float;
+uniform vec2  u_resolution;
+uniform float u_time;
+uniform sampler2D u_fft;
+uniform sampler2D u_waveform;
+
+float fft(float b)  { return texture2D(u_fft,     vec2(clamp(b,0.,1.),.5)).r; }
+float wave(float x) { return texture2D(u_waveform, vec2(clamp(x,0.,1.),.5)).r*2.-1.; }
+float band(float lo,float hi){ return (fft(lo)+fft((lo+hi)*.5)+fft(hi))/3.; }
+
+float bass()  { return band(.0,.05); }
+float mids()  { return band(.05,.30); }
+float treb()  { return band(.30,1.0); }
+float beat()  { return exp(-mod(u_time*2.,1.)*5.)*bass(); }
+
+float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5); }
+float hash1(float n){ return fract(sin(n*127.1)*43758.5); }
+float noise(vec2 p){ vec2 i=floor(p),f=fract(p),u=f*f*(3.-2.*f); return mix(mix(hash(i),hash(i+vec2(1,0)),u.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),u.x),u.y); }
+float fbm(vec2 p){ float v=0.,a=.5; for(int i=0;i<4;i++){v+=a*noise(p);p*=2.;a*=.5;} return v; }
+float smin(float a,float b,float k){ float h=clamp(.5+.5*(b-a)/k,0.,1.); return mix(b,a,h)-k*h*(1.-h); }
+
+// SDF scene
+float sdSph(vec3 p,float r){ return length(p)-r; }
+float sdTor(vec3 p,vec2 t){ return length(vec2(length(p.xz)-t.x,p.y))-t.y; }
+
+float scene3D(vec3 p){
+  float b=bass(),m=mids();
+  float core=sdSph(p,.25+b*.3);
+  float tor =sdTor(p-vec3(0.,.0,0.),vec2(.65+m*.2,.07));
+  float orb=1e6;
+  for(int i=0;i<8;i++){
+    float fi=float(i);
+    float ang=fi*.7854+u_time*(.5+fft(fi/8.*.5+.05)*.8);
+    float r=.5+fft(fi/8.*.5)*.3;
+    vec3 op=p-vec3(cos(ang)*r,sin(fi*.9+u_time*.4)*.25,sin(ang)*r);
+    orb=min(orb,sdSph(op,.06+fft(fi/8.*.5)*.08));
+  }
+  float gnd=p.y+.9;
+  float d=smin(core,orb,.1+b*.08);
+  d=min(d,tor); d=min(d,gnd);
+  return d;
+}
+vec3 normal3D(vec3 p){ float e=.001; return normalize(vec3(scene3D(p+vec3(e,0,0))-scene3D(p-vec3(e,0,0)),scene3D(p+vec3(0,e,0))-scene3D(p-vec3(0,e,0)),scene3D(p+vec3(0,0,e))-scene3D(p-vec3(0,0,e)))); }
+
+void main(){
+  vec2 uv  = (gl_FragCoord.xy/u_resolution)*2.-1.;
+  uv.x    *= u_resolution.x/u_resolution.y;
+  vec2 uvN = gl_FragCoord.xy/u_resolution;
+
+  float b=bass(), m=mids(), tr=treb(), bt=beat();
+
+  // ── CAMERA ──
+  float shk = bt*.015;
+  vec2 shake = vec2(sin(u_time*73.1)*shk, cos(u_time*51.7)*shk);
+  uv += shake;
+  float ca = u_time*.22;
+  float cd = 2.5-bt*.3;
+  vec3 ro=vec3(sin(ca)*cd, .4+b*.2, cos(ca)*cd);
+  vec3 fw=normalize(vec3(0.,.05,0.)-ro);
+  vec3 ri=normalize(cross(vec3(0,1,0),fw));
+  float fovL=1.45-bt*.18;
+  vec3 rd=normalize(fw*fovL+ri*uv.x+cross(fw,ri)*uv.y);
+
+  // ── SKY + STARS ──
+  vec3 skyCol=mix(vec3(.03,.03,.12),vec3(.1,.03,.18),b*.5);
+  vec3 color=skyCol;
+  vec2 starUV=rd.xz/(abs(rd.y)+.05);
+  float star=step(.9975,hash(floor(starUV*180.)));
+  color+=star*clamp(rd.y,0.,1.)*(0.4+tr*.9);
+
+  // ── NOISE ATMOSPHERE ──
+  float noiseV=fbm(uvN*3.+u_time*(.08+m*.4)+vec2(fbm(uvN*2.+u_time*.06)*.4));
+  color+=mix(vec3(.04,.04,.15),vec3(.12,.03,.22),noiseV)*(b*.3+m*.1);
+
+  // ── RAYMARCHING ──
+  float t2=0.; bool hit=false;
+  for(int i=0;i<90;i++){
+    float d=scene3D(ro+rd*t2);
+    if(d<.002){hit=true;break;}
+    t2+=d; if(t2>14.)break;
+  }
+  if(hit){
+    vec3 p=ro+rd*t2, n=normal3D(p);
+    vec3 L=normalize(vec3(1.5,2.5,1.));
+    float diff=max(dot(n,L),0.);
+    vec3 col=mix(vec3(.3,.5,.9),vec3(.9,.25,.1),b);
+    col=mix(col,vec3(.2,.9,.4),m*.35);
+    col+=vec3(0.,tr*.3,tr*.5);
+    color=col*(.08+diff*.92);
+    color+=.3*pow(max(dot(normalize(L-rd),n),0.),.5)*vec3(.9,.95,1.);
+    color+=pow(1.-max(dot(n,-rd),0.),4.)*.1*vec3(.3,.5,1.);
+    color=mix(color,skyCol,t2*.06);
+  }
+
+  // ── PARTICLES ──
+  for(int i=0;i<40;i++){
+    float fi=float(i);
+    float bin=fi/40.*.8+.05;
+    float amp=fft(bin);
+    float ang=fi*.1571+u_time*(.4+amp*.8);
+    float r=.55+amp*.4;
+    vec2 pos=vec2(cos(ang)*r,sin(ang)*r);
+    float d2=length(uv-pos);
+    vec3 pc=mix(vec3(1.,.2,.0),vec3(.1,.5,1.),fi/40.);
+    color+=pc*.003/(d2*d2+.0007)*amp*2.;
+  }
+
+  // ── BEAT PARTICLES ──
+  for(int i=0;i<24;i++){
+    float fi=float(i);
+    float ang=hash1(fi)*6.2832;
+    float spd=.3+hash1(fi+100.)*.5;
+    float age=mod(u_time*.8-hash1(fi+200.)*2.,2.5);
+    vec2 pos=vec2(cos(ang),sin(ang))*spd*age;
+    float fade2=(1.-age/2.5)*bt*3.+.1;
+    float d3=length(uv-pos);
+    color+=vec3(1.,.5,.1)*clamp(.004/(d3+.001)*fade2,0.,.8);
+  }
+
+  // ── WAVEFORM LINE ──
+  // Drawn as screen-space overlay at bottom 15%
+  if(uvN.y < .15){
+    float ly=(uvN.y)/.15;
+    float waveY=wave(uvN.x)*.38+.5;
+    float wLine=smoothstep(.018,0.,abs(ly-waveY));
+    float wStr=abs(wave(uvN.x));
+    vec3 wCol=mix(vec3(.1,.9,.3),vec3(1.,.9,.1),wStr);
+    color=mix(color,wCol,wLine*.85);
+  }
+
+  // ── POST: CHROMATIC ABERRATION ──
+  float caStr=.003+bt*.016;
+  vec2 caDir=normalize(uvN-.5)*caStr;
+  color.r+=fft(fract(atan(uv.y+caDir.y,uv.x+caDir.x)/6.28+.5))*.15*bt;
+  color.b-=fft(fract(atan(uv.y-caDir.y,uv.x-caDir.x)/6.28+.5))*.12*bt;
+
+  // ── POST: SCANLINES ──
+  float scan=sin(uvN.y*u_resolution.y*1.5)*.5+.5;
+  color*=mix(.85,1.,pow(scan,.25));
+
+  // ── POST: VIGNETTE ──
+  vec2 vig=uvN*2.-1.;
+  color*=1.-dot(vig*.55,vig*.55);
+
+  // ── POST: EDGE FLASH ──
+  color+=bt*.2*vec3(1.,.3,.05)*smoothstep(.4,1.,max(abs(vig.x),abs(vig.y)));
+
+  // ── TONE MAP + FADE IN ──
+  color=color/(1.+color)*1.35;
+  color*=smoothstep(0.,2.,u_time);
+
+  gl_FragColor=vec4(clamp(color,0.,1.),1.);
+}`,
+body: `
+<p>Every technique from this course, simultaneously. Hit <strong>🎵 Synth</strong> and let it play for a few seconds to get the full effect.</p>
+<div class="step-card"><span class="step-num">WHAT YOU'RE SEEING</span>Raymarched 3D scene: central sphere (bass-reactive), orbiting satellites (each on its own FFT bin), torus ring (mids-reactive), noise atmosphere. 40 spectrum particles orbiting in screen space. 24 beat-burst particles on kick. Waveform oscilloscope strip at the bottom. Chromatic aberration, scanlines, vignette, and edge flash all post-processed on top.</div>
+<div class="step-card"><span class="step-num">AUDIO WIRING SUMMARY</span>
+bass() → 3D sphere radius, camera height, sky color, particle spread<br>
+mids() → torus size, noise speed, orbit speed burst<br>
+treb() → star brightness, fine detail, outer particles<br>
+beat() → camera shake, FOV punch, burst particles, edge flash, chromatic aberration<br>
+fft(bin) → per-orbit-satellite size and speed, per-particle brightness<br>
+wave(x) → oscilloscope strip at bottom</div>
+<p>This is the architecture of real audio-reactive productions — not one effect driven by one value, but a layered system where every visual element has its own audio input, its own frequency range, its own personality.</p>
+<div class="step-card"><span class="step-num">WHERE TO GO FROM HERE</span>shadertoy.com — search "music" or "audio" for thousands of examples<br>iquilezles.org — the definitive reference for SDF math<br>The book "The Nature of Code" — particle systems and emergent behavior<br>Web Audio API spec — the full PannerNode, ConvolverNode, WaveShaperNode rabbit hole<br>JSFXR / ZzFX — micro audio synthesis libraries for game audio</div>
+<div class="challenge">Add a second waveform line offset by half a period: float waveY2 = wave(fract(uvN.x + 0.5)) * 0.38 + 0.5. Draw it in a different color. You now have a stereo oscilloscope — if you feed true stereo, the two channels will show different shapes.</div>
+`},
+
+]; // end LESSONS
+
+// ═══════════════════════════════════════════════════
+//  WEBGL SETUP
+// ═══════════════════════════════════════════════════
+const canvas   = document.getElementById('shader-output');
+const gl       = canvas.getContext('webgl');
+const textarea = document.getElementById('glsl-code');
+const errorBox = document.getElementById('error-box');
+
+if(!gl){ errorBox.style.display='block'; errorBox.textContent='WebGL not supported'; }
+
+const VERT_SRC = `attribute vec2 a_position; void main(){ gl_Position=vec4(a_position,0.,1.); }`;
+
+let program=null, animId=null, startTime=performance.now();
+
+function resize(){
+  const r=canvas.parentElement.getBoundingClientRect();
+  canvas.width=Math.floor(r.width)||400;
+  canvas.height=Math.floor(r.height)||220;
+  gl.viewport(0,0,canvas.width,canvas.height);
+}
+function compileShader(src,type){
+  const sh=gl.createShader(type);
+  gl.shaderSource(sh,src); gl.compileShader(sh);
+  if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)) return{error:gl.getShaderInfoLog(sh)};
+  return sh;
+}
+function buildProgram(frag){
+  const v=compileShader(VERT_SRC,gl.VERTEX_SHADER);
+  if(v.error) return{error:'VERT: '+v.error};
+  const f=compileShader(frag,gl.FRAGMENT_SHADER);
+  if(f.error) return{error:f.error};
+  const p=gl.createProgram();
+  gl.attachShader(p,v); gl.attachShader(p,f); gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)) return{error:gl.getProgramInfoLog(p)};
+  return p;
+}
+
+const quadBuf=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,quadBuf);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+
+// ═══════════════════════════════════════════════════
+//  AUDIO ENGINE
+// ═══════════════════════════════════════════════════
+// analyser.fftSize = 256  →  frequencyBinCount = 128
+// fftBuf / wavBuf must be exactly 128 bytes each
+const FFT_BINS = 128;
+const floatExt = gl.getExtension('OES_texture_float');
+
+// Correctly-sized typed arrays — one byte per bin
+const fftBuf = new Uint8Array(FFT_BINS);
+const wavBuf = new Uint8Array(FFT_BINS);
+
+function makeTex(){
+  const t = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  // Initialise to zeros / silence
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, FFT_BINS, 1, 0,
+                gl.LUMINANCE, gl.UNSIGNED_BYTE, new Uint8Array(FFT_BINS));
+  return t;
+}
+const fftTex = makeTex();
+const wavTex = makeTex();
+
+function uploadTex(tex, u8arr){
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  // Always upload as UNSIGNED_BYTE — works on all WebGL1 devices
+  // even if OES_texture_float is absent
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, FFT_BINS, 1, 0,
+                gl.LUMINANCE, gl.UNSIGNED_BYTE, u8arr);
+}
+
+// Tracker state updated by synth tick, read by render()
+let trackerState = { step:0, bpm:128,
+                     note0:0, note1:0, note2:0,
+                     env0:0,  env1:0,  env2:0 };
+
+// Web Audio objects — created on first user gesture
+let audioCtx = null, analyser = null;
+let activeSource = null, micStream = null, synthTimer = null;
+
+function ensureCtx(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  if(!analyser){
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize             = FFT_BINS * 2;  // frequencyBinCount = FFT_BINS
+    analyser.smoothingTimeConstant = 0.8;
+    analyser.connect(audioCtx.destination);       // so we actually hear it
+  }
+}
+
+function setStatus(t){ document.getElementById('audio-status').textContent = t; }
+function clearBtns(){ document.querySelectorAll('.abtn').forEach(b => b.classList.remove('on')); }
+
+function stopAudio(){
+  clearBtns();
+  if(synthTimer){ clearInterval(synthTimer); synthTimer = null; }
+  if(activeSource){ try{ activeSource.stop(); }catch(e){} activeSource = null; }
+  if(micStream){ micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+  trackerState = { step:0, bpm:128, note0:0,note1:0,note2:0, env0:0,env1:0,env2:0 };
+  // Zero out textures so shader goes silent too
+  fftBuf.fill(0); wavBuf.fill(128);
+  uploadTex(fftTex, fftBuf); uploadTex(wavTex, wavBuf);
+  setStatus('stopped');
+}
+
+// ── MIC ──
+document.getElementById('btn-mic').onclick = async () => {
+  stopAudio(); ensureCtx();
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
+    activeSource = audioCtx.createMediaStreamSource(micStream);
+    activeSource.connect(analyser);
+    document.getElementById('btn-mic').classList.add('on');
+    setStatus('🎤 mic live — speak or play music near it');
+  } catch(e){ setStatus('mic blocked: ' + e.message); }
+};
+
+// ── FILE ──
+document.getElementById('btn-file').onclick = () =>
+  document.getElementById('audio-file-input').click();
+
+document.getElementById('audio-file-input').addEventListener('change', async e => {
+  const file = e.target.files[0]; if(!file) return;
+  stopAudio(); ensureCtx();
+  try {
+    const ab  = await file.arrayBuffer();
+    const buf = await audioCtx.decodeAudioData(ab);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    src.connect(analyser); src.start(0);
+    activeSource = src;
+    document.getElementById('btn-file').classList.add('on');
+    setStatus('▶ ' + file.name);
+  } catch(e){ setStatus('file error: ' + e.message); }
+  // Reset so same file can be re-selected
+  e.target.value = '';
+});
+
+// ── SYNTH ──
+// 16-step MOD tracker: 3 channels + kick on every beat
+// Note indices: 0=rest, 1=C4, 2=D4, 3=E4, 4=F4, 5=G4, 6=A4, 7=B4, 8=C5
+const NOTE_FREQ = [0, 261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+const PATTERN = [
+  [1,0,3,0, 5,0,3,0, 6,0,5,0, 3,0,1,0],  // ch0 melody   (square)
+  [3,0,5,0, 1,0,5,0, 1,0,3,0, 6,0,5,0],  // ch1 harmony  (triangle)
+  [1,1,0,0, 3,3,0,0, 5,5,0,0, 3,3,0,0],  // ch2 bass     (sawtooth, octave down)
+];
+const OSC_TYPE  = ['square','triangle','sawtooth'];
+const OSC_VOL   = [0.22, 0.18, 0.35];
+const SYNTH_BPM = 128;
+
+let synthStep = 0;
+
+document.getElementById('btn-synth').onclick = () => {
+  stopAudio(); ensureCtx();
+
+  // Mark active BEFORE first tick so the button state is correct
+  document.getElementById('btn-synth').classList.add('on');
+  setStatus('🎵 synth — ' + SYNTH_BPM + ' BPM');
+
+  const stepMs  = (60 / SYNTH_BPM / 2) * 1000;  // 8th note in ms
+  const stepSec = stepMs / 1000;
+  synthStep = 0;
+
+  function tick(){
+    const now  = audioCtx.currentTime;
+    const step = synthStep % 16;
+    trackerState.step = step;
+    trackerState.bpm  = SYNTH_BPM;
+
+    // 3 melodic channels
+    for(let ch = 0; ch < 3; ch++){
+      const noteIdx = PATTERN[ch][step];
+      let freq = NOTE_FREQ[noteIdx] || 0;
+      if(ch === 2) freq *= 0.5;           // bass one octave down
+      trackerState['note' + ch] = freq;
+
+      if(freq > 0){
+        const osc = audioCtx.createOscillator();
+        const env = audioCtx.createGain();
+        osc.type = OSC_TYPE[ch];
+        osc.frequency.value = freq;
+        env.gain.setValueAtTime(0, now);
+        env.gain.linearRampToValueAtTime(OSC_VOL[ch], now + 0.008);
+        env.gain.exponentialRampToValueAtTime(0.0001,  now + stepSec * 0.75);
+        osc.connect(env);
+        env.connect(analyser);
+        osc.start(now);
+        osc.stop(now + stepSec * 0.78);
+        trackerState['env' + ch] = 1.0;
+      } else {
+        trackerState['env' + ch] = 0;
+        trackerState['note' + ch] = 0;
+      }
+    }
+
+    // Kick drum on beats 1,5,9,13 (every 4 steps)
+    if(step % 4 === 0){
+      const kick = audioCtx.createOscillator();
+      const kenv = audioCtx.createGain();
+      kick.type = 'sine';
+      kick.frequency.setValueAtTime(110, now);
+      kick.frequency.exponentialRampToValueAtTime(28, now + 0.18);
+      kenv.gain.setValueAtTime(0.7, now);
+      kenv.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+      kick.connect(kenv);
+      kenv.connect(analyser);
+      kick.start(now);
+      kick.stop(now + 0.25);
+    }
+
+    synthStep++;
+  }
+
+  tick(); // fire immediately — button is already marked .on
+  synthTimer = setInterval(tick, stepMs);
+};
+
+document.getElementById('btn-stop').onclick = stopAudio;
+
+// ── RENDER LOOP ──
+// Called every animation frame. Pulls live FFT/waveform data,
+// uploads to GPU textures, sets all uniforms, draws the quad.
+function render(){
+  if(!program){ animId = requestAnimationFrame(render); return; }
+
+  gl.useProgram(program);
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+  const aPos = gl.getAttribLocation(program, 'a_position');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const t = (performance.now() - startTime) / 1000;
+  const uRes  = gl.getUniformLocation(program, 'u_resolution');
+  const uTime = gl.getUniformLocation(program, 'u_time');
+  if(uRes)  gl.uniform2f(uRes,  canvas.width, canvas.height);
+  if(uTime) gl.uniform1f(uTime, t);
+
+  // Pull fresh audio data each frame
+  if(analyser){
+    analyser.getByteFrequencyData(fftBuf);   // 0-255 per bin, FFT_BINS values
+    analyser.getByteTimeDomainData(wavBuf);  // 0-255, 128 = silence
+  } else {
+    fftBuf.fill(0); wavBuf.fill(128);
+  }
+  uploadTex(fftTex, fftBuf);
+  uploadTex(wavTex, wavBuf);
+
+  // Bind textures to units 0 and 1
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, fftTex);
+  const uFft = gl.getUniformLocation(program, 'u_fft');
+  if(uFft !== null) gl.uniform1i(uFft, 0);
+
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, wavTex);
+  const uWav = gl.getUniformLocation(program, 'u_waveform');
+  if(uWav !== null) gl.uniform1i(uWav, 1);
+
+  // Tracker uniforms — harmless no-ops on shaders that don't declare them
+  const setF = (n, v) => { const u = gl.getUniformLocation(program, n); if(u !== null) gl.uniform1f(u, v); };
+  const ts = trackerState;
+  setF('u_bpm',   ts.bpm);
+  setF('u_step',  ts.step);
+  setF('u_note0', ts.note0); setF('u_note1', ts.note1); setF('u_note2', ts.note2);
+  setF('u_env0',  ts.env0);  setF('u_env1',  ts.env1);  setF('u_env2',  ts.env2);
+
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+  animId = requestAnimationFrame(render);
+}
+
+function compileAndRun(){
+  if(animId) cancelAnimationFrame(animId);
+  if(program) gl.deleteProgram(program);
+  const result = buildProgram(textarea.value);
+  if(result.error){
+    errorBox.style.display = 'block';
+    errorBox.textContent   = result.error;
+    program = null;
+  } else {
+    errorBox.style.display = 'none';
+    program = result;
+  }
+  animId = requestAnimationFrame(render);
+}
+textarea.addEventListener('keydown', e => {
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+    e.preventDefault(); compileAndRun();
+  }
+});
+
+// ── FFT MINI VISUALIZER (toolbar EQ bars) ──
+const miniCanvas = document.getElementById('fft-mini');
+const miniCtx    = miniCanvas.getContext('2d');
+(function drawMini(){
+  miniCtx.fillStyle = '#0a0a14';
+  miniCtx.fillRect(0, 0, 96, 20);
+  if(analyser){
+    // Re-use fftBuf — already populated by render() each frame
+    for(let i = 0; i < 32; i++){
+      const h   = Math.round(fftBuf[i] / 255 * 18);
+      const hue = Math.round((1 - i/32) * 240); // red=bass, blue=treble
+      miniCtx.fillStyle = `hsl(${hue},90%,55%)`;
+      miniCtx.fillRect(i * 3, 20 - h, 2, h);
+    }
+  }
+  requestAnimationFrame(drawMini);
+})();
+
+// ═══════════════════════════════════════════════════
+//  LESSON NAVIGATION
+// ═══════════════════════════════════════════════════
+let currentLesson=0;
+function loadLesson(idx){
+  currentLesson=idx;
+  const L=LESSONS[idx];
+  document.getElementById('lesson-text').innerHTML=`
+    <div class="lesson-number">${L.subtitle}</div>
+    <div class="lesson-title">${L.title}</div>
+    <div class="lesson-body">${L.body}</div>`;
+  textarea.value=L.shader;
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  document.getElementById('progress').style.width=((idx+1)/LESSONS.length*100).toFixed(1)+'%';
+  startTime=performance.now();
+  compileAndRun();
+}
+
+const nav=document.getElementById('lesson-nav');
+LESSONS.forEach((L,i)=>{
+  const b=document.createElement('button');
+  b.className='nav-btn'; b.textContent=L.subtitle;
+  b.onclick=()=>loadLesson(i);
+  nav.appendChild(b);
+});
+
+// ═══════════════════════════════════════════════════
+//  HERO CANVAS
+// ═══════════════════════════════════════════════════
+(function(){
+  const hc=document.getElementById('hero');
+  const hgl=hc.getContext('webgl');
+  if(!hgl) return;
+  const hFrag=`precision mediump float;uniform vec2 u_resolution;uniform float u_time;
+  float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5);}
+  float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),u.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x),u.y);}
+  void main(){vec2 uv=gl_FragCoord.xy/u_resolution;float v=n(uv*3.+u_time*.12)+n(uv*7.-u_time*.08)*.5;gl_FragColor=vec4(mix(vec3(.25,.0,.12),vec3(.0,.15,.4),v),1.);}`;
+  function rs(){hc.width=hc.parentElement.offsetWidth;hc.height=hc.parentElement.offsetHeight;hgl.viewport(0,0,hc.width,hc.height);}
+  rs(); window.addEventListener('resize',rs);
+  const vs=hgl.createShader(hgl.VERTEX_SHADER);hgl.shaderSource(vs,'attribute vec2 a;void main(){gl_Position=vec4(a,0,1);}');hgl.compileShader(vs);
+  const fs=hgl.createShader(hgl.FRAGMENT_SHADER);hgl.shaderSource(fs,hFrag);hgl.compileShader(fs);
+  const pr=hgl.createProgram();hgl.attachShader(pr,vs);hgl.attachShader(pr,fs);hgl.linkProgram(pr);
+  const b2=hgl.createBuffer();hgl.bindBuffer(hgl.ARRAY_BUFFER,b2);hgl.bufferData(hgl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),hgl.STATIC_DRAW);
+  const st=performance.now();
+  (function loop(){
+    hgl.useProgram(pr);hgl.bindBuffer(hgl.ARRAY_BUFFER,b2);
+    const p2=hgl.getAttribLocation(pr,'a');hgl.enableVertexAttribArray(p2);hgl.vertexAttribPointer(p2,2,hgl.FLOAT,false,0,0);
+    hgl.uniform2f(hgl.getUniformLocation(pr,'u_resolution'),hc.width,hc.height);
+    hgl.uniform1f(hgl.getUniformLocation(pr,'u_time'),(performance.now()-st)/1000);
+    hgl.drawArrays(hgl.TRIANGLES,0,6);requestAnimationFrame(loop);
+  })();
+})();
+
+resize();
+window.addEventListener('resize',resize);
+loadLesson(0);
+</script>
+</body>
+</html>

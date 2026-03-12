@@ -1,0 +1,2843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GLSL for Lemurs 🐒 — Shader School</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap');
+:root{
+  --bg:#0a0a0f;--panel:#111118;--border:#1e1e2e;
+  --accent:#7fff6b;--accent2:#ff6b9d;--accent3:#6bc5ff;
+  --text:#e0e0f0;--muted:#666688;--code-bg:#0d0d15;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+header{padding:3rem 2rem 2rem;text-align:center;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+header canvas#hero{position:absolute;inset:0;width:100%;height:100%;opacity:.35;pointer-events:none;}
+header .inner{position:relative;z-index:1;}
+.tagline-chip{display:inline-block;background:var(--accent);color:#000;font-family:'Space Mono',monospace;font-size:.65rem;padding:.25rem .75rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem;}
+h1{font-size:clamp(2.5rem,6vw,5rem);font-weight:800;line-height:1;letter-spacing:-.02em;}
+h1 span{color:var(--accent);}
+.subtitle{font-family:'Space Mono',monospace;font-size:.85rem;color:var(--muted);margin-top:.75rem;}
+nav{display:flex;gap:.4rem;padding:1rem 1.5rem;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:100;scrollbar-width:none;}
+nav::-webkit-scrollbar{display:none;}
+.nav-btn{flex-shrink:0;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:.7rem;padding:.4rem .8rem;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nav-btn.active{background:var(--accent);color:#000;border-color:var(--accent);}
+main{display:grid;grid-template-columns:1fr 1fr;gap:0;height:calc(100vh - 180px);min-height:500px;}
+@media(max-width:900px){main{grid-template-columns:1fr;height:auto;}}
+.lesson-panel{padding:2rem;overflow-y:auto;border-right:1px solid var(--border);scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.lesson-number{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.5rem;}
+.lesson-title{font-size:1.8rem;font-weight:800;line-height:1.1;margin-bottom:1rem;}
+.lesson-body{font-family:'Space Mono',monospace;font-size:.78rem;line-height:1.9;color:#b0b0cc;}
+.lesson-body p{margin-bottom:1rem;}
+.lesson-body strong{color:var(--accent);font-weight:700;}
+.lesson-body em{color:var(--accent3);font-style:normal;}
+.lesson-body .tip{background:#1a1a2e;border-left:3px solid var(--accent2);padding:.75rem 1rem;margin:1rem 0;color:#d0d0e8;}
+.lesson-body .tip::before{content:'🐒 LEMUR TIP: ';color:var(--accent2);font-weight:700;}
+.lesson-body .step-card{background:#0f0f1e;border:1px solid var(--border);border-left:3px solid var(--accent3);padding:.75rem 1rem;margin:.6rem 0;}
+.lesson-body .step-card .step-num{color:var(--accent3);font-weight:700;font-size:.65rem;letter-spacing:.15em;display:block;margin-bottom:.25rem;}
+.lesson-body .challenge{background:#160d1e;border:1px solid var(--accent2);padding:.75rem 1rem;margin:.6rem 0;}
+.lesson-body .challenge::before{content:'⚡ CHALLENGE: ';color:var(--accent2);font-weight:700;}
+.lesson-body code{background:#1a1a2e;color:var(--accent3);padding:.1em .4em;font-size:.85em;}
+.editor-panel{display:flex;flex-direction:column;background:var(--code-bg);}
+.canvas-area{flex:0 0 220px;position:relative;background:#000;border-bottom:1px solid var(--border);}
+canvas#shader-output{width:100%;height:100%;display:block;}
+.canvas-label{position:absolute;top:.5rem;left:.75rem;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.error-overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(255,80,80,.9);color:#fff;font-family:'Space Mono',monospace;font-size:.65rem;padding:.5rem .75rem;display:none;white-space:pre-wrap;line-height:1.5;max-height:80px;overflow-y:auto;}
+/* ── AUDIO TOOLBAR — lives inside editor-panel, always present, hidden when not needed ── */
+/* ── CODE TOOLBAR ── */
+.code-toolbar{display:flex;justify-content:space-between;align-items:center;padding:.5rem .75rem;border-bottom:1px solid var(--border);background:var(--panel);}
+.code-toolbar span{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.1em;}
+.run-btn{background:var(--accent);color:#000;border:none;font-family:'Space Mono',monospace;font-size:.7rem;font-weight:700;padding:.35rem 1rem;cursor:pointer;transition:opacity .15s;letter-spacing:.05em;}
+.run-btn:hover{opacity:.85;}
+.code-editor{flex:1;overflow:auto;position:relative;}
+textarea#glsl-code{width:100%;height:100%;background:var(--code-bg);color:#c8f0c0;font-family:'Space Mono',monospace;font-size:.72rem;line-height:1.7;border:none;outline:none;padding:1rem;resize:none;tab-size:2;}
+.progress-bar{height:2px;background:var(--border);}
+.progress-fill{height:100%;background:var(--accent);transition:width .4s ease;}
+</style>
+</head>
+<body>
+
+<header>
+  <canvas id="hero"></canvas>
+  <div class="inner">
+    <div class="tagline-chip">🐒 Interactive Shader School</div>
+    <h1>GLSL for <span>Lemurs</span></h1>
+    <p class="subtitle">// from zero pixels → shader wizard → you can do this</p>
+  </div>
+</header>
+
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<nav id="lesson-nav"></nav>
+
+<main>
+  <div class="lesson-panel" id="lesson-text"></div>
+  <div class="editor-panel">
+    <div class="canvas-area">
+      <span class="canvas-label">▶ live output</span>
+      <canvas id="shader-output"></canvas>
+      <div class="error-overlay" id="error-box"></div>
+    </div>
+    <div class="code-toolbar">
+      <span>FRAGMENT SHADER — edit &amp; run</span>
+      <button class="run-btn" onclick="compileAndRun()">▶ RUN</button>
+    </div>
+    <div class="code-editor">
+      <textarea id="glsl-code" spellcheck="false"></textarea>
+    </div>
+  </div>
+</main>
+
+<script>
+const LESSONS = [
+
+// ─── 1 ───────────────────────────────────────────
+{
+title: "Your First Pixel",
+subtitle: "01 — Hello Color",
+body: `
+<p>Welcome! A <strong>shader</strong> is just a tiny program that runs on your GPU — once <em>per pixel</em>, insanely fast, all at the same time.</p>
+<p>Think of it like this: imagine a million tiny ants, each painting one dot of the screen. They all run the same code but each ant only knows where <em>it</em> is.</p>
+<p>The shader below outputs a <strong>solid color</strong>. Every pixel runs this code and returns the same result.</p>
+<p><strong>gl_FragColor</strong> is the magic variable — it's the color you're handing back. It takes 4 numbers: <em>Red, Green, Blue, Alpha</em> — all between 0.0 and 1.0.</p>
+<div class="tip">Think of 0.0 as "none of that color" and 1.0 as "full blast". It's like a knob from off to maximum. No 0–255 nonsense here!</div>
+<p>Try changing the numbers. Make it red: <strong>vec4(1.0, 0.0, 0.0, 1.0)</strong></p>
+`,
+shader: `// Every pixel runs this exact code.
+// "precision" just tells the GPU how precise
+// our decimal numbers should be. mediump = "medium".
+precision mediump float;
+
+void main() {
+  // gl_FragColor = the final color of THIS pixel.
+  // vec4 = a group of 4 numbers: (R, G, B, Alpha)
+  // All values go from 0.0 (none) to 1.0 (full)
+  
+  gl_FragColor = vec4(
+    0.2,   // Red:   low → not much red
+    0.8,   // Green: high → lots of green
+    0.6,   // Blue:  medium
+    1.0    // Alpha: 1.0 = fully visible
+  );
+}
+`
+},
+
+// ─── 2 ───────────────────────────────────────────
+{
+title: "Knowing Where You Are",
+subtitle: "02 — Coordinates & UV",
+body: `
+<p>Right now every pixel paints the same color. Boring! Let's make pixels paint <em>differently based on their position</em>.</p>
+<p>The special variable <strong>gl_FragCoord</strong> tells each pixel its own X,Y position in pixels. But pixel coordinates are ugly to work with (they depend on screen size).</p>
+<p>Instead, we convert to <strong>UV coordinates</strong> — a normalized 0.0–1.0 space. Bottom-left = (0,0). Top-right = (1,1). Same everywhere, no matter the screen size.</p>
+<p>In the shader: <em>uv.x</em> goes from 0 (left) → 1 (right). We use that as the Red channel. Result: a <strong>gradient</strong>!</p>
+<div class="tip">UV is just "normalized position". U = horizontal, V = vertical. It's the most useful thing in shader-land. Tattoo it on your brain.</div>
+<p>Try using <strong>uv.y</strong> for blue. Or add both together!</p>
+`,
+shader: `precision mediump float;
+
+// The GPU gives us the resolution (canvas size)
+// as a "uniform" — a value shared by ALL pixels.
+uniform vec2 u_resolution;
+
+void main() {
+  // gl_FragCoord.xy = this pixel's position in pixels
+  // Dividing by resolution gives us 0.0 → 1.0 range
+  // This is called "UV" or "normalized coordinates"
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  
+  // uv.x goes from 0 (left edge) to 1 (right edge)
+  // Use it as the Red channel → red gradient!
+  float red   = uv.x;
+  
+  // uv.y goes from 0 (bottom) to 1 (top)
+  float green = uv.y;
+  
+  // Combine them!
+  gl_FragColor = vec4(red, green, 0.4, 1.0);
+}
+`
+},
+
+// ─── 3 ───────────────────────────────────────────
+{
+title: "Time & Animation",
+subtitle: "03 — The u_time Uniform",
+body: `
+<p>Animation = changing something over time. We pass the current time into the shader as a <strong>uniform</strong> called <em>u_time</em>.</p>
+<p>A uniform is a value that's the same for every pixel but changes each frame — like the current second on a clock.</p>
+<p>The magic function: <strong>sin()</strong>. It oscillates smoothly between -1 and 1. Feed it time, get a wave! Scale it to 0–1 with: <em>(sin(x) + 1.0) / 2.0</em></p>
+<div class="tip">sin() is your best friend in shaders. It's just a smoothly wiggling number. Like a lemur's tail swinging back and forth. Feed it time → pulsing animation. No math degree needed!</div>
+<p>Try making different channels pulse at different speeds by multiplying u_time: <strong>sin(u_time * 2.0)</strong></p>
+`,
+shader: `precision mediump float;
+
+uniform vec2 u_resolution;
+uniform float u_time; // current time in seconds
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  
+  // sin() goes from -1 to 1 smoothly.
+  // Add 1, divide by 2 → now it's 0 to 1.
+  // This maps nicely to a color value!
+  float pulse = (sin(u_time) + 1.0) / 2.0;
+  
+  // Different speeds for each channel:
+  float r = (sin(u_time * 1.0) + 1.0) / 2.0;
+  float g = (sin(u_time * 0.7 + 1.0) + 1.0) / 2.0;
+  float b = (sin(u_time * 1.3 + 2.0) + 1.0) / 2.0;
+  
+  // Mix with UV position too for extra fun
+  gl_FragColor = vec4(r * uv.x, g, b * uv.y, 1.0);
+}
+`
+},
+
+// ─── 4 ───────────────────────────────────────────
+{
+title: "Drawing Shapes",
+subtitle: "04 — Circles & step()",
+body: `
+<p>How do you draw a circle in a shader? There's no "draw circle" function — instead, you <em>test every pixel</em>: "are you inside the circle?"</p>
+<p>The distance formula: <strong>length(uv - center)</strong> gives you how far each pixel is from the center point.</p>
+<p>Then <strong>step(edge, value)</strong> is a hard switch: returns 0.0 if value &lt; edge, returns 1.0 if value ≥ edge. It's like an on/off button.</p>
+<p>Use <strong>smoothstep(a, b, x)</strong> for a soft edge — smooth transition between a and b. Much more beautiful!</p>
+<div class="tip">Shaders don't "draw shapes" — they ask "is this pixel inside the shape?" for every single pixel. It's backwards from what you're used to, but incredibly powerful!</div>
+`,
+shader: `precision mediump float;
+
+uniform vec2 u_resolution;
+uniform float u_time;
+
+void main() {
+  // Center UV around 0,0 (so center of screen = 0,0)
+  // by multiplying by 2 and subtracting 1
+  vec2 uv = (gl_FragCoord.xy / u_resolution) * 2.0 - 1.0;
+  
+  // Fix stretching: multiply x by width/height ratio
+  uv.x *= u_resolution.x / u_resolution.y;
+  
+  // Distance from center (0,0) for each pixel
+  float dist = length(uv);
+  
+  // Animated radius
+  float radius = 0.4 + sin(u_time) * 0.1;
+  
+  // smoothstep(edge0, edge1, x)
+  // → smooth 0-to-1 transition between edge0 and edge1
+  // Invert (1.0 - ...) so inside = 1, outside = 0
+  float circle = 1.0 - smoothstep(radius - 0.02, radius + 0.02, dist);
+  
+  // Color the circle green, background dark
+  vec3 color = mix(
+    vec3(0.05, 0.05, 0.1),  // background color
+    vec3(0.5, 1.0, 0.4),    // circle color
+    circle                  // 0 = bg, 1 = circle
+  );
+  
+  gl_FragColor = vec4(color, 1.0);
+}
+`
+},
+
+// ─── 5 ───────────────────────────────────────────
+{
+title: "Patterns with fract()",
+subtitle: "05 — Repeating & Tiling",
+body: `
+<p>Want to tile a pattern? <strong>fract(x)</strong> returns only the decimal part of a number. So fract(2.7) = 0.7, fract(3.0) = 0.0.</p>
+<p>If you multiply UV by 5 and take fract(), you get 5 copies of the 0–1 space across your canvas. Instant tiling!</p>
+<p><strong>floor(x)</strong> is the opposite — gives you just the integer part. Use it to give each tile a unique ID for randomness.</p>
+<div class="tip">fract() is like a copy machine for your coordinate space. Multiply first to set how many copies, then fract() to reset each tile back to 0-1. That's ALL tiling is!</div>
+<p>Try changing the <strong>8.0</strong> to see more or fewer tiles. Try using the tile ID for colors!</p>
+`,
+shader: `precision mediump float;
+
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// A "hash" function: scrambles a number into
+// a fake-random value. It's not truly random,
+// just looks like it. Very useful!
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5);
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  
+  // Scale up to make 8x8 grid
+  vec2 scaled = uv * 8.0;
+  
+  // fract() wraps each tile back to 0-1 range
+  vec2 cell_uv = fract(scaled);
+  
+  // floor() gives the INTEGER tile index (0,1,2...)
+  // Use it as a unique ID for each cell
+  vec2 cell_id = floor(scaled);
+  
+  // Each cell gets a random brightness using its ID
+  float brightness = hash(cell_id + floor(u_time * 0.5));
+  
+  // Draw a circle in each tile
+  vec2 centered = cell_uv * 2.0 - 1.0;
+  float dist = length(centered);
+  float circle = 1.0 - smoothstep(0.3, 0.35, dist);
+  
+  vec3 color = vec3(0.1, 0.8, 0.5) * brightness * circle;
+  
+  gl_FragColor = vec4(color, 1.0);
+}
+`
+},
+
+// ─── 6 ───────────────────────────────────────────
+{
+title: "Noise — Organic Randomness",
+subtitle: "06 — Value Noise",
+body: `
+<p>Pure random looks static and harsh. <strong>Noise</strong> is smooth randomness — like clouds, terrain, or wood grain. It's the secret sauce of organic-looking shaders.</p>
+<p>Value noise works by: hashing random values at grid corners, then <strong>smoothly interpolating</strong> between them using <em>mix()</em>.</p>
+<p>Stack multiple noise layers at different scales (frequencies) and you get <strong>fractal noise</strong> — also called FBM (Fractal Brownian Motion). This is how pretty much every natural texture is made.</p>
+<div class="tip">Noise = smooth randomness. Think of it like a random landscape where nearby points are similar. Layer it at different zoom levels and you get clouds, fire, marble — literally everything natural!</div>
+`,
+shader: `precision mediump float;
+
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// Simple 2D hash: input position → "random" float
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5);
+}
+
+// Value noise: smooth random by blending grid corners
+float noise(vec2 p) {
+  vec2 i = floor(p);   // integer grid cell
+  vec2 f = fract(p);   // position within cell
+  
+  // Smooth the interpolation (feels nicer than linear)
+  // This is called a "smoothstep curve"
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  
+  // Sample the 4 corners of the grid cell
+  float a = hash(i);
+  float b = hash(i + vec2(1.0, 0.0));
+  float c = hash(i + vec2(0.0, 1.0));
+  float d = hash(i + vec2(1.0, 1.0));
+  
+  // Blend between corners based on position
+  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+
+// FBM = layer noise at different scales
+// Each layer = "octave". More octaves = more detail
+float fbm(vec2 p) {
+  float value = 0.0;
+  float amplitude = 0.5; // how strong each layer is
+  
+  for (int i = 0; i < 5; i++) {
+    value += amplitude * noise(p);
+    p *= 2.0;          // zoom in (higher frequency)
+    amplitude *= 0.5;  // quieter (less amplitude)
+  }
+  return value;
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  
+  // Animate the noise by shifting it over time
+  float n = fbm(uv * 3.0 + u_time * 0.2);
+  
+  // Map noise to a color gradient
+  // mix(colorA, colorB, amount) blends two colors
+  vec3 color = mix(
+    vec3(0.05, 0.1, 0.3),  // dark blue
+    vec3(0.8, 0.95, 1.0),  // light cyan
+    n
+  );
+  
+  gl_FragColor = vec4(color, 1.0);
+}
+`
+},
+
+// ─── 7 ───────────────────────────────────────────
+{
+title: "Textures & UV Mapping",
+subtitle: "07 — sampler2D",
+body: `
+<p>A <strong>texture</strong> is an image you send to the GPU. You sample it using UV coordinates — you ask "what color is at this position in the image?"</p>
+<p>The function <strong>texture2D(sampler, uv)</strong> returns the color at that UV spot. UVs still go 0–1 and tile/wrap automatically.</p>
+<p>The power: you can <em>warp, stretch, scroll, and distort</em> the UVs before sampling. Offsetting UVs over time = scrolling texture. Adding noise to UVs = warped/melting effect.</p>
+<div class="tip">UV mapping is like stretching a photo over a surface. The UVs decide WHICH part of the photo lands on WHICH pixel. Distort the UVs, distort the image. You're not touching the image — just the "projection"!</div>
+<p>This demo uses a procedural "texture" since we can't load images here — but the same texture2D() call works with real images!</p>
+`,
+shader: `precision mediump float;
+
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// In real apps you'd have: uniform sampler2D u_texture;
+// And sample it with: texture2D(u_texture, uv)
+// Here we'll make a fake procedural texture instead!
+
+// Fake "texture" — a checkerboard pattern
+vec3 fakeTexture(vec2 uv) {
+  // Tile 8x8
+  vec2 tiled = fract(uv * 8.0);
+  // Checker: XOR of which half each axis is in
+  float cx = step(0.5, tiled.x);
+  float cy = step(0.5, tiled.y);
+  float checker = abs(cx - cy); // 0 or 1, alternating
+  return mix(vec3(0.1, 0.1, 0.3), vec3(0.9, 0.8, 0.5), checker);
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  
+  // === UV DISTORTION ===
+  // Adding a wave offset to UVs before sampling
+  // This "warps" the texture without changing it!
+  float warpX = sin(uv.y * 6.0 + u_time) * 0.04;
+  float warpY = cos(uv.x * 6.0 + u_time) * 0.04;
+  
+  // Distorted UV — slide the sample point around
+  vec2 warpedUV = uv + vec2(warpX, warpY);
+  
+  // Sample the "texture" at the distorted UV
+  vec3 color = fakeTexture(warpedUV);
+  
+  // Vignette: darken the edges (multiply by 1 at center,
+  // 0 at corners). dist from center, inverted.
+  vec2 centered = uv * 2.0 - 1.0;
+  float vignette = 1.0 - dot(centered, centered) * 0.5;
+  
+  gl_FragColor = vec4(color * vignette, 1.0);
+}
+`
+},
+
+// ─── 8 ───────────────────────────────────────────
+{
+title: "Vertex Shaders",
+subtitle: "08 — Geometry & Attributes",
+body: `
+<p>So far we've only used <strong>fragment shaders</strong> (per-pixel). But there's another shader: the <strong>vertex shader</strong> — which runs on each <em>point of your geometry</em>.</p>
+<p>In a typical WebGL pipeline: CPU sends <em>vertex positions</em> → <strong>vertex shader</strong> transforms them → GPU fills triangles → <strong>fragment shader</strong> colors each pixel.</p>
+<p>The vertex shader outputs <strong>gl_Position</strong> — the final clip-space position. You can move, scale, rotate vertices here.</p>
+<p><strong>Varyings</strong> are values you pass FROM the vertex shader TO the fragment shader — they get <em>interpolated</em> across the triangle surface automatically.</p>
+<div class="tip">The vertex shader is like a puppet master — it controls WHERE geometry ends up on screen. The fragment shader decides what COLOR each pixel is. Together they make everything!</div>
+`,
+shader: `// ⚠️ This shows BOTH shaders as comments.
+// In real WebGL you'd compile them separately!
+// This canvas is running a demo that visualizes
+// what a vertex shader does to a triangle mesh.
+
+precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// === VERTEX SHADER (shown as comment) ===
+// attribute vec2 a_position;  // per-vertex input
+// varying vec2 v_uv;          // output to fragment
+// void main() {
+//   v_uv = a_position * 0.5 + 0.5;  // remap -1→1 to 0→1
+//   // Wiggle vertices with time!
+//   vec2 pos = a_position;
+//   pos.y += sin(pos.x * 3.0 + u_time) * 0.1;
+//   gl_Position = vec4(pos, 0.0, 1.0);
+// }
+
+// === FRAGMENT SHADER (active) ===
+// v_uv comes FROM the vertex shader, interpolated
+// across the triangle surface automatically.
+// varying vec2 v_uv;
+
+void main() {
+  // Simulating what a vertex-distorted mesh looks like:
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  
+  // Simulate the wave distortion a vertex shader would do
+  float wave = sin(uv.x * 6.28 * 2.0 + u_time) * 0.05;
+  vec2 distorted = vec2(uv.x, uv.y + wave);
+  
+  // Draw grid lines to visualize the mesh
+  vec2 grid = fract(distorted * 10.0);
+  float lines = step(0.92, grid.x) + step(0.92, grid.y);
+  lines = clamp(lines, 0.0, 1.0);
+  
+  // Color by distorted position
+  vec3 meshColor = vec3(distorted.x * 0.5, distorted.y, 0.8);
+  vec3 lineColor = vec3(0.0, 1.0, 0.6);
+  
+  vec3 color = mix(meshColor * 0.3, lineColor, lines);
+  gl_FragColor = vec4(color, 1.0);
+}
+`
+},
+
+// ─── 9 ───────────────────────────────────────────
+{
+title: "SDF — Signed Distance Fields",
+subtitle: "09 — The Pro Shape Toolkit",
+body: `
+<p><strong>SDF</strong> is how pros draw shapes in shaders. Instead of "is this pixel inside/outside", an SDF returns the <em>exact distance</em> to the shape's edge — negative inside, positive outside.</p>
+<p>This unlocks: <em>smooth blending</em> between shapes, cheap <em>outlines</em>, <em>drop shadows</em>, <em>rounded corners</em> — all for free from the distance value!</p>
+<p>To <strong>combine shapes</strong>: use <em>min()</em> for union, <em>max()</em> for intersection, <em>max(a, -b)</em> for subtraction. These are called "boolean operations".</p>
+<div class="tip">SDF is like asking "how far am I from the nearest border?" A positive number = you're outside. Negative = inside. Zero = you're exactly on the edge. This one number tells you EVERYTHING about your relationship to the shape.</div>
+`,
+shader: `precision mediump float;
+
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// === SDF FUNCTIONS ===
+// Each returns: negative = inside, positive = outside
+
+// Circle SDF: just distance minus radius
+float sdCircle(vec2 p, float r) {
+  return length(p) - r;
+}
+
+// Box SDF: distance to axis-aligned rectangle
+float sdBox(vec2 p, vec2 b) {
+  // q = how far outside the box in each axis (or 0 if inside)
+  vec2 q = abs(p) - b;
+  return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
+}
+
+// Smooth union: blends two shapes together softly
+// k = how smooth the blend is (try 0.0 to 0.5)
+float sdSmoothUnion(float a, float b, float k) {
+  float h = clamp(0.5 + 0.5*(b-a)/k, 0.0, 1.0);
+  return mix(b, a, h) - k * h * (1.0 - h);
+}
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy / u_resolution) * 2.0 - 1.0;
+  uv.x *= u_resolution.x / u_resolution.y;
+  
+  // Moving circles
+  float angle = u_time;
+  vec2 pos1 = vec2(cos(angle) * 0.4, sin(angle) * 0.2);
+  vec2 pos2 = vec2(cos(angle + 2.1) * 0.4, sin(angle + 2.1) * 0.2);
+  vec2 pos3 = vec2(cos(angle + 4.2) * 0.4, sin(angle + 4.2) * 0.2);
+  
+  float d1 = sdCircle(uv - pos1, 0.25);
+  float d2 = sdCircle(uv - pos2, 0.25);
+  float d3 = sdCircle(uv - pos3, 0.25);
+  
+  // Smoothly blend all three together
+  float d = sdSmoothUnion(d1, d2, 0.15);
+  d = sdSmoothUnion(d, d3, 0.15);
+  
+  // d < 0 = inside shape, d > 0 = outside
+  // smoothstep for soft edge
+  float shape = 1.0 - smoothstep(-0.01, 0.01, d);
+  
+  // Use distance for glow/color gradient
+  float glow = exp(-abs(d) * 8.0); // bright near edge
+  
+  vec3 innerColor = vec3(0.3, 0.9, 0.6);
+  vec3 glowColor  = vec3(0.1, 0.5, 0.9);
+  vec3 bgColor    = vec3(0.02, 0.02, 0.08);
+  
+  vec3 color = bgColor;
+  color += glowColor * glow * 0.5;
+  color = mix(color, innerColor, shape);
+  
+  gl_FragColor = vec4(color, 1.0);
+}
+`
+},
+
+// ─── 10 ───────────────────────────────────────────
+{
+title: "Raymarching",
+subtitle: "10 — Fake 3D From Nothing",
+body: `
+<p><strong>Raymarching</strong> is mind-bending: you cast a ray from the camera into a scene, and use SDFs to figure out where it hits. No actual geometry — just math. Yet you get fully 3D objects with shadows!</p>
+<p>The loop: step along the ray by the SDF distance (safe — you can't overshoot). When distance is nearly 0, you've hit a surface.</p>
+<p>Then calculate <strong>normals</strong> by sampling the SDF at tiny offsets — the gradient of the SDF IS the surface normal.</p>
+<div class="tip">Raymarching is like walking through a dark room using only a distance meter. "How far to the nearest wall?" You walk that far. Check again. Repeat. You never bump into anything AND you can make 3D scenes with zero geometry!</div>
+`,
+shader: `precision mediump float;
+
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// 3D SDF for a sphere
+float sdSphere(vec3 p, float r) {
+  return length(p) - r;
+}
+
+// 3D SDF for a box
+float sdBox3(vec3 p, vec3 b) {
+  vec3 q = abs(p) - b;
+  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
+
+// The whole 3D scene as one SDF
+// Returns distance to nearest surface
+float scene(vec3 p) {
+  // Rotating box
+  float a = u_time * 0.5;
+  // Simple Y-axis rotation
+  vec3 rp = vec3(
+    p.x * cos(a) + p.z * sin(a),
+    p.y,
+    -p.x * sin(a) + p.z * cos(a)
+  );
+  float box = sdBox3(rp - vec3(0.0, 0.0, 0.0), vec3(0.35));
+  
+  // Sphere orbiting the box
+  vec3 orbit = vec3(cos(u_time)*0.7, sin(u_time*0.7)*0.4, sin(u_time)*0.7);
+  float sphere = sdSphere(p - orbit, 0.2);
+  
+  // Ground plane
+  float ground = p.y + 0.6;
+  
+  // Union = nearest surface wins
+  return min(min(box, sphere), ground);
+}
+
+// Estimate surface normal by sampling scene at small offsets
+vec3 getNormal(vec3 p) {
+  float e = 0.001;
+  return normalize(vec3(
+    scene(p + vec3(e,0,0)) - scene(p - vec3(e,0,0)),
+    scene(p + vec3(0,e,0)) - scene(p - vec3(0,e,0)),
+    scene(p + vec3(0,0,e)) - scene(p - vec3(0,0,e))
+  ));
+}
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy / u_resolution) * 2.0 - 1.0;
+  uv.x *= u_resolution.x / u_resolution.y;
+  
+  // Camera setup
+  vec3 ro = vec3(0.0, 0.3, 2.0); // ray origin (camera pos)
+  vec3 rd = normalize(vec3(uv, -1.5)); // ray direction
+  
+  // RAYMARCH: step along the ray
+  float t = 0.0; // total distance traveled
+  for (int i = 0; i < 80; i++) {
+    vec3 p = ro + rd * t; // current position on ray
+    float d = scene(p);   // how far to nearest surface?
+    if (d < 0.001) break; // hit! close enough
+    t += d;               // safe to step this far
+    if (t > 20.0) break;  // too far, give up
+  }
+  
+  vec3 color = vec3(0.05, 0.05, 0.12); // sky/bg
+  
+  if (t < 20.0) { // we hit something!
+    vec3 p = ro + rd * t;
+    vec3 normal = getNormal(p);
+    
+    // Simple diffuse lighting
+    vec3 light = normalize(vec3(1.0, 2.0, 1.5));
+    float diff = max(dot(normal, light), 0.0);
+    
+    // Ambient + diffuse
+    color = vec3(0.15) + vec3(0.6, 0.85, 0.5) * diff;
+    
+    // Fog: farther = more background color
+    color = mix(color, vec3(0.05,0.05,0.12), t * 0.15);
+  }
+  
+  gl_FragColor = vec4(color, 1.0);
+}
+`
+},
+
+// ─── 11 ───────────────────────────────────────────
+{
+title: "Post-Processing Effects",
+subtitle: "11 — Screen-Space Magic",
+body: `
+<p><strong>Post-processing</strong> means running a shader on an already-rendered image to add effects. Bloom, blur, chromatic aberration, film grain — all post-processing.</p>
+<p>The technique: render your scene to a <em>framebuffer texture</em>, then run another shader that reads from that texture and outputs to screen with effects applied.</p>
+<p>Here we simulate several classic effects in a single shader: <em>scanlines, vignette, chromatic aberration, and film grain</em>.</p>
+<div class="tip">Post-processing is basically Instagram filters but for your entire 3D scene. You render everything normally, then apply filters to the final image. The crazy part: each filter is just a few lines of shader code!</div>
+`,
+shader: `precision mediump float;
+
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// The "base scene" we're post-processing
+// (In real apps this would be a rendered texture)
+vec3 baseScene(vec2 uv) {
+  // Simple colorful base
+  float n = sin(uv.x * 8.0 + u_time) * cos(uv.y * 6.0 + u_time * 0.7);
+  vec3 a = vec3(0.8, 0.3, 0.1);
+  vec3 b = vec3(0.1, 0.4, 0.9);
+  return mix(a, b, n * 0.5 + 0.5);
+}
+
+// === POST EFFECTS ===
+
+// Chromatic aberration: RGB channels slightly offset
+vec3 chromaticAberration(vec2 uv, float amount) {
+  float r = baseScene(uv + vec2(amount, 0.0)).r;
+  float g = baseScene(uv).g;
+  float bl = baseScene(uv - vec2(amount, 0.0)).b;
+  return vec3(r, g, bl);
+}
+
+// Film grain: random noise overlay
+float grain(vec2 uv, float time) {
+  return fract(sin(dot(uv + time * 0.001, vec2(12.9898, 78.233))) * 43758.5);
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  
+  // 1. Chromatic aberration (color fringing)
+  float aberration = 0.005 + sin(u_time * 0.3) * 0.002;
+  vec3 color = chromaticAberration(uv, aberration);
+  
+  // 2. Scanlines (CRT monitor effect)
+  float scanline = sin(uv.y * u_resolution.y * 1.5) * 0.5 + 0.5;
+  scanline = pow(scanline, 0.3); // subtle, not harsh
+  color *= mix(0.85, 1.0, scanline);
+  
+  // 3. Vignette (darken edges)
+  vec2 centered = uv * 2.0 - 1.0;
+  float vignette = 1.0 - dot(centered * 0.7, centered * 0.7);
+  vignette = smoothstep(0.0, 1.0, vignette);
+  color *= vignette;
+  
+  // 4. Film grain (random noise)
+  float g = grain(uv, u_time * 100.0);
+  color += (g - 0.5) * 0.06;
+  
+  // 5. Slight color grade (push contrast)
+  color = color * 1.1 - 0.05;
+  color = clamp(color, 0.0, 1.0);
+  
+  gl_FragColor = vec4(color, 1.0);
+}
+`
+},
+
+// ─── 12 ───────────────────────────────────────────
+{
+title: "Compute Shaders (Concepts)",
+subtitle: "12 — GPU as a Calculator",
+body: `
+<p><strong>Compute shaders</strong> don't draw pixels — they do arbitrary calculations on the GPU in parallel. Particle systems, physics simulations, machine learning — all compute shaders.</p>
+<p>In WebGL 2 / WebGPU you can write to textures or buffers from any shader using <em>ping-pong rendering</em>: render the simulation state to texture A, next frame read from A and write to B, alternate.</p>
+<p>This demo simulates a <strong>reaction-diffusion</strong> system (like leopard spots or fish patterns) — a classic compute pattern: each frame reads neighbors and writes a new state.</p>
+<div class="tip">Compute is just asking: "what if instead of coloring pixels, I use the GPU to do MATH at massive scale?" A million particles updating simultaneously. Physics simulations. Neural nets. All running in parallel. The GPU is just a HUGE math machine!</div>
+`,
+shader: `precision mediump float;
+
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// Reaction-Diffusion inspired pattern
+// (Simulating what a compute shader produces)
+// Real compute ping-pong: too complex for one demo,
+// but this approximates the visual result!
+
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5);
+}
+float noise(vec2 p) {
+  vec2 i = floor(p); vec2 f = fract(p);
+  vec2 u = f*f*(3.-2.*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),u.x),
+             mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),u.x),u.y);
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / u_resolution;
+  
+  // Simulate Gray-Scott reaction-diffusion style pattern
+  // (Real version requires reading neighboring pixels
+  //  each frame — a true compute operation!)
+  
+  // Warped coordinate system (approximates RD output)
+  float t = u_time * 0.1;
+  vec2 p = uv * 4.0;
+  
+  // Layer multiple noise octaves with interference
+  float v = 0.0;
+  for (int i = 0; i < 4; i++) {
+    float fi = float(i);
+    v += noise(p * pow(2.0, fi) + vec2(t, t*0.7)) / pow(2.0, fi);
+  }
+  
+  // Reaction-diffusion look: threshold + contour lines
+  float contour = abs(fract(v * 4.0 + t * 0.5) - 0.5) * 2.0;
+  contour = smoothstep(0.3, 0.4, contour);
+  
+  // Organic coloring
+  vec3 colA = vec3(0.05, 0.02, 0.15); // dark purple
+  vec3 colB = vec3(0.95, 0.8, 0.1);   // gold
+  vec3 colC = vec3(0.1, 0.9, 0.5);    // green
+  
+  vec3 color = mix(colA, colB, contour);
+  color = mix(color, colC, smoothstep(0.6, 0.8, v));
+  
+  gl_FragColor = vec4(color, 1.0);
+}
+`
+},
+
+// ─── 13 ───────────────────────────────────────────
+{
+title: "3D UV Mapping",
+subtitle: "13 — UVs on 3D Surfaces",
+body: `
+<p>In 2D, UV was just screen position. In 3D raymarching, you need to figure out <em>where on the surface</em> you hit — and turn that into a UV coordinate for texturing.</p>
+<p>Each shape has its own UV unwrap. A <strong>sphere's UV</strong> uses the hit-point converted to spherical angles: longitude (how far around) and latitude (how far up). Like GPS coordinates on a globe.</p>
+<p>A <strong>box's UV</strong> figures out which face you're on (using the normal direction), then uses the remaining two axes as UV. Like unfolding a cardboard box flat.</p>
+<p>Once you have UV, you can apply any 2D pattern — checker, noise, gradient — as if it were a real texture painted onto the surface.</p>
+<div class="tip">UV on 3D = answering "where on the object's skin is this pixel?" For a sphere, imagine peeling it like an orange and laying the skin flat. Those flat coordinates ARE the UV. Every surface has its own way of being "peeled"!</div>
+`,
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// ── SCENE SDF ──
+float sdSphere(vec3 p, float r) { return length(p) - r; }
+float sdBox(vec3 p, vec3 b) {
+  vec3 q = abs(p) - b;
+  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
+
+// Scene: returns distance + object ID (1=sphere, 2=box)
+vec2 scene(vec3 p) {
+  float sphere = sdSphere(p - vec3(-0.7, 0.0, 0.0), 0.55);
+  float box    = sdBox(p - vec3(0.75, 0.0, 0.0), vec3(0.4));
+  if (sphere < box) return vec2(sphere, 1.0);
+  return vec2(box, 2.0);
+}
+
+vec3 getNormal(vec3 p) {
+  float e = 0.001;
+  return normalize(vec3(
+    scene(p+vec3(e,0,0)).x - scene(p-vec3(e,0,0)).x,
+    scene(p+vec3(0,e,0)).x - scene(p-vec3(0,e,0)).x,
+    scene(p+vec3(0,0,e)).x - scene(p-vec3(0,0,e)).x
+  ));
+}
+
+// ── UV FOR A SPHERE ──
+// Convert hit point (normalised to surface) → longitude/latitude
+vec2 sphereUV(vec3 hitPoint) {
+  // Normalize so it's a unit sphere direction
+  vec3 n = normalize(hitPoint);
+  // atan returns the angle around Y axis (longitude)
+  float u = atan(n.z, n.x) / (2.0 * 3.14159) + 0.5;
+  // asin returns angle from equator (latitude)
+  float v = asin(clamp(n.y, -1.0, 1.0)) / 3.14159 + 0.5;
+  return vec2(u, v);
+}
+
+// ── UV FOR A BOX ──
+// Check which face we're on via the normal, use other two axes
+vec2 boxUV(vec3 hitPoint, vec3 normal) {
+  // abs normal tells us the dominant axis
+  vec3 an = abs(normal);
+  if (an.x > an.y && an.x > an.z) return hitPoint.yz; // left/right face
+  if (an.y > an.x && an.y > an.z) return hitPoint.xz; // top/bottom face
+  return hitPoint.xy;                                  // front/back face
+}
+
+// A simple checker texture using any UV
+vec3 checker(vec2 uv, vec3 colA, vec3 colB) {
+  float scale = 6.0;
+  vec2 g = floor(uv * scale);
+  float c = mod(g.x + g.y, 2.0); // alternates 0,1
+  return mix(colA, colB, c);
+}
+
+void main() {
+  vec2 screen = (gl_FragCoord.xy / u_resolution) * 2.0 - 1.0;
+  screen.x *= u_resolution.x / u_resolution.y;
+
+  // Slowly rotate camera around scene
+  float camAngle = u_time * 0.4;
+  vec3 ro = vec3(sin(camAngle)*3.0, 0.6, cos(camAngle)*3.0);
+  vec3 target = vec3(0.0);
+  // Camera basis vectors
+  vec3 fwd   = normalize(target - ro);
+  vec3 right = normalize(cross(vec3(0,1,0), fwd));
+  vec3 up    = cross(fwd, right);
+  vec3 rd    = normalize(fwd*1.5 + right*screen.x + up*screen.y);
+
+  // Raymarch
+  float t = 0.0;
+  float objId = 0.0;
+  for (int i = 0; i < 90; i++) {
+    vec2 res = scene(ro + rd*t);
+    if (res.x < 0.001) { objId = res.y; break; }
+    t += res.x;
+    if (t > 20.0) break;
+  }
+
+  vec3 color = vec3(0.07, 0.07, 0.15);
+
+  if (t < 20.0) {
+    vec3 p      = ro + rd * t;
+    vec3 normal = getNormal(p);
+    vec3 light  = normalize(vec3(1.5, 2.0, 1.0));
+    float diff  = max(dot(normal, light), 0.0);
+
+    vec2 uv;
+    vec3 texColor;
+
+    if (objId < 1.5) {
+      // SPHERE: use spherical UV
+      uv = sphereUV(p - vec3(-0.7, 0.0, 0.0));
+      texColor = checker(uv,
+        vec3(0.9, 0.3, 0.1),  // red
+        vec3(1.0, 0.9, 0.2)   // yellow
+      );
+    } else {
+      // BOX: use box-face UV
+      uv = boxUV(p - vec3(0.75, 0.0, 0.0), normal);
+      texColor = checker(uv,
+        vec3(0.1, 0.4, 0.9),  // blue
+        vec3(0.9, 0.95, 1.0)  // white
+      );
+    }
+
+    // Lighting × texture
+    float ambient = 0.15;
+    color = texColor * (ambient + diff * 0.85);
+
+    // Specular highlight
+    vec3 halfway = normalize(light - rd);
+    float spec = pow(max(dot(normal, halfway), 0.0), 32.0);
+    color += vec3(1.0) * spec * 0.4;
+  }
+
+  gl_FragColor = vec4(color, 1.0);
+}
+`
+},
+
+// ─── 14 ───────────────────────────────────────────
+{
+title: "3D SDF Primitives",
+subtitle: "14 — The Shape Toolkit",
+body: `
+<p>Raymarching gives you a whole zoo of <strong>SDF primitives</strong> — mathematical shapes you get for free just by knowing their distance formula.</p>
+<p>Key ones: <em>sphere, box, capsule, torus, cylinder, cone, plane</em>. Each is just a few lines. Mix and match with boolean ops (union, subtract, intersect) to build anything.</p>
+<p><strong>Rounding</strong> any shape is trivially easy: subtract a small constant from the SDF result. That inflates the surface outward by that amount, rounding all edges automatically.</p>
+<p><strong>Elongate</strong> stretches a shape. <strong>Twist</strong> spins it along an axis. These domain-warp tricks work on ANY primitive.</p>
+<div class="tip">SDF primitives are like LEGOs for 3D. Each shape is just a formula that says "how far is point P from my surface?" Learn 5–6 of these and you can build almost anything — all without loading a single mesh file!</div>
+`,
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// ═══ PRIMITIVE LIBRARY ═══
+
+float sdSphere(vec3 p, float r) {
+  return length(p) - r;
+}
+
+float sdBox(vec3 p, vec3 b) {
+  vec3 q = abs(p) - b;
+  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
+
+// Rounded box = box SDF minus a small radius
+// That "inflates" the shape, rounding all edges!
+float sdRoundBox(vec3 p, vec3 b, float r) {
+  return sdBox(p, b) - r;
+}
+
+// Torus: like a donut. t.x = ring radius, t.y = tube radius
+float sdTorus(vec3 p, vec2 t) {
+  // q.x = distance from the ring centerline
+  vec2 q = vec2(length(p.xz) - t.x, p.y);
+  return length(q) - t.y;
+}
+
+// Capsule: a cylinder with round caps. Like a pill.
+// a,b = endpoints of the line segment, r = radius
+float sdCapsule(vec3 p, vec3 a, vec3 b, float r) {
+  vec3 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa,ba)/dot(ba,ba), 0.0, 1.0);
+  return length(pa - ba*h) - r;
+}
+
+// Cone (infinite, pointing up): c = sin/cos of half-angle
+float sdCone(vec3 p, vec2 c, float h) {
+  vec2 q = h * vec2(c.x/c.y, -1.0);
+  vec2 w = vec2(length(p.xz), p.y);
+  vec2 a = w - q * clamp(dot(w,q)/dot(q,q), 0.0, 1.0);
+  vec2 b2 = w - q * vec2(clamp(w.x/q.x, 0.0, 1.0), 1.0);
+  float k = sign(q.y);
+  float d = min(dot(a,a), dot(b2,b2));
+  float s = max(k*(w.x*q.y-w.y*q.x), k*(w.y-q.y));
+  return sqrt(d)*sign(s);
+}
+
+// ── DOMAIN WARP: TWIST ──
+// Rotates space around Y axis based on height.
+// Apply BEFORE sampling any SDF to twist that shape!
+vec3 opTwist(vec3 p, float strength) {
+  float angle = p.y * strength;
+  float c = cos(angle), s = sin(angle);
+  // Rotate X and Z by the angle (standard 2D rotation)
+  return vec3(c*p.x - s*p.z, p.y, s*p.x + c*p.z);
+}
+
+// ── SMOOTH MIN (soft union) ──
+float smin(float a, float b, float k) {
+  float h = clamp(0.5 + 0.5*(b-a)/k, 0.0, 1.0);
+  return mix(b, a, h) - k*h*(1.0-h);
+}
+
+// ── FULL SCENE ──
+// Returns (distance, colorID)
+vec2 scene(vec3 p) {
+  float t = u_time;
+
+  // 1. Torus — center stage
+  float torus = sdTorus(p, vec2(0.55, 0.18));
+
+  // 2. Twisted round box — left
+  vec3 tp = opTwist(p - vec3(-1.4, 0.0, 0.0), sin(t)*3.0);
+  float rbox = sdRoundBox(tp, vec3(0.28), 0.07);
+
+  // 3. Capsule — right (like a floating pill)
+  float caps = sdCapsule(p,
+    vec3(1.1, -0.35, 0.0),
+    vec3(1.1,  0.35, 0.0), 0.2);
+
+  // 4. Cone — back
+  float cone = sdCone(p - vec3(0.0, -0.6, -1.1),
+    vec2(sin(0.4), cos(0.4)), 0.6);
+
+  // Union all: nearest surface wins
+  float d = torus;
+  float id = 1.0;
+  if (rbox  < d) { d = rbox;  id = 2.0; }
+  if (caps  < d) { d = caps;  id = 3.0; }
+  if (cone  < d) { d = cone;  id = 4.0; }
+
+  // Ground plane
+  float ground = p.y + 0.65;
+  if (ground < d) { d = ground; id = 0.0; }
+
+  return vec2(d, id);
+}
+
+vec3 getNormal(vec3 p) {
+  float e = 0.001;
+  return normalize(vec3(
+    scene(p+vec3(e,0,0)).x - scene(p-vec3(e,0,0)).x,
+    scene(p+vec3(0,e,0)).x - scene(p-vec3(0,e,0)).x,
+    scene(p+vec3(0,0,e)).x - scene(p-vec3(0,0,e)).x
+  ));
+}
+
+// Palette: pick a color per object ID
+vec3 palette(float id, vec3 p) {
+  if (id < 0.5) return vec3(0.15, 0.12, 0.18) + vec3(0.05)*mod(floor(p.x*5.0)+floor(p.z*5.0),2.0);
+  if (id < 1.5) return vec3(0.9, 0.5, 0.1);   // torus orange
+  if (id < 2.5) return vec3(0.2, 0.7, 0.95);  // box cyan
+  if (id < 3.5) return vec3(0.8, 0.2, 0.6);   // capsule pink
+  return vec3(0.4, 0.9, 0.3);                  // cone green
+}
+
+void main() {
+  vec2 screen = (gl_FragCoord.xy/u_resolution)*2.0-1.0;
+  screen.x *= u_resolution.x/u_resolution.y;
+
+  float a = u_time*0.35;
+  vec3 ro = vec3(sin(a)*3.8, 1.2, cos(a)*3.8);
+  vec3 fwd = normalize(-ro + vec3(0,0.1,0));
+  vec3 right = normalize(cross(vec3(0,1,0), fwd));
+  vec3 up = cross(fwd, right);
+  vec3 rd = normalize(fwd*1.5 + right*screen.x + up*screen.y);
+
+  float t2 = 0.0; float objId = -1.0;
+  for (int i = 0; i < 100; i++) {
+    vec2 res = scene(ro + rd*t2);
+    if (res.x < 0.001) { objId = res.y; break; }
+    t2 += res.x;
+    if (t2 > 20.0) break;
+  }
+
+  vec3 color = vec3(0.04, 0.04, 0.1);
+  if (t2 < 20.0) {
+    vec3 p = ro + rd*t2;
+    vec3 n = getNormal(p);
+    vec3 L = normalize(vec3(2.0, 3.0, 1.5));
+    float diff = max(dot(n, L), 0.0);
+    float amb  = 0.12;
+    vec3 baseCol = palette(objId, p);
+    color = baseCol * (amb + diff*0.88);
+    // specular
+    vec3 h = normalize(L - rd);
+    color += 0.35 * pow(max(dot(n,h),0.0), 48.0);
+    // fog
+    color = mix(color, vec3(0.04,0.04,0.1), t2*0.06);
+  }
+  gl_FragColor = vec4(color, 1.0);
+}
+`
+},
+
+// ─── 15 ───────────────────────────────────────────
+{
+title: "Model From Code",
+subtitle: "15 — SDF Character",
+body: `
+<p>Here's the big payoff: building a recognizable <strong>character</strong> purely from SDF primitives. No 3D file. No Blender. Just math and boolean operations.</p>
+<p>The secret: <em>think in parts</em>. A robot head = box body + sphere head + capsule arms + cylinder eyes. Each part is placed by <strong>subtracting its center position</strong> from the point before testing.</p>
+<p>Use <em>smin</em> (smooth union) between parts that should flow together organically. Use <em>hard union</em> (min) for parts that should have a crisp seam.</p>
+<p><strong>Subtraction</strong> (<em>max(a, -b)</em>) carves holes — perfect for eye sockets, windows, nostrils.</p>
+<div class="tip">Building a character in SDF is like sculpting with math. Each body part is a little shape positioned in space. Layer them together with smooth or sharp unions and suddenly you have something that looks alive. This is exactly how Inigo Quilez builds those beautiful Shadertoy sculptures!</div>
+`,
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// ── PRIMITIVE HELPERS ──
+float sdSphere(vec3 p, float r)  { return length(p)-r; }
+float sdBox(vec3 p, vec3 b) {
+  vec3 q=abs(p)-b; return length(max(q,0.0))+min(max(q.x,max(q.y,q.z)),0.0);
+}
+float sdRoundBox(vec3 p,vec3 b,float r) { return sdBox(p,b)-r; }
+float sdCapsule(vec3 p,vec3 a,vec3 b,float r) {
+  vec3 pa=p-a,ba=b-a; float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0);
+  return length(pa-ba*h)-r;
+}
+float sdTorus(vec3 p,vec2 t) {
+  return length(vec2(length(p.xz)-t.x,p.y))-t.y;
+}
+float sdCylinder(vec3 p,float r,float h) {
+  vec2 d=abs(vec2(length(p.xz),p.y))-vec2(r,h);
+  return min(max(d.x,d.y),0.0)+length(max(d,0.0));
+}
+
+float smin(float a,float b,float k){
+  float h=clamp(0.5+0.5*(b-a)/k,0.0,1.0);
+  return mix(b,a,h)-k*h*(1.0-h);
+}
+
+// ── THE CHARACTER: "ROBO" ──
+// Returns (distance, part ID for coloring)
+vec2 robo(vec3 p) {
+  float t = u_time;
+
+  // ── BODY ──
+  float body = sdRoundBox(p, vec3(0.38, 0.45, 0.22), 0.06);
+
+  // ── HEAD ──
+  // Bob gently up and down
+  float headBob = sin(t*1.2)*0.03;
+  vec3 hp = p - vec3(0.0, 0.72+headBob, 0.0);
+  float head = sdRoundBox(hp, vec3(0.28, 0.22, 0.2), 0.07);
+
+  // Eye sockets (carved INTO the head with subtraction)
+  float eyeL = sdSphere(hp - vec3(-0.12, 0.03, 0.18), 0.07);
+  float eyeR = sdSphere(hp - vec3( 0.12, 0.03, 0.18), 0.07);
+  head = max(head, -eyeL); // carve left socket
+  head = max(head, -eyeR); // carve right socket
+
+  // ── EYEBALLS (separate, go inside sockets) ──
+  // They look left/right based on sin(time)
+  float gaze = sin(t*0.7)*0.03;
+  float eyeballL = sdSphere(hp - vec3(-0.12+gaze, 0.03, 0.2), 0.055);
+  float eyeballR = sdSphere(hp - vec3( 0.12+gaze, 0.03, 0.2), 0.055);
+
+  // Pupils (dark dot in center of each eye)
+  float pupilL = sdSphere(hp - vec3(-0.12+gaze, 0.03, 0.24), 0.025);
+  float pupilR = sdSphere(hp - vec3( 0.12+gaze, 0.03, 0.24), 0.025);
+
+  // Antenna
+  float antennaPole = sdCapsule(hp,
+    vec3(0.0, 0.21, 0.0), vec3(0.0, 0.48, 0.0), 0.025);
+  float antennaBall = sdSphere(hp - vec3(0.0, 0.5, 0.0), 0.055);
+  float antenna = smin(antennaPole, antennaBall, 0.03);
+
+  // Mouth (a torus cross-section — like a visor slit)
+  vec3 mp = hp - vec3(0.0, -0.08, 0.12);
+  // Rotate torus to face forward: swap y and z axes
+  float mouth = sdTorus(mp.xzy, vec2(0.1, 0.025));
+
+  // ── NECK ──
+  float neck = sdCylinder(p - vec3(0.0, 0.47, 0.0), 0.1, 0.07);
+
+  // ── ARMS ──
+  // Swing with opposite phase (like walking)
+  float swingL =  sin(t) * 0.25;
+  float swingR = -sin(t) * 0.25;
+
+  // Left arm: capsule from shoulder to hand
+  vec3 lShoulder = vec3(-0.44, 0.28, 0.0);
+  vec3 lHand     = vec3(-0.65, -0.1+swingL, 0.1);
+  float armL = sdCapsule(p, lShoulder, lHand, 0.1);
+  float handL = sdSphere(p - lHand, 0.12);
+  armL = smin(armL, handL, 0.05);
+
+  // Right arm
+  vec3 rShoulder = vec3(0.44, 0.28, 0.0);
+  vec3 rHand     = vec3(0.65, -0.1+swingR, 0.1);
+  float armR = sdCapsule(p, rShoulder, rHand, 0.1);
+  float handR = sdSphere(p - rHand, 0.12);
+  armR = smin(armR, handR, 0.05);
+
+  // ── LEGS ──
+  float stepL =  sin(t)*0.15;
+  float stepR = -sin(t)*0.15;
+
+  vec3 lHip  = vec3(-0.2, -0.45, 0.0);
+  vec3 lFoot = vec3(-0.22, -0.95, stepL);
+  float legL = sdCapsule(p, lHip, lFoot, 0.12);
+  float footL = sdRoundBox(p - lFoot - vec3(0.0,-0.05,0.05),
+    vec3(0.1,0.07,0.15), 0.04);
+  legL = smin(legL, footL, 0.04);
+
+  vec3 rHip  = vec3(0.2, -0.45, 0.0);
+  vec3 rFoot = vec3(0.22, -0.95, stepR);
+  float legR = sdCapsule(p, rHip, rFoot, 0.12);
+  float footR = sdRoundBox(p - rFoot - vec3(0.0,-0.05,0.05),
+    vec3(0.1,0.07,0.15), 0.04);
+  legR = smin(legR, footR, 0.04);
+
+  // ── CHEST PANEL (decorative box inset) ──
+  float panel = sdRoundBox(p - vec3(0.0, 0.1, 0.21), vec3(0.2,0.18,0.03), 0.02);
+
+  // ── ASSEMBLE ── (nearest surface = winner)
+  // Merge body parts smoothly
+  float torso = smin(body, neck, 0.06);
+  torso = smin(torso, armL, 0.05);
+  torso = smin(torso, armR, 0.05);
+  torso = smin(torso, legL, 0.05);
+  torso = smin(torso, legR, 0.05);
+  float full = smin(torso, head, 0.04);
+
+  // Now figure out which part we're closest to for coloring
+  // (Re-evaluate each independently without smin for ID)
+  float d = full;
+  float id = 1.0; // body = 1
+
+  // Override ID if closer to specific colorable part
+  if (eyeballL < d+0.01 || eyeballR < d+0.01) { d=min(eyeballL,eyeballR); id=2.0; }
+  if (pupilL   < d+0.01 || pupilR   < d+0.01) { d=min(pupilL,pupilR);     id=3.0; }
+  if (antenna  < d+0.01)                       { d=antenna;                id=4.0; }
+  if (panel    < d+0.01)                       { d=panel;                  id=5.0; }
+  if (mouth    < d-0.01)                       { d=mouth;                  id=6.0; }
+
+  return vec2(min(d, full), id);
+}
+
+float scene(vec3 p) {
+  return min(robo(p).x, p.y + 1.05); // ground plane
+}
+
+vec2 sceneID(vec3 p) {
+  vec2 r = robo(p);
+  float ground = p.y + 1.05;
+  if (ground < r.x) return vec2(ground, 0.0);
+  return r;
+}
+
+vec3 getNormal(vec3 p) {
+  float e=0.001;
+  return normalize(vec3(
+    scene(p+vec3(e,0,0))-scene(p-vec3(e,0,0)),
+    scene(p+vec3(0,e,0))-scene(p-vec3(0,e,0)),
+    scene(p+vec3(0,0,e))-scene(p-vec3(0,0,e))
+  ));
+}
+
+vec3 partColor(float id, vec3 p) {
+  if (id < 0.5) { // ground
+    float checker = mod(floor(p.x*3.0)+floor(p.z*3.0),2.0);
+    return mix(vec3(0.12,0.1,0.18), vec3(0.18,0.15,0.25), checker);
+  }
+  if (id < 1.5) return vec3(0.55, 0.7, 0.85);  // body: steel blue
+  if (id < 2.5) return vec3(0.9, 0.95, 1.0);   // eyeball: white
+  if (id < 3.5) return vec3(0.1, 0.15, 0.5);   // pupil: dark blue
+  if (id < 4.5) return vec3(1.0, 0.6, 0.1);    // antenna: gold
+  if (id < 5.5) return vec3(0.2, 0.3, 0.5);    // panel: dark
+  return vec3(0.8, 0.3, 0.1);                   // mouth: orange
+}
+
+void main() {
+  vec2 screen = (gl_FragCoord.xy/u_resolution)*2.0-1.0;
+  screen.x *= u_resolution.x/u_resolution.y;
+
+  // Camera slowly orbits + slight auto-pan
+  float a = u_time * 0.3;
+  float camY = 0.1 + sin(u_time*0.2)*0.15;
+  vec3 ro = vec3(sin(a)*3.2, camY, cos(a)*3.2);
+  vec3 fwd = normalize(vec3(0,0,0)-ro);
+  vec3 right = normalize(cross(vec3(0,1,0),fwd));
+  vec3 up = cross(fwd,right);
+  vec3 rd = normalize(fwd*1.6 + right*screen.x + up*screen.y);
+
+  float t2=0.0; vec3 hitP; bool hit=false;
+  for(int i=0;i<120;i++){
+    hitP=ro+rd*t2;
+    float d=scene(hitP);
+    if(d<0.001){hit=true;break;}
+    t2+=d;
+    if(t2>15.0)break;
+  }
+
+  vec3 color = vec3(0.04,0.05,0.12);
+  if(hit){
+    vec3 p=ro+rd*t2;
+    vec3 n=getNormal(p);
+    float id=sceneID(p).y;
+
+    vec3 L1=normalize(vec3(2.0, 3.0, 1.0));
+    vec3 L2=normalize(vec3(-1.5, 1.0, -1.0));
+    float d1=max(dot(n,L1),0.0);
+    float d2=max(dot(n,L2),0.0)*0.3;
+
+    vec3 baseCol = partColor(id, p);
+    color = baseCol*(0.1 + d1*0.8 + d2);
+
+    // Specular
+    vec3 h=normalize(L1-rd);
+    float spec=pow(max(dot(n,h),0.0),64.0);
+    color += 0.4*spec*vec3(0.9,0.95,1.0);
+
+    // Rim light (backlight glow)
+    float rim=pow(1.0-max(dot(n,-rd),0.0),3.0);
+    color += rim*0.15*vec3(0.3,0.6,1.0);
+
+    // Depth fog
+    color=mix(color, vec3(0.04,0.05,0.12), t2*0.045);
+  }
+
+  gl_FragColor=vec4(color,1.0);
+}
+`
+},
+
+// ─── 16 ───────────────────────────────────────────
+{
+title: "Full 3D UV Unwrap",
+subtitle: "16 — Triplanar & Procedural Texturing",
+body: `
+<p>Spherical UV works for spheres, box UV for boxes — but what about a <em>complex organic shape</em>? It has no clean seam to unwrap along.</p>
+<p>The pro solution: <strong>triplanar mapping</strong>. Project the texture from all three axes (X, Y, Z) and blend them based on the surface normal. Steep surfaces use the projection that faces them most. No UV seams anywhere!</p>
+<p>This is how game engines texture procedural terrain, rocks, and characters with no UV artist needed.</p>
+<p>Combine triplanar with <strong>noise-based procedural textures</strong> and you get infinite detail — rust, moss, wood grain, alien skin — all generated at runtime.</p>
+<div class="tip">Triplanar = "project the texture from 3 directions and blend". Think of it like shining the texture image from left, from above, and from the front simultaneously. Where walls are steep the front-facing projection dominates; where it's flat the top projection dominates. No seams!</div>
+`,
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// ── NOISE UTILS ──
+float hash(vec3 p) {
+  return fract(sin(dot(p, vec3(127.1,311.7,74.7)))*43758.5);
+}
+float noise3(vec3 p) {
+  vec3 i=floor(p); vec3 f=fract(p);
+  vec3 u=f*f*(3.0-2.0*f);
+  return mix(mix(mix(hash(i),          hash(i+vec3(1,0,0)),u.x),
+                 mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),u.x),u.y),
+             mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),u.x),
+                 mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),u.x),u.y),u.z);
+}
+float fbm3(vec3 p) {
+  float v=0.0; float a=0.5;
+  for(int i=0;i<5;i++){ v+=a*noise3(p); p*=2.0; a*=0.5; }
+  return v;
+}
+
+// ── TRIPLANAR TEXTURE FUNCTION ──
+// Give it a 3D world point and a surface normal.
+// It samples a "texture" from all 3 axes and blends.
+vec3 triplanar(vec3 worldPos, vec3 normal, float scale) {
+  // The three UV planes:
+  vec2 uvX = worldPos.yz * scale; // project from X axis
+  vec2 uvY = worldPos.xz * scale; // project from Y axis (top)
+  vec2 uvZ = worldPos.xy * scale; // project from Z axis
+
+  // Sample the "texture" at each projection
+  // (Using a procedural marble/granite pattern)
+  float marble_x = sin(uvX.x*6.0 + fbm3(vec3(uvX*2.0, 0.0))*4.0)*0.5+0.5;
+  float marble_y = sin(uvY.x*6.0 + fbm3(vec3(uvY*2.0, 1.7))*4.0)*0.5+0.5;
+  float marble_z = sin(uvZ.x*6.0 + fbm3(vec3(uvZ*2.0, 3.3))*4.0)*0.5+0.5;
+
+  // Blend weights = absolute normal components.
+  // If normal points mostly in Y, top projection dominates.
+  vec3 weights = abs(normal);
+  weights = pow(weights, vec3(6.0)); // sharpen the blending
+  weights /= weights.x+weights.y+weights.z; // normalize to sum=1
+
+  // Blend the three samples by weight
+  float blended = marble_x*weights.x + marble_y*weights.y + marble_z*weights.z;
+  return mix(vec3(0.08,0.05,0.12), vec3(0.88,0.82,0.95), blended);
+}
+
+// ── SCENE (complex organic blob via SDF) ──
+float smin(float a,float b,float k){
+  float h=clamp(.5+.5*(b-a)/k,0.,1.); return mix(b,a,h)-k*h*(1.-h);
+}
+float sdSphere(vec3 p,float r){ return length(p)-r; }
+
+// Organic blob: lots of spheres merged smoothly
+float blobScene(vec3 p) {
+  float t = u_time * 0.5;
+  float d = sdSphere(p, 0.7); // core
+  // Smaller blobs orbiting + merging into core
+  for (int i = 0; i < 6; i++) {
+    float fi = float(i);
+    float angle = fi * 1.047 + t; // evenly spaced + animated
+    float vert  = sin(fi*2.3 + t*0.7) * 0.4;
+    vec3 offset = vec3(cos(angle)*0.6, vert, sin(angle)*0.6);
+    float blob = sdSphere(p - offset, 0.28 + sin(fi+t)*0.06);
+    d = smin(d, blob, 0.35); // smooth merge!
+  }
+  // Ground
+  return min(d, p.y + 0.95);
+}
+
+vec3 getNormal(vec3 p) {
+  float e=0.001;
+  vec3 n=vec3(
+    blobScene(p+vec3(e,0,0))-blobScene(p-vec3(e,0,0)),
+    blobScene(p+vec3(0,e,0))-blobScene(p-vec3(0,e,0)),
+    blobScene(p+vec3(0,0,e))-blobScene(p-vec3(0,0,e))
+  );
+  return normalize(n);
+}
+
+void main() {
+  vec2 screen=(gl_FragCoord.xy/u_resolution)*2.0-1.0;
+  screen.x*=u_resolution.x/u_resolution.y;
+
+  float a=u_time*0.3;
+  vec3 ro=vec3(sin(a)*3.0, 0.8, cos(a)*3.0);
+  vec3 fwd=normalize(vec3(0,-0.1,0)-ro);
+  vec3 right=normalize(cross(vec3(0,1,0),fwd));
+  vec3 up=cross(fwd,right);
+  vec3 rd=normalize(fwd*1.5+right*screen.x+up*screen.y);
+
+  float t2=0.0; bool hit=false;
+  for(int i=0;i<100;i++){
+    float d=blobScene(ro+rd*t2);
+    if(d<0.001){hit=true;break;}
+    t2+=d; if(t2>15.0)break;
+  }
+
+  vec3 color=vec3(0.04,0.03,0.09);
+  if(hit){
+    vec3 p=ro+rd*t2;
+    vec3 n=getNormal(p);
+
+    // TRIPLANAR TEXTURING — no UV needed!
+    vec3 texColor;
+    if(p.y < -0.93) {
+      // Ground: use a different scale + color
+      texColor = mix(vec3(0.15,0.1,0.2), vec3(0.25,0.2,0.3),
+        fbm3(p*3.0));
+    } else {
+      // Organic blob: triplanar marble
+      texColor = triplanar(p * 1.8, n, 1.0);
+      // Tint: inside blobs slightly warmer
+      float warmth = 1.0 - smoothstep(0.5, 0.9, length(p));
+      texColor = mix(texColor, texColor*vec3(1.3, 0.8, 0.7), warmth);
+    }
+
+    // Lighting
+    vec3 L=normalize(vec3(1.5,2.5,1.0));
+    float diff=max(dot(n,L),0.0);
+    float amb=0.1;
+    color=texColor*(amb+diff*0.9);
+
+    // Specular
+    vec3 h=normalize(L-rd);
+    float spec=pow(max(dot(n,h),0.0),80.0);
+    color+=spec*0.5*vec3(0.9,0.8,1.0);
+
+    // Rim
+    float rim=pow(1.0-max(dot(n,-rd),0.0),4.0);
+    color+=rim*0.2*vec3(0.5,0.3,1.0);
+
+    color=mix(color,vec3(0.04,0.03,0.09),t2*0.05);
+  }
+  gl_FragColor=vec4(color,1.0);
+}
+`
+},
+
+// ─── 17 ───────────────────────────────────────────
+{
+title: "Loading External 3D Files",
+subtitle: "17 — OBJ / glTF / FBX",
+body: `
+<p>Real-world 3D workflows use <strong>mesh files</strong> — OBJ, glTF, or FBX — exported from Blender, Maya, or ZBrush. The GPU can't read those formats directly; you parse them on the CPU and upload vertex data as buffers.</p>
+<p><strong>OBJ</strong> is the simplest: plain text with lines starting with <code>v</code> (vertex), <code>vt</code> (UV), <code>vn</code> (normal), <code>f</code> (face/triangle). Easy to parse yourself.</p>
+<p><strong>glTF</strong> (.gltf / .glb) is the modern standard — binary, compact, supports animation, PBR materials, and loads directly into Three.js / Babylon.js. Think of it as the "JPG of 3D".</p>
+<p><strong>FBX</strong> is proprietary (Autodesk) — use a library like <code>three/examples/jsm/loaders/FBXLoader</code> or convert to glTF first via Blender.</p>
+<p>Once parsed, you upload data to the GPU via <strong>VBOs</strong> (Vertex Buffer Objects) — exactly the same buffers you already know from WebGL. The shader doesn't care where the data came from.</p>
+<div class="tip">Think of mesh files as a recipe card. Your CPU reads the recipe (parses the file), assembles the ingredients (vertex arrays), then hands them to the GPU chef (WebGL). The shader just receives pre-chopped ingredients — it never sees the recipe card at all!</div>
+<div class="step-card"><span class="step-num">PIPELINE</span>Load file → parse vertices/UVs/normals → upload to GPU buffers → bind in vertex shader → shade in fragment shader</div>
+<div class="challenge">Try it: parse the OBJ below manually and count how many triangles it has. Each "f" line = 1 face. Hint: a cube has 12 triangles.</div>
+`,
+shader: `// OBJ FILE FORMAT — annotated example
+// (This shader visualises what a parsed mesh looks like
+//  as vertex data flowing through the pipeline)
+
+precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// ── WHAT AN OBJ FILE LOOKS LIKE (as a comment) ──
+//
+// v  0.5  0.5 -0.5   ← vertex position (x y z)
+// v -0.5  0.5 -0.5
+// vt 1.0  1.0        ← UV coordinate (u v)
+// vt 0.0  1.0
+// vn  0.0  1.0  0.0  ← surface normal (x y z)
+// f  1/1/1  2/2/1  3/3/1  ← face: vertIdx/uvIdx/normalIdx
+//
+// After parsing, you'd have float arrays like:
+// positions = [0.5, 0.5, -0.5,  -0.5, 0.5, -0.5, ...]
+// uvs       = [1.0, 1.0,   0.0, 1.0, ...]
+// normals   = [0.0, 1.0,   0.0, ...]
+// Then: gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), ...)
+
+// ── SIMULATING A LOADED MESH IN THE SHADER ──
+// We fake a rotating mesh using raymarching to show
+// what it looks like once it's on the GPU.
+
+float sdBox(vec3 p,vec3 b){vec3 q=abs(p)-b;return length(max(q,0.0))+min(max(q.x,max(q.y,q.z)),0.0);}
+float sdSphere(vec3 p,float r){return length(p)-r;}
+float smin(float a,float b,float k){float h=clamp(.5+.5*(b-a)/k,0.,1.);return mix(b,a,h)-k*h*(1.-h);}
+
+// Fake "loaded character" built from primitives
+// In a real app this would come from your OBJ/glTF vertices
+float fakeModel(vec3 p) {
+  float t = u_time * 0.5;
+  // Body
+  float body = sdBox(p, vec3(0.4,0.55,0.25));
+  // Head
+  float head = sdSphere(p - vec3(0.0,0.8,0.0), 0.32);
+  // Arms (spread out like a T-pose — classic mesh export pose!)
+  float armL = sdBox(p - vec3(-0.7, 0.1, 0.0), vec3(0.28,0.1,0.1));
+  float armR = sdBox(p - vec3( 0.7, 0.1, 0.0), vec3(0.28,0.1,0.1));
+  // Legs
+  float legL = sdBox(p - vec3(-0.18,-1.0,0.0), vec3(0.12,0.45,0.12));
+  float legR = sdBox(p - vec3( 0.18,-1.0,0.0), vec3(0.12,0.45,0.12));
+
+  float d = smin(body, head, 0.08);
+  d = smin(d, armL, 0.06);
+  d = smin(d, armR, 0.06);
+  d = smin(d, legL, 0.05);
+  d = smin(d, legR, 0.05);
+  return d;
+}
+
+float scene(vec3 p){ return min(fakeModel(p), p.y+1.5); }
+
+vec3 getNormal(vec3 p){float e=0.001;return normalize(vec3(scene(p+vec3(e,0,0))-scene(p-vec3(e,0,0)),scene(p+vec3(0,e,0))-scene(p-vec3(0,e,0)),scene(p+vec3(0,0,e))-scene(p-vec3(0,0,e))));}
+
+void main(){
+  vec2 sc=(gl_FragCoord.xy/u_resolution)*2.0-1.0;
+  sc.x*=u_resolution.x/u_resolution.y;
+  float a=u_time*0.4;
+  vec3 ro=vec3(sin(a)*3.5,0.3,cos(a)*3.5);
+  vec3 fwd=normalize(-ro+vec3(0,0.1,0));
+  vec3 right=normalize(cross(vec3(0,1,0),fwd));
+  vec3 up=cross(fwd,right);
+  vec3 rd=normalize(fwd*1.5+right*sc.x+up*sc.y);
+  float t2=0.0; bool hit=false;
+  for(int i=0;i<100;i++){float d=scene(ro+rd*t2);if(d<0.001){hit=true;break;}t2+=d;if(t2>20.0)break;}
+  vec3 color=vec3(0.04,0.04,0.1);
+  if(hit){
+    vec3 p=ro+rd*t2;
+    vec3 n=getNormal(p);
+    // Wireframe overlay — visualises the mesh topology
+    // In real meshes, each triangle edge would show here
+    vec3 L=normalize(vec3(1.5,2.0,1.0));
+    float diff=max(dot(n,L),0.0);
+    // Base color: show normals as RGB (useful for debugging meshes!)
+    vec3 normalColor = n*0.5+0.5;
+    vec3 diffColor = vec3(0.4,0.7,1.0)*(0.1+diff*0.9);
+    color = mix(diffColor, normalColor, 0.3);
+    vec3 h=normalize(L-rd);
+    color+=0.3*pow(max(dot(n,h),0.0),32.0);
+    color=mix(color,vec3(0.04,0.04,0.1),t2*0.05);
+  }
+  gl_FragColor=vec4(color,1.0);
+}
+`
+},
+
+// ─── 18 ───────────────────────────────────────────
+{
+title: "Particle Systems",
+subtitle: "18 — GPU Particles",
+body: `
+<p>A <strong>particle system</strong> is thousands of tiny objects — sparks, smoke, rain, stars — each with its own position, velocity, and lifetime.</p>
+<p>The naive way: update particles on the CPU in JavaScript, upload positions every frame. Fine for a few hundred. Terrible for millions.</p>
+<p>The GPU way: store all particle state in a <strong>texture</strong> (one texel = one particle's data). Each frame, a <em>compute pass</em> updates positions. A draw pass reads positions and renders points.</p>
+<p>In pure fragment shaders (like here), we simulate particles <em>analytically</em> — computing where each particle <em>would be</em> at time T purely from math, with no state storage needed.</p>
+<div class="tip">Analytical particles = "I don't store where you are, I CALCULATE where you must be right now from the laws of physics." Like knowing a ball thrown upward at speed V is at height V*t - 0.5*g*t² at any time. No simulation loop needed — just pure math!</div>
+<div class="challenge">Modify the gravity constant (currently 0.4) to see particles arc differently. Try negative gravity for floating particles!</div>
+`,
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// ── ANALYTICAL PARTICLE SYSTEM ──
+// Each particle has: seed (for randomness), launch time
+// Position is calculated PURELY from physics math.
+// No CPU loop. No state. Just: where are you RIGHT NOW?
+
+// Pseudo-random: unique number from a seed
+float rand(float seed) {
+  return fract(sin(seed * 127.1 + 311.7) * 43758.5);
+}
+
+// Physics: position of one particle at current time
+// Launch angle, speed, and timing all come from its seed.
+vec2 particlePos(float id, float t) {
+  // Each particle gets unique properties from its ID
+  float launchTime  = rand(id * 1.1) * 4.0;     // when it launches (0-4s)
+  float angle       = rand(id * 2.3) * 6.28;    // launch direction (radians)
+  float speed       = rand(id * 3.7) * 1.2 + 0.3; // launch speed
+
+  // Age: how long since THIS particle launched
+  // mod() makes it loop, so particles respawn
+  float age = mod(t - launchTime, 5.0);
+
+  // Physics: position = start + velocity*time + gravity*time²
+  // (Classic kinematic equation — same as high school physics!)
+  float gravity = 0.4;
+  float x = cos(angle) * speed * age;
+  float y = sin(angle) * speed * age - 0.5 * gravity * age * age;
+
+  return vec2(x, y);
+}
+
+// Color: fade from bright to dim as particle ages
+vec3 particleColor(float id, float age) {
+  // Hue shift per particle using its ID
+  float hue = rand(id * 5.1);
+  vec3 hot  = vec3(1.0, 0.6 + hue*0.4, 0.1);  // young = hot/bright
+  vec3 cool = vec3(0.3, 0.1, 0.5 * hue);       // old = cool/dim
+  return mix(hot, cool, clamp(age / 3.0, 0.0, 1.0));
+}
+
+void main() {
+  // Remap UV: center = (0,0), edges = ±1.5
+  vec2 uv = (gl_FragCoord.xy / u_resolution) * 2.0 - 1.0;
+  uv.x *= u_resolution.x / u_resolution.y;
+  uv *= 1.8; // zoom out a bit
+
+  vec3 color = vec3(0.03, 0.02, 0.08); // dark background
+
+  // Emitter position: slowly drifts
+  vec2 emitter = vec2(sin(u_time*0.3)*0.3, -0.5);
+
+  // Draw N particles
+  // (In real GPU particles you'd draw actual geometry quads;
+  //  here we check every pixel against every particle)
+  int N = 120;
+  for (int i = 0; i < 120; i++) {
+    float id = float(i);
+    float launchTime = rand(id * 1.1) * 4.0;
+    float age = mod(u_time - launchTime, 5.0);
+
+    vec2 pos = emitter + particlePos(id, u_time);
+
+    // Distance from this pixel to this particle center
+    float dist = length(uv - pos);
+
+    // Particle size: shrinks with age (fades out)
+    float size = 0.04 * (1.0 - clamp(age/4.0, 0.0, 1.0));
+
+    // Soft glow: bright core, soft falloff
+    float glow = size / (dist + 0.001);
+    glow = clamp(glow * 0.05, 0.0, 1.0);
+
+    // Hard core dot
+    float core = smoothstep(size*0.3, 0.0, dist);
+
+    vec3 pColor = particleColor(id, age);
+    color += pColor * (glow + core * 0.8);
+  }
+
+  // Tone-map: prevent blowout (HDR-style)
+  color = color / (color + 1.0);
+  // Gamma correction (makes colors look right on screen)
+  color = pow(color, vec3(0.4545));
+
+  gl_FragColor = vec4(color, 1.0);
+}
+`
+},
+
+// ─── 19 ───────────────────────────────────────────
+{
+title: "Vertex Shaders Deep Dive",
+subtitle: "19 — Deform, Skin & Displace",
+body: `
+<p>The vertex shader runs <em>before</em> the fragment shader, once per vertex. Its main job: output <code>gl_Position</code> — the final 2D clip-space position of each vertex. But you can do so much more.</p>
+<p><strong>Displacement</strong>: move vertices along their normal using a noise or texture value. Great for terrain, waves, cloth.</p>
+<p><strong>Skinning</strong>: animate a mesh by multiplying each vertex by a blend of bone matrices. This is how every game character moves — each vertex is "pulled" by nearby skeleton joints.</p>
+<p><strong>Varyings</strong>: pass any per-vertex data (color, UV, world position, normal) to the fragment shader where it gets smoothly interpolated across the triangle surface.</p>
+<div class="tip">The vertex shader is the puppet master — it decides WHERE each point of your mesh ends up. The fragment shader just colors in the gaps. Displace vertices with a wave function and your flat plane becomes an ocean. No new geometry needed, just math applied to existing points!</div>
+<div class="challenge">The wave height is controlled by the amplitude variable (currently 0.3). Try making it react to distance from center for a ripple effect!</div>
+`,
+shader: `// This fragment shader SIMULATES what a vertex shader
+// displacement looks like, using raymarching.
+// In real WebGL the VERTEX shader would run this math
+// before the fragment shader ever executes.
+
+precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// ── WHAT THE VERTEX SHADER WOULD DO ──
+// (shown as math we replicate in the ray scene)
+//
+// attribute vec3 a_position;  // mesh vertex
+// attribute vec3 a_normal;    // which way it faces
+// attribute vec2 a_uv;        // texture coords
+// varying vec2 v_uv;          // pass UV → fragment shader
+// varying vec3 v_worldPos;    // pass position → fragment shader
+// uniform float u_time;
+//
+// void main() {
+//   float wave = sin(a_position.x*4.0 + u_time*2.0)
+//              * cos(a_position.z*4.0 + u_time*1.5) * 0.3;
+//   // DISPLACE vertex along its normal
+//   vec3 displaced = a_position + a_normal * wave;
+//   v_uv = a_uv;
+//   v_worldPos = displaced;
+//   gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);
+// }
+
+// ── SIMULATED DISPLACED SURFACE ──
+// We show a flat grid displaced by a wave function —
+// exactly what a vertex shader would produce.
+
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5);}
+float noise(vec2 p){vec2 i=floor(p);vec2 f=fract(p);vec2 u=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),u.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),u.x),u.y);}
+
+// The displaced surface SDF
+float displacedPlane(vec3 p) {
+  // Base: flat plane at y=0
+  // Displacement: wave function applied to XZ position
+  float amplitude = 0.3;
+  float wave = sin(p.x*3.0 + u_time*1.8)
+             * cos(p.z*3.0 + u_time*1.3) * amplitude;
+  // Add finer detail noise on top
+  float detail = noise(p.xz*4.0 + u_time*0.5) * 0.08;
+  // "Distance to the displaced surface" = how far Y is from the wave
+  return p.y - wave - detail;
+}
+
+float scene(vec3 p){ return displacedPlane(p); }
+vec3 getNormal(vec3 p){float e=0.003;return normalize(vec3(scene(p+vec3(e,0,0))-scene(p-vec3(e,0,0)),scene(p+vec3(0,e,0))-scene(p-vec3(0,e,0)),scene(p+vec3(0,0,e))-scene(p-vec3(0,0,e))));}
+
+void main(){
+  vec2 sc=(gl_FragCoord.xy/u_resolution)*2.0-1.0;
+  sc.x*=u_resolution.x/u_resolution.y;
+
+  // Low angle camera to see the waves nicely
+  vec3 ro=vec3(sin(u_time*0.2)*1.5, 1.8, cos(u_time*0.2)*1.5+3.0);
+  vec3 target=vec3(0.0,0.0,0.0);
+  vec3 fwd=normalize(target-ro);
+  vec3 right=normalize(cross(vec3(0,1,0),fwd));
+  vec3 up=cross(fwd,right);
+  vec3 rd=normalize(fwd*1.5+right*sc.x+up*sc.y);
+
+  float t2=0.0; bool hit=false;
+  for(int i=0;i<100;i++){
+    float d=scene(ro+rd*t2);
+    if(abs(d)<0.002){hit=true;break;}
+    t2+=d*0.5; if(t2>15.0)break;
+  }
+
+  // Sky gradient
+  float skyT = sc.y*0.5+0.5;
+  vec3 color = mix(vec3(0.05,0.08,0.18), vec3(0.02,0.02,0.08), skyT);
+
+  if(hit){
+    vec3 p=ro+rd*t2;
+    vec3 n=getNormal(p);
+    vec3 L=normalize(vec3(1.0,2.0,0.5));
+    float diff=max(dot(n,L),0.0);
+
+    // Water-like color: dark below, bright reflections on top
+    vec3 deep=vec3(0.02,0.08,0.22);
+    vec3 shallow=vec3(0.1,0.5,0.7);
+    vec3 waterColor=mix(deep,shallow,diff*0.8+0.1);
+
+    // Fresnel: more reflective at glancing angles
+    float fresnel=pow(1.0-max(dot(n,-rd),0.0),4.0);
+    vec3 skyRefl=mix(vec3(0.05,0.08,0.18),vec3(0.6,0.8,1.0),fresnel);
+    waterColor=mix(waterColor,skyRefl,fresnel*0.7);
+
+    // Specular shimmer
+    vec3 h=normalize(L-rd);
+    waterColor+=0.6*pow(max(dot(n,h),0.0),128.0)*vec3(1.0,0.95,0.8);
+
+    // Wireframe lines — shows mesh vertices
+    vec2 grid=fract(p.xz*3.0);
+    float wire=step(0.94,grid.x)+step(0.94,grid.y);
+    wire=clamp(wire,0.0,1.0)*0.15;
+    waterColor+=wire*vec3(0.3,0.8,1.0);
+
+    color=waterColor;
+    color=mix(color,vec3(0.05,0.08,0.18),t2*0.04);
+  }
+  gl_FragColor=vec4(color,1.0);
+}
+`
+},
+
+// ─── 20 ───────────────────────────────────────────
+{
+title: "Cellular Automata",
+subtitle: "20 — Game of Life on GPU",
+body: `
+<p><strong>Cellular automata</strong>: each cell's next state depends only on its current neighbors. Conway's Game of Life uses four rules — yet produces gliders, oscillators, and self-replicating structures forever.</p>
+<p>On the GPU this is a <strong>ping-pong texture</strong> operation — each frame, shader reads from texture A and writes to texture B, then they swap. Each pixel IS a cell. It's a full compute shader in a fragment shader.</p>
+<p>The rules: a live cell with 2–3 live neighbors <em>survives</em>. A dead cell with exactly 3 live neighbors is <em>born</em>. Everything else dies or stays dead.</p>
+<div class="tip">CA = "stupidly simple rules → insanely complex emergent behavior." Each cell only looks at 8 neighbors yet gliders emerge, travel, collide, and create new structures. Zero top-down design. Biologists think actual life might work this way!</div>
+<div class="challenge">Change the birth threshold from step(2.5,nb)*step(nb,3.5) to step(1.5,nb)*step(nb,3.5) — that's B2/S23 "Gnarl". Or try step(2.5,nb)*step(nb,4.5) for HighLife. Tiny changes = totally different universes!</div>
+`,
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+// Deterministic hash: same seed always gives same result.
+// This is how we simulate CA without ping-pong textures —
+// each "generation" is computed from its own hash seed.
+float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5); }
+
+void main(){
+  vec2 uv   = gl_FragCoord.xy / u_resolution;
+  float tick = floor(u_time * 2.0); // 2 generations per second
+
+  // Which cell are we? (80x80 grid)
+  vec2 cell = floor(uv * 80.0);
+
+  // Current alive/dead state of THIS cell this generation
+  float alive = step(0.52, hash(cell + tick * 0.13));
+
+  // Count live neighbors (the 3x3 ring around this cell)
+  float nb = 0.0;
+  for(int dx=-1; dx<=1; dx++)
+    for(int dy=-1; dy<=1; dy++){
+      if(dx==0 && dy==0) continue; // skip self
+      vec2 n = cell + vec2(float(dx), float(dy));
+      nb += step(0.52, hash(n + tick * 0.13));
+    }
+
+  // Conway B3/S23 rule:
+  // Born:    dead cell + exactly 3 neighbors
+  // Survive: live cell + 2 or 3 neighbors
+  float born  = (1.-alive) * step(2.5,nb)*step(nb,3.5);
+  float surv  = alive      * step(1.5,nb)*step(nb,3.5);
+  float life  = max(born, surv);
+
+  // Previous tick state for color history effects
+  float was   = step(0.52, hash(cell + (tick-1.)*0.13));
+  float dying = was*(1.-life);    // was alive, now dead this tick
+  float born2 = (1.-was)*life;   // was dead, now alive this tick
+
+  // Colors:
+  vec3 color = vec3(0.03,0.02,0.07);         // dead = dark
+  color = mix(color, vec3(0.08,0.7,0.25), life);  // alive = green
+  // Flash on birth/death (only visible for first ~25% of the tick)
+  color = mix(color, vec3(0.9,0.95,0.2), born2  * step(fract(u_time*2.),0.25));
+  color = mix(color, vec3(0.7,0.1,0.25), dying  * step(fract(u_time*2.),0.25));
+
+  // Cell grid lines (visible on dead cells only)
+  vec2 g = fract(uv*80.0);
+  color += 0.04*(1.-life)*clamp(step(0.96,g.x)+step(0.96,g.y),0.,1.);
+
+  // Alive cells pulse gently with time
+  color += vec3(0.04,0.4,0.1)*life*(sin(u_time*6.28)*.5+.5)*0.12;
+
+  gl_FragColor = vec4(clamp(color,0.,1.), 1.0);
+}
+`
+},
+
+// ─── 21 ───────────────────────────────────────────
+{
+title: "Boids — Flocking",
+subtitle: "21 — Emergent Swarm Behavior",
+body: `
+<p><strong>Boids</strong> (Craig Reynolds, 1987): three rules only — <em>Separation</em> (don't crowd neighbors), <em>Alignment</em> (match their heading), <em>Cohesion</em> (steer toward center). Three rules → birds, fish, crowds.</p>
+<p>On the GPU: store position+velocity per boid in a texture. Each frame, read all boids, compute the three forces, write new state. Same ping-pong as CA. Here we compute positions analytically to keep it single-shader.</p>
+<p>Each boid is drawn as an elongated arrow pointing in its direction of travel. Connection lines appear between close neighbors — you can literally <em>see</em> the cohesion radius.</p>
+<div class="tip">Boids is the poster child of emergent behavior. Nobody told the flock to form a V-shape. Three simple force rules and group intelligence appears. The flock is smarter than any individual bird. This is why game AI and crowd simulation still use it today!</div>
+<div class="challenge">The cohesion mix value is 0.25. Try 0.7 — the whole flock collapses into a tight ball. Then try 0.05 — birds barely pull together. The tension between separation and cohesion IS the flock.</div>
+`,
+shader: `precision mediump float;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+float hash1(float n){ return fract(sin(n*127.1)*43758.5); }
+
+// ── BOID SIMULATION ──
+// Each boid orbits at its own radius/speed.
+// Cohesion: pulled toward average radius (mix toward 0.42)
+// Separation: staggered phase offset so they don't stack
+// Alignment: shared angular velocity direction
+vec2 boidPos(float id, float t){
+  float baseR = 0.3 + hash1(id+5.)*0.35;
+  float r     = mix(baseR, 0.42, 0.25);   // cohesion
+  float speed = 0.8 + hash1(id+2.)*0.4;
+  float sep   = id * 0.28;               // separation: phase stagger
+  float a     = hash1(id)*6.28 + t*speed + sep;
+  return vec2(cos(a)*r, sin(a)*r);
+}
+// Velocity = direction of travel
+vec2 boidDir(float id, float t){
+  return normalize(boidPos(id,t+.02) - boidPos(id,t-.02));
+}
+
+void main(){
+  vec2 uv = (gl_FragCoord.xy/u_resolution)*2.-1.;
+  uv.x   *= u_resolution.x/u_resolution.y;
+  vec3 color = vec3(0.03,0.03,0.08);
+
+  // ── DRAW BOIDS ──
+  for(int i=0;i<40;i++){
+    float fi  = float(i);
+    vec2 pos  = boidPos(fi, u_time);
+    vec2 vel  = boidDir(fi, u_time);
+    vec2 tp   = uv - pos;
+
+    // Project pixel onto forward and side axes of this boid
+    float fwd = dot(tp, vel);
+    float sid = dot(tp, vec2(-vel.y, vel.x));
+
+    // Arrow body: elongated ellipse (longer forward than wide)
+    float body = sqrt((fwd/0.036)*(fwd/0.036) + (sid/0.010)*(sid/0.010));
+    float shape = smoothstep(1.2, 0.7, body);
+
+    // Each boid has unique color from its ID
+    vec3 bc = mix(vec3(0.2,0.6,1.0), vec3(1.0,0.6,0.1), hash1(fi));
+    color = mix(color, bc, shape);
+
+    // Velocity trail: phosphor afterglow
+    float td = length(uv - (pos - vel*0.06));
+    color += bc * 0.06 / (td*td*800. + 1.);
+  }
+
+  // ── CONNECTION LINES (shows cohesion radius) ──
+  for(int i=0;i<40;i++)for(int j=0;j<40;j++){
+    if(i>=j) continue;
+    vec2 pi = boidPos(float(i),u_time);
+    vec2 pj = boidPos(float(j),u_time);
+    float d = length(pi-pj);
+    if(d > 0.22) continue;  // only draw within cohesion radius
+
+    // Closest point on segment pi→pj to this pixel
+    vec2 ab = pj-pi;
+    float t2 = clamp(dot(uv-pi,ab)/dot(ab,ab),0.,1.);
+    float ld = length(uv - (pi+ab*t2));
+
+    // Line fades as birds get farther apart
+    color += vec3(0.1,0.4,0.8) * 0.0003/(ld*ld+0.00003) * (1.-d/0.22);
+  }
+
+  gl_FragColor = vec4(clamp(color,0.,1.), 1.0);
+}
+`
+},
+
+// ─── 22 ───────────────────────────────────────────
+{
+title: "🎬 Grand Finale",
+subtitle: "22 — Everything, Unleashed",
+body: `
+<p>This is your <strong>demo scene</strong>. Every lesson in this course is present simultaneously, interacting, driven by audio. Hit <strong>🎵 Synth</strong> and watch it come alive.</p>
+<p>This is the tradition: cram every technique into a real-time render and make something that feels like it shouldn't be possible from a fragment shader.</p>
+<div class="step-card"><span class="step-num">LESSONS 1–4 — COLOR · UV · TIME · SHAPES</span>The whole image is a fragment shader. Every pixel computed from scratch each frame. UV coordinates drive the sky gradient and star field. Animated via u_time.</div>
+<div class="step-card"><span class="step-num">LESSONS 5–6 — PATTERNS · NOISE</span>FBM noise builds the sky atmosphere and the ground surface texture. fract() tiles the ground checker under the triplanar layer.</div>
+<div class="step-card"><span class="step-num">LESSONS 7–8 — UV MAPPING · VERTEX SHADERS</span>Triplanar projection textures the ground and robot body without UV seams. The ground plane is displaced by a noise wave (vertex-shader-style math).</div>
+<div class="step-card"><span class="step-num">LESSONS 9–10 — SDF · RAYMARCHING</span>The robot, torus, and ground are all signed distance fields. The camera casts a ray per pixel, marches until it hits a surface.</div>
+<div class="step-card"><span class="step-num">LESSONS 11–13 — POST · COMPUTE · 3D UV</span>Scanlines, vignette, chromatic aberration and tone mapping applied last. Triplanar texturing on every surface. CA computed as a pseudo-ping-pong in the ground.</div>
+<div class="step-card"><span class="step-num">LESSONS 14–17 — SDF PRIMITIVES · MODEL · OBJ</span>Robot built from sdRoundBox + sdCapsule + sdSphere + smin. Smooth blending everywhere. Exactly the pipeline you'd use with a loaded mesh.</div>
+<div class="step-card"><span class="step-num">LESSONS 18–19 — PARTICLES · VERTEX DISPLACEMENT</span>32 analytic spark particles arc from the antenna with real gravity. The ground plane is sinusoidally displaced — vertex-shader-style in the SDF.</div>
+<div class="step-card"><span class="step-num">LESSONS 20–22 — AUDIO REACTIVE</span>Bass → eye glow intensity. Mids → torus radius + flock spread. Treble → outer sparkle ring. Beat → camera punch + edge flash. Enable Synth to see it all.</div>
+<div class="step-card"><span class="step-num">LESSONS 23–24 — CA · BOIDS</span>Game of Life cells crawl on the ground surface in world space. 24 boids orbit the scene in screen space with trails and connection lines.</div>
+<p style="margin-top:1rem;"><strong>From here:</strong> shadertoy.com · iquilezles.org · bookofshaders.com · twigl.app · revision-party.net</p>
+`,
+shader: `// ═══════════════════════════════════════════════════
+// 🎬 GRAND FINALE
+// Every lesson: color, UV, time, shapes, patterns,
+// noise, UV mapping, vertex displacement, SDF,
+// raymarching, post-fx, compute/CA, 3D UV,
+// SDF primitives, model-from-code, particles,
+// audio-reactive, cellular automata, boids.
+// ═══════════════════════════════════════════════════
+
+precision mediump float;
+uniform vec2  u_resolution;
+uniform float u_time;
+// ─────────────────────────────────────────
+// AUDIO-LIKE ANIMATION (procedural, no mic needed)
+// These functions simulate audio-reactive behaviour
+// using time-based math — the same shapes you'd get
+// from real FFT data, driven by u_time instead.
+// ─────────────────────────────────────────
+float bass()  { return (.5+.5*sin(u_time*1.8))*.8; }
+float mids()  { return (.5+.5*sin(u_time*2.7+1.2))*.7; }
+float treb()  { return (.5+.5*sin(u_time*5.1+2.4))*.6; }
+float beat()  { return exp(-mod(u_time*2.,1.)*6.)*bass(); }
+
+// ─────────────────────────────────────────
+// LESSONS 1-6: MATH UTILS / NOISE / PATTERNS
+// ─────────────────────────────────────────
+float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5); }
+float hash1(float n){ return fract(sin(n*127.1)*43758.5); }
+float noise(vec2 p){
+  vec2 i=floor(p), f=fract(p), u=f*f*(3.-2.*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),u.x),
+             mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),u.x),u.y);
+}
+float fbm(vec2 p){
+  float v=0.,a=.5;
+  for(int i=0;i<4;i++){v+=a*noise(p);p*=2.;a*=.5;}
+  return v;
+}
+// LESSON 9: smooth SDF union
+float smin(float a,float b,float k){
+  float h=clamp(.5+.5*(b-a)/k,0.,1.);
+  return mix(b,a,h)-k*h*(1.-h);
+}
+
+// ─────────────────────────────────────────
+// LESSONS 14-17: SDF PRIMITIVES
+// ─────────────────────────────────────────
+float sdBox(vec3 p,vec3 b,float r){
+  vec3 q=abs(p)-b;
+  return length(max(q,0.))+min(max(q.x,max(q.y,q.z)),0.)-r;
+}
+float sdCap(vec3 p,vec3 a,vec3 b,float r){
+  vec3 pa=p-a,ba=b-a;
+  float h=clamp(dot(pa,ba)/dot(ba,ba),0.,1.);
+  return length(pa-ba*h)-r;
+}
+float sdTor(vec3 p,vec2 t){
+  return length(vec2(length(p.xz)-t.x,p.y))-t.y;
+}
+float sdSph(vec3 p,float r){ return length(p)-r; }
+
+// ─────────────────────────────────────────
+// LESSON 15: MODEL FROM CODE
+// Robot built entirely from primitive SDFs + smin
+// ─────────────────────────────────────────
+float robot(vec3 p){
+  float bob = sin(u_time*1.3)*.03;
+  float sw  = sin(u_time)*.2;
+
+  // Body (rounded box)
+  float d = sdBox(p, vec3(.36,.44,.21), .06);
+
+  // Head
+  vec3 h = p - vec3(0.,.72+bob,0.);
+  d = smin(d, sdBox(h, vec3(.27,.21,.19), .07), .05);
+
+  // Eye sockets carved out (SDF subtraction)
+  d = max(d, -sdSph(h-vec3(-.11,.04,.18), .068));
+  d = max(d, -sdSph(h-vec3( .11,.04,.18), .068));
+
+  // Eyeballs inside sockets
+  d = min(d, sdSph(h-vec3(-.11,.04,.20), .048));
+  d = min(d, sdSph(h-vec3( .11,.04,.20), .048));
+
+  // Antenna + ball
+  float ant = sdCap(h, vec3(0.,.22,0.), vec3(0.,.47,0.), .022);
+  float ball= sdSph(h-vec3(0.,.50,0.), .048);
+  d = smin(d, smin(ant,ball,.025), .02);
+
+  // Arms swing opposite phases
+  d = smin(d, sdCap(p,vec3(-.43,.28,0.),vec3(-.63,-.06+sw,.09),.1), .05);
+  d = smin(d, sdCap(p,vec3( .43,.28,0.),vec3( .63,-.06-sw,.09),.1), .05);
+
+  // Legs alternate
+  d = smin(d, sdCap(p,vec3(-.18,-.44,0.),vec3(-.20,-.91, sw*.6),.11), .05);
+  d = smin(d, sdCap(p,vec3( .18,-.44,0.),vec3( .20,-.91,-sw*.6),.11), .05);
+
+  return d;
+}
+
+// ─────────────────────────────────────────
+// LESSONS 9-10: FULL SCENE SDF + RAYMARCHING
+// Returns vec2(dist, id): 0=ground, 1=robot, 2=torus
+// ─────────────────────────────────────────
+vec2 scene(vec3 p){
+  // LESSON 19: vertex-displacement-style ground wave
+  float wave = sin(p.x*3.+u_time*1.2)*cos(p.z*3.+u_time*.9)*.06;
+  float gnd = p.y + 1.05 - wave;
+
+  float bot = robot(p);
+
+  // Torus radius reacts to mids (LESSON 20)
+  float torR = .85 + mids()*.18;
+  float tor = sdTor(p-vec3(0.,.38,0.), vec2(torR,.09));
+
+  float d=bot; float id=1.;
+  if(tor<d){ d=tor; id=2.; }
+  if(gnd<d){ d=gnd; id=0.; }
+  return vec2(d,id);
+}
+
+float sceneD(vec3 p){ return scene(p).x; }
+
+// LESSON 10: normal from SDF gradient
+vec3 sceneN(vec3 p){
+  float e=.001;
+  return normalize(vec3(
+    sceneD(p+vec3(e,0,0))-sceneD(p-vec3(e,0,0)),
+    sceneD(p+vec3(0,e,0))-sceneD(p-vec3(0,e,0)),
+    sceneD(p+vec3(0,0,e))-sceneD(p-vec3(0,0,e))
+  ));
+}
+
+// ─────────────────────────────────────────
+// LESSONS 7+13+16: TRIPLANAR UV MAPPING
+// No UV seams — projects texture from 3 axes
+// ─────────────────────────────────────────
+vec3 triplanar(vec3 p, vec3 n){
+  vec3 w = abs(n);
+  w = pow(w, vec3(8.));
+  w /= w.x+w.y+w.z;
+  // Sample a procedural marble from each axis
+  float vx = sin(p.y *7.+fbm(vec2(p.y,p.z)*1.3)*3.)*.5+.5;
+  float vy = sin(p.x *7.+fbm(vec2(p.x,p.z)*1.3)*3.)*.5+.5;
+  float vz = sin(p.x *7.+fbm(vec2(p.x,p.y)*1.3)*3.)*.5+.5;
+  float v  = vx*w.x + vy*w.y + vz*w.z;
+  return mix(vec3(.06,.04,.14), vec3(.72,.67,.92), v);
+}
+
+// ─────────────────────────────────────────
+// LESSON 23: CELLULAR AUTOMATA on ground
+// Conway B3/S23 baked into the ground texture
+// ─────────────────────────────────────────
+float caCell(vec2 cell, float tick){
+  float alive = step(0.52, hash(cell + tick*.13));
+  float nb = 0.;
+  for(int dx=-1;dx<=1;dx++)
+    for(int dy=-1;dy<=1;dy++){
+      if(dx==0&&dy==0) continue;
+      nb += step(0.52, hash(cell+vec2(float(dx),float(dy))+tick*.13));
+    }
+  float born = (1.-alive)*step(2.5,nb)*step(nb,3.5);
+  float surv = alive*step(1.5,nb)*step(nb,3.5);
+  return max(born,surv);
+}
+
+// ─────────────────────────────────────────
+// LESSON 24: BOIDS — analytic flock
+// ─────────────────────────────────────────
+vec2 bPos(float id, float t){
+  float r = mix(.28+hash1(id+5.)*.3, .42, .28) + mids()*.2;
+  float a = hash1(id)*6.2832 + t*(.7+hash1(id+2.)*.4) + id*.27;
+  return vec2(cos(a)*r, sin(a)*r);
+}
+vec2 bDir(float id, float t){
+  return normalize(bPos(id,t+.025)-bPos(id,t-.025));
+}
+
+// ─────────────────────────────────────────
+// LESSON 18: ANALYTIC PARTICLES
+// Screen-space sparks from antenna with gravity
+// ─────────────────────────────────────────
+vec3 sparks(vec2 uvN){
+  vec3 c = vec3(0.);
+  vec2 em = vec2(.5, .74);           // antenna tip approx screen pos
+  float str = beat()*3. + .15;       // LESSON 20: beat drives intensity
+  for(int i=0;i<32;i++){
+    float fi  = float(i);
+    float age = mod(u_time*1.2-hash1(fi)*2.8, 3.2);
+    float ang = hash1(fi+100.)*6.2832;
+    float spd = hash1(fi+200.)*.3+.07;
+    // Kinematic equations: x=vx*t, y=vy*t - 0.5*g*t^2
+    vec2 pos  = em + vec2(
+      cos(ang)*spd*age,
+      (sin(ang)*spd*age - .5*.45*age*age) * (u_resolution.y/u_resolution.x)
+    )*.2;
+    float fade= (1.-clamp(age/2.8,0.,1.))*str;
+    float d   = length(uvN-pos);
+    c += vec3(1.,.62,.08) * clamp(.004/(d+.0015)*fade, 0., .7);
+  }
+  return c;
+}
+
+// ─────────────────────────────────────────
+// MAIN
+// ─────────────────────────────────────────
+void main(){
+  // LESSON 2: UV coordinates
+  vec2 uvN = gl_FragCoord.xy / u_resolution;
+  vec2 uv  = uvN*2.-1.;
+  uv.x    *= u_resolution.x / u_resolution.y;
+
+  // ── LESSON 20+: CAMERA reacts to audio ──
+  float camA  = u_time*.25;
+  float camY  = .55 + sin(u_time*.2)*.2 + bass()*.12;
+  float camD  = 3.2 - beat()*.3;       // camera punches in on beat
+  vec3 ro = vec3(sin(camA)*camD, camY, cos(camA)*camD);
+  vec3 fw = normalize(vec3(0.,.08,0.)-ro);
+  vec3 ri = normalize(cross(vec3(0,1,0),fw));
+  vec3 up2= cross(fw,ri);
+  float fovLen = 1.55 - beat()*.18;    // FOV tightens on kick
+  vec3 rd = normalize(fw*fovLen + ri*uv.x + up2*uv.y);
+
+  // ── LESSON 1+3: COLOR + TIME — Sky gradient ──
+  // LESSON 6: FBM noise atmosphere
+  float skyBlend = clamp(rd.y*.6+.3, 0., 1.);
+  vec3 skyLow  = mix(vec3(.04,.06,.18), vec3(.18,.04,.22), bass()*.5);
+  vec3 skyHigh = mix(vec3(.01,.02,.06), vec3(.04,.01,.10), mids()*.3);
+  vec3 color   = mix(skyLow, skyHigh, skyBlend);
+  // LESSON 5: fract() for star field pattern
+  vec2 starUV  = rd.xz / (abs(rd.y)+.05);
+  float star   = step(.9975, hash(floor(starUV*150.)));
+  color += star * clamp(rd.y, 0., 1.) * (.4+treb());
+
+  // ── LESSONS 9-10: RAYMARCHING ──
+  float t2=0.;
+  float hitId=-1.;
+  bool hitSomething=false;
+  for(int i=0;i<110;i++){
+    vec2 res=scene(ro+rd*t2);
+    if(res.x<.0015){ hitId=res.y; hitSomething=true; break; }
+    t2+=res.x;
+    if(t2>20.) break;
+  }
+
+  float diffOut=0.; // expose diff to post-section
+
+  if(hitSomething){
+    vec3 p = ro+rd*t2;
+    vec3 n = sceneN(p);
+    vec3 L = normalize(vec3(1.6,2.8,1.2));
+    float diff= max(dot(n,L),0.);
+    float amb = .09;
+    diffOut = diff;
+
+    // Surface shading by ID
+    vec3 base = vec3(0.);
+
+    if(hitId < .5){
+      // ── GROUND ──
+      // LESSONS 7+16: triplanar UV (no seams)
+      base = triplanar(p, n);
+      // LESSON 5: checker tile under triplanar
+      float chk = mod(floor(p.x*1.8)+floor(p.z*1.8),2.);
+      base = mix(base, base*vec3(.55,.45,.7), chk*.3);
+      // LESSON 23: CA cells crawl on ground in world space
+      float caT  = floor(u_time*1.5);
+      float caV  = caCell(floor(p.xz*14.), caT);
+      base = mix(base, vec3(.2,.9,.35)*1.4, caV*.3);
+      // LESSON 20: beat pulse radiates from origin
+      base += vec3(.15,.5,.1)*beat()*.25*exp(-length(p.xz)*.7);
+
+    } else if(hitId < 1.5){
+      // ── ROBOT BODY ──
+      // LESSON 11: different material zones
+      base = mix(vec3(.44,.60,.82), vec3(.64,.72,.90), diff);
+      // LESSONS 7+13: triplanar on body panels
+      vec3 bodyTri = triplanar(p*2., n);
+      base = mix(base, bodyTri*.7, .25);
+      // LESSON 20: eye glow driven by bass amplitude
+      vec3 hp = p-vec3(0.,.72,0.);
+      float edist = min(sdSph(hp-vec3(-.11,.04,.2),.048),
+                        sdSph(hp-vec3( .11,.04,.2),.048));
+      float eyeG  = (.08 + bass()*3.)*smoothstep(.06,.0,edist);
+      base += vec3(.1,.55,1.)*eyeG;
+      // LESSON 20: chest panel color shifts with mids
+      float chestD = sdBox(p-vec3(0.,.12,.21),vec3(.18,.16,.01),.01);
+      float chestMask = smoothstep(.025,.0,chestD);
+      vec3 chestCol   = mix(vec3(.06,.2,.7), vec3(.1,.8,.3), mids());
+      base = mix(base, chestCol, chestMask*.8);
+
+    } else {
+      // ── TORUS ──
+      // LESSON 20: color shifts between blue/green with mids
+      base = mix(vec3(.1,.35,.9), vec3(.4,.9,.3), mids());
+      // LESSON 11: rim lighting
+      base += pow(1.-max(dot(n,-rd),0.),3.)*.7*vec3(.3,.8,1.);
+    }
+
+    // LESSON 10: Blinn-Phong lighting (diffuse + specular + ambient + rim)
+    color = base*(amb+diff*.9);
+    vec3 h2 = normalize(L-rd);
+    color  += .28*pow(max(dot(h2,n),0.),.5)*vec3(.9,.95,1.);
+    color  += pow(1.-max(dot(n,-rd),0.),4.)*.1*vec3(.3,.5,1.);
+    // Depth fog back to sky
+    color   = mix(color, skyLow, clamp(t2*.045,0.,1.));
+  }
+
+  // ── LESSON 24: BOIDS in screen space ──
+  for(int i=0;i<24;i++){
+    float fi  = float(i);
+    vec2 pos  = bPos(fi, u_time);
+    vec2 vel  = bDir(fi, u_time);
+    vec2 tp   = uv-pos;
+    float fw2 = dot(tp,vel);
+    float sd2 = dot(tp,vec2(-vel.y,vel.x));
+    // Arrow body: elongated ellipse in direction of travel
+    float body= sqrt((fw2/.030)*(fw2/.030)+(sd2/.009)*(sd2/.009));
+    float shp = smoothstep(1.2,.7,body);
+    vec3 bc   = mix(vec3(.2,.55,1.),vec3(1.,.55,.1),hash1(fi));
+    color = mix(color, bc*.85, shp*.5);
+    // Phosphor trail
+    float td = length(uv-(pos-vel*.07));
+    color += bc*.04/(td*td*1000.+1.);
+  }
+  // Boid connection lines (cohesion radius visualised)
+  for(int i=0;i<24;i++)for(int j=0;j<24;j++){
+    if(i>=j) continue;
+    vec2 pi=bPos(float(i),u_time), pj=bPos(float(j),u_time);
+    float bd=length(pi-pj);
+    if(bd>.22) continue;
+    vec2 ab=pj-pi;
+    float bt=clamp(dot(uv-pi,ab)/dot(ab,ab),0.,1.);
+    float bl=length(uv-(pi+ab*bt));
+    color+=vec3(.1,.4,.9)*.00025/(bl*bl+.000025)*(1.-bd/.22);
+  }
+
+  // ── LESSON 18: PARTICLE SPARKS ──
+  color += sparks(uvN);
+
+  // ── LESSON 20: TREBLE SPARKLE RING ──
+  float tr = treb();
+  for(int i=0;i<20;i++){
+    float fi=float(i);
+    float ang=fi*.3142+u_time*.5;
+    float r2=.82+treb()*.25*sin(fi*.7+u_time)*.3;
+    vec2 sp=vec2(cos(ang),sin(ang))*r2;
+    float d2=length(uv-sp);
+    color+=vec3(.5,1.,.25)*.003/(d2*d2+.001)*tr*1.5;
+  }
+
+  // ── LESSON 11: POST-PROCESSING ──
+  // Chromatic aberration on beat
+  float ca   = beat()*.012;
+  color.r   += ca;
+  color.b   -= ca*.7;
+
+  // Scanlines (CRT feel from lesson 11)
+  float scan = sin(uvN.y*u_resolution.y*1.5)*.5+.5;
+  color *= mix(.86,1.,pow(scan,.25));
+
+  // Vignette
+  vec2 vig = uvN*2.-1.;
+  color *= 1.-dot(vig*.55,vig*.55);
+
+  // Beat edge flash (lesson 20)
+  color += beat()*.18*vec3(1.,.35,.05)*smoothstep(.45,1.,max(abs(vig.x),abs(vig.y)));
+
+  // Tone mapping (lesson 11)
+  color = color/(1.+color)*1.35;
+
+  // Fade in on first load
+  color *= smoothstep(0.,2.,u_time);
+
+  gl_FragColor = vec4(clamp(color,0.,1.),1.);
+}
+`
+},
+
+
+// --- 23: SHADER MATH FOR LEMURS ---
+{
+title: "Shader Math for Lemurs",
+subtitle: "23 -- The Maths You Already Know",
+body: `
+<div class="lesson-intro">Every shader tutorial hits you with <code>dot()</code>, <code>normalize()</code>, <code>mat4</code>, and <code>gl_Position = MVP * vec4(pos, 1.0)</code> like you already signed the maths waiver. You didn't. This page is the waiver. No prerequisites -- just the shortest honest explanation for each thing that makes the code make sense.</div>
+
+<div class="step-card"><span class="step-num">1. VECTORS -- a list of numbers wearing a costume</span>
+A vector is just a list of numbers. That's it. The costume changes depending on context:<br><br>
+<code>vec2(0.5, 0.3)</code> -- could be UV coordinates, a 2D position, a screen offset.<br>
+<code>vec3(1.0, 0.0, 0.0)</code> -- could be a 3D point, the color red, or "pointing right." Same type, three jobs.<br>
+<code>vec4(r, g, b, a)</code> -- color with alpha, or a 3D position with a secret fourth number (section 8).<br><br>
+When a textbook writes <strong>v</strong> in bold or with an arrow on top, it just means "this is a vector, not a plain number." In GLSL it's literally just a variable type. When someone writes "the surface normal <strong>n</strong>," they mean a vec3 pointing perpendicular to a surface. The bold is decoration.
+</div>
+
+<div class="step-card"><span class="step-num">2. LENGTH AND NORMALIZE -- stripping the "how long" out of a direction</span>
+<code>length(v) = sqrt(v.x*v.x + v.y*v.y + v.z*v.z)</code><br><br>
+Pythagoras. In 3D. GLSL has <code>length(v)</code> built in so you never write that formula yourself.<br><br>
+<code>normalize(v)</code> divides every component by the length, giving a vector pointing the same direction but with length exactly 1.0. This is called a <em>unit vector</em>. Think of it as extracting the pure direction and throwing away the magnitude.<br><br>
+<strong>Why normalize obsessively?</strong> Because dot products and lighting math only give correct answers when you feed them unit vectors. Non-unit normals produce subtly wrong lighting that's genuinely hard to debug. "Normalize your normals" is the shader equivalent of "wash your hands."
+</div>
+
+<div class="step-card"><span class="step-num">3. DOT PRODUCT -- one number that answers "how aligned?"</span>
+<code>dot(a, b) = a.x*b.x + a.y*b.y + a.z*b.z</code><br><br>
+Multiply matching components, add them up. Out comes a single number -- not a vector. The number means:<br><br>
+-- Same direction: <code>dot = 1.0</code> (for unit vectors)<br>
+-- Perpendicular: <code>dot = 0.0</code><br>
+-- Opposite directions: <code>dot = -1.0</code><br><br>
+This is why every diffuse lighting calculation in existence is just:<br>
+<code>float brightness = max(0.0, dot(normal, lightDir));</code><br><br>
+Surface faces the light = vectors align = dot near 1 = bright. Surface faces away = vectors oppose = dot negative = clamped to 0 = dark. The entire Lambertian lighting model, derived from one multiply-and-add. The dot product is probably the single most-used operation in real-time graphics.
+</div>
+
+<div class="step-card"><span class="step-num">4. CROSS PRODUCT -- conjuring a perpendicular from thin air</span>
+Give cross product two 3D vectors, get back a third vector perpendicular to both:<br>
+<code>vec3 c = cross(a, b);</code><br><br>
+If <code>a</code> points right and <code>b</code> points forward, <code>cross(a, b)</code> points up. Direction follows the right-hand rule: curl your right-hand fingers from <code>a</code> toward <code>b</code>, your thumb points the way the result goes.<br><br>
+You reach for this when you need to manufacture a perpendicular:<br>
+-- Computing a face normal from two triangle edges<br>
+-- Building a camera's "right" and "up" vectors from just a forward direction<br>
+-- Checking which side of a plane a point lives on<br><br>
+Works in 3D only. (There's a 7D version but it requires a different universe.)
+</div>
+
+<div class="step-card"><span class="step-num">5. MIX / LERP -- the slider between two things</span>
+<code>mix(a, b, t) = a*(1.0 - t) + b*t</code><br><br>
+t=0 gives you a. t=1 gives you b. t=0.5 gives you exactly halfway. t is the slider.<br><br>
+Works on floats, vec2, vec3, vec4. <code>mix(red, blue, 0.5)</code> gives purple. <code>mix(posA, posB, t)</code> moves a point from A to B as t travels 0->1. It's everywhere.<br><br>
+The textbook name is <strong>lerp</strong> (linear interpolation). GLSL calls it <code>mix</code>. Same thing. You'll also see:<br>
+<code>a + t*(b - a)</code> -- algebraically identical, sometimes easier to read.<br><br>
+If you remember only one function from this whole page, make it this one.
+</div>
+
+<div class="step-card"><span class="step-num">6. SMOOTHSTEP -- lerp with an S-curve and a conscience</span>
+<code>smoothstep(edge0, edge1, x)</code> -- returns 0 when x is below edge0, 1 when above edge1, smooth S-curve in between:<br>
+<code>t = clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0)</code><br>
+<code>result = t*t*(3.0 - 2.0*t)</code><br><br>
+That <code>t*t*(3-2t)</code> is a cubic Hermite -- flat slope at both endpoints, which is what makes the S-shape. <code>step()</code> is the rude hard-cutoff version. Smoothstep is <code>step()</code> with manners.<br><br>
+<code>smoothstep(0.4, 0.5, d)</code> where <code>d</code> is a distance field gives you a circle with a clean antialiased edge. That single line is 80% of what the SDF lesson does. Burn it into your fingers.
+</div>
+
+<div class="step-card"><span class="step-num">7. MATRICES -- a transformation wearing a grid outfit</span>
+A matrix is a grid of numbers that describes a transformation: rotate, scale, translate, or any combination of all three.<br><br>
+In GLSL: <code>mat2</code> (2x2), <code>mat3</code> (3x3), <code>mat4</code> (4x4). Apply to a vector with <code>mat * vec</code>.<br><br>
+The 2D rotation matrix you've seen in every pattern lesson:<br>
+<code>mat2 rot = mat2(cos(a), -sin(a), sin(a), cos(a));</code><br>
+<code>vec2 rotated = rot * uv;</code><br><br>
+Why a grid? Because a matrix is really just "for each output axis, how much of each input axis feeds in." The cos and sin entries encode "tilt x into y by angle a." Every row is a dot product. Matrix math is this idea scaled up and made systematic. The grid is just a compact way to store it.
+</div>
+
+<div class="step-card"><span class="step-num">8. HOMOGENEOUS COORDINATES -- why positions need a secret fourth number</span>
+You'll see 3D positions written as <code>vec4(x, y, z, 1.0)</code>. That fourth component is <strong>w</strong>. It's always 1.0 for positions and 0.0 for directions. Here's why this exists:<br><br>
+Rotation and scale are easy in matrix math. <strong>Translation (moving) is not</strong> -- "add 5 to x" can't be expressed as a 3x3 matrix multiply. Bump to 4D with w=1 and a 4x4 matrix can encode translation in its bottom row. Problem solved, one dimension richer.<br><br>
+The w=0 vs w=1 distinction is load-bearing: directions (w=0) should not move when you move the camera. Positions (w=1) should. The math falls out correctly for free if you set w right.<br><br>
+So <code>gl_Position = MVP * vec4(position, 1.0)</code> means: "this is a position (w=1), apply the full Model-View-Projection transform, and that's where it ends up on screen." The <code>1.0</code> is not filler.
+</div>
+
+<div class="step-card"><span class="step-num">9. THE MVP MATRIX -- the pipeline every vertex survives</span>
+Every vertex shader essentially does one thing:<br>
+<code>gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(pos, 1.0);</code><br><br>
+Matrix multiplication is right-to-left, so read it backwards:<br><br>
+<strong>Model matrix</strong>: takes the vertex from the object's own local space into the world. Where is this object? How is it rotated? That's here.<br><br>
+<strong>View matrix</strong>: moves the entire world so the camera sits at the origin looking down -Z. It's the inverse of the camera's transform. Moving the camera right is mathematically identical to moving the whole world left.<br><br>
+<strong>Projection matrix</strong>: squashes the 3D view frustum into the 2D [-1,1] clip square, applying perspective (far things get smaller) or orthographic (they don't).<br><br>
+Three matrices. One multiply. Every 3D object on every screen everywhere goes through this exact pipeline.
+</div>
+
+<div class="step-card"><span class="step-num">10. COORDINATE SPACES -- "wait, which coordinate system are we in?"</span>
+The same point can be expressed in different coordinate systems. This is the source of most shader confusion. The key question to ask when lost: <strong>what's at the origin, and what direction do the axes point?</strong><br><br>
+<strong>Object/local space</strong>: origin at the object's center. A cube's corners are always at +/-1 here regardless of where it lives in the world.<br>
+<strong>World space</strong>: shared scene coordinates. The cube's corners depend on where it's been placed.<br>
+<strong>View/camera space</strong>: camera at origin, looking down -Z. Useful for lighting ("eye space").<br>
+<strong>Clip space</strong>: after projection. X and Y are -1 to +1 across the screen. This is what <code>gl_Position</code> must be in.<br>
+<strong>Screen space</strong>: pixels. This is <code>gl_FragCoord</code>.<br>
+<strong>UV/texture space</strong>: 0.0 to 1.0 across a surface. This is <code>vUv</code>.<br><br>
+Every "what space is this in?" confusion resolves by asking that question. What's at the origin?
+</div>
+
+<div class="step-card"><span class="step-num">11. THE BASIS -- what i, j, k actually are</span>
+Three unit vectors define any coordinate system:<br>
+<code>i = (1,0,0)</code> "right" &nbsp; <code>j = (0,1,0)</code> "up" &nbsp; <code>k = (0,0,1)</code> "forward"<br><br>
+Every vec3 is secretly: <code>v = v.x*i + v.y*j + v.z*k</code>. The three components tell you how far along each axis. That's all a vec3 is -- three dot products with the basis.<br><br>
+A <strong>change of basis</strong> looks terrifying in textbooks but is just: "express this vector in terms of different axes." The TBN matrix (Tangent, Bitangent, Normal) in normal mapping is exactly this -- a new set of basis vectors that live on the surface, so you can convert a normal-map vector from "surface space" into "world space." The algebra is substitution. The concept is just changing the measuring sticks.
+</div>
+
+<div class="step-card"><span class="step-num">12. USEFUL IDENTITIES -- the ones you'll reach for constantly</span>
+<code>reflect(v, n)</code> -- bounces v off a surface with normal n. Mirror reflections, specular highlights.<br>
+Under the hood: <code>v - 2.0*dot(v,n)*n</code>. That's the whole thing.<br><br>
+<code>refract(v, n, eta)</code> -- bends v at a boundary. eta = refractive index ratio (air/glass ~= 1.0/1.5).<br><br>
+<code>clamp(x, lo, hi)</code> -- clamps x to [lo, hi]. <code>clamp(x, 0.0, 1.0)</code> is so common it should be a reflex.<br><br>
+<code>fract(x)</code> -- returns just the decimal part. <code>fract(3.7) = 0.7</code>. Wraps any number into [0,1). <code>fract(uv * N)</code> tiles the UV N times. The tiling lesson in one line.<br><br>
+<code>mod(x, y)</code> -- remainder after dividing x by y. <code>mod(n, 2.0)</code> alternates 0 and 1 -- checkerboard in one call.<br><br>
+<code>abs(x)</code> -- strips the sign. In SDFs, <code>abs(p) - r</code> is a box. It's everywhere.<br><br>
+<code>sign(x)</code> -- returns -1, 0, or +1. Tells you which side of a plane a point is on.
+</div>
+
+<div class="step-card"><span class="step-num">13. SYMBOLS GLOSSARY -- the pictograms and what they actually mean</span>
+Things you encounter in shader/math writing that have dead-simple translations:<br><br>
+<strong>|v|</strong> -- length of v. Same as <code>length(v)</code>.<br>
+<strong>v-hat</strong> (v with a little hat) -- normalized v. Same as <code>normalize(v)</code>.<br>
+<strong>a . b</strong> (center dot) -- dot product. <code>dot(a, b)</code>.<br>
+<strong>a x b</strong> (cross symbol) -- cross product. <code>cross(a, b)</code>.<br>
+<strong>theta</strong> -- an angle, almost always in radians.<br>
+<strong>grad f</strong> (upside-down triangle) -- gradient: the direction of steepest increase of f. In SDFs the gradient of the distance field points away from the surface -- that's your normal.<br>
+<strong>df/dx</strong> (d-over-d notation) -- partial derivative: how much f changes when you nudge x alone. GLSL's <code>dFdx(f)</code> approximates this using neighboring pixels.<br>
+<strong>SUM</strong> (big E) -- add everything up. <code>for(i=0; i&lt;N; i++) total += ...</code>.<br>
+<strong>x in [0,1]</strong> -- "x is somewhere between 0 and 1." Same as after a clamp.<br>
+<strong>M^T</strong> (superscript T) -- transpose: flip rows and columns of matrix M.
+</div>
+
+<div class="step-card"><span class="step-num">14. WHERE TO GO FROM HERE</span>
+You have a working vocabulary. Fastest paths to fluency:<br><br>
+<strong>3Blue1Brown "Essence of Linear Algebra"</strong> -- 16 YouTube videos, each under 15 min. The best visual intuition for all of this that exists anywhere. Watch it and every lesson in this course will feel like something you already understood.<br><br>
+<strong>The Book of Shaders</strong> (thebookofshaders.com) -- every concept is interactive. Chapters 7-11 on shapes and noise are especially good.<br><br>
+<strong>Inigo Quilez's articles</strong> (iquilezles.org) -- the inventor of most modern SDF techniques. Every article is a masterclass. Start with "distance functions."<br><br>
+<strong>Scratchapixel</strong> (scratchapixel.com) -- the most patient explanation of camera and projection matrices on the internet. Good when you want the full derivation, not just the recipe.<br><br>
+The maths in shaders is really just dot, normalize, mix, cross, and matrices -- applied cleverly and repeatedly. You've seen all of them now. The gap between "I follow the code" and "I can write the code" is just repetition.
+</div>
+
+`,
+shader: `// This is a reference lesson -- no interactive shader needed.
+// But here's a quick demo of dot product lighting,
+// the most common operation in all of 3D graphics.
+precision mediump float;
+uniform float u_time;
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy / vec2(400.0, 400.0)) * 2.0 - 1.0;
+
+  // Fake surface normal points outward from center (like a sphere face-on)
+  vec3 normal = normalize(vec3(uv, sqrt(max(0.0, 1.0 - dot(uv, uv)))));
+
+  // Orbiting light direction
+  vec3 lightDir = normalize(vec3(cos(u_time), sin(u_time * 0.7), 0.8));
+
+  // Lambertian diffuse: just a dot product
+  float diff = max(0.0, dot(normal, lightDir));
+
+  // Specular: reflect light off surface, compare to view direction
+  vec3 viewDir = vec3(0.0, 0.0, 1.0);
+  vec3 refl = reflect(-lightDir, normal);
+  float spec = pow(max(0.0, dot(refl, viewDir)), 32.0);
+
+  // Only show the sphere (where normal.z > 0)
+  float sphere = step(0.0, normal.z - 0.001);
+  vec3 color = (diff * vec3(0.4, 0.6, 1.0) + spec * 0.8) * sphere;
+
+  gl_FragColor = vec4(color, 1.0);
+}
+`
+},
+
+
+// --- 24: EIGENVALUES SUPPLEMENTAL ---
+{
+title: "Eigenvalues Demystified",
+subtitle: "24 -- Directions a Matrix Doesn't Rotate",
+body: `
+<div class="lesson-intro">Eigenvalues show up in graphics papers, physics sim docs, and PCA write-ups like everyone already knows what they are. Nobody does. Here's the actual explanation -- and a live demo you can steer into a singularity.</div>
+
+<div class="step-card"><span class="step-num">THE CORE IDEA -- one vector the matrix can't rotate</span>
+Multiply most vectors by a matrix and they come out pointing somewhere new -- rotated and scaled. An <strong>eigenvector</strong> is the exception: the matrix can only <em>scale</em> it. Same direction goes in, same direction comes out (or exactly flipped). The scale factor is the <strong>eigenvalue</strong>.<br><br>
+Written out:<br>
+<code>M * v = lambda * v</code><br><br>
+<code>M</code> = matrix, <code>v</code> = eigenvector, <code>lambda</code> = eigenvalue (just a number).<br><br>
+In plain English: "applying this matrix to v is the same as just multiplying v by a scalar." The matrix does nothing to v's direction. Only its length changes.
+</div>
+
+<div class="step-card"><span class="step-num">CONCRETE EXAMPLE -- stretch matrix, meet your eigenvectors</span>
+A matrix that stretches x by 3 and y by 2:<br>
+<code>M = [[3, 0], [0, 2]]</code><br><br>
+Feed in (1, 0): out comes (3, 0). Still points right. Eigenvalue = 3.<br>
+Feed in (0, 1): out comes (0, 2). Still points up. Eigenvalue = 2.<br>
+Feed in (1, 1): out comes (3, 2). Now points in a different direction. <em>Not</em> an eigenvector.<br><br>
+The demo to the right shows this animating in real time. Watch the two colored arrows -- they stay locked to their directions while the grid deforms around them. Drag <code>Shear</code> away from 0 and the blue eigenvector tilts off-axis. That's because shear mixes x and y, shifting which direction the matrix leaves alone.
+</div>
+
+<div class="step-card"><span class="step-num">WHAT THE EIGENVALUE VALUE TELLS YOU</span>
+-- lambda &gt; 1 &nbsp;&nbsp;&nbsp; that direction stretches<br>
+-- 0 &lt; lambda &lt; 1 &nbsp; that direction compresses<br>
+-- lambda = 1 &nbsp;&nbsp;&nbsp; that direction passes through unchanged<br>
+-- lambda = 0 &nbsp;&nbsp;&nbsp; that direction collapses entirely -- the matrix is "flat" in that direction. This is what "singular matrix" (non-invertible) means: at least one eigenvalue hit zero.<br>
+-- lambda &lt; 0 &nbsp;&nbsp;&nbsp; that direction flips AND scales<br><br>
+Try setting <code>ScaleX = 0.0</code> in the shader. The red eigenvector collapses to nothing. The matrix loses a dimension. You can't invert it.
+</div>
+
+<div class="step-card"><span class="step-num">THE ELLIPSE INTUITION -- a circle's identity after a matrix</span>
+Take a circle. Apply any matrix to every point on it. You get an ellipse. The eigenvectors point exactly along the long and short axes of that ellipse. The eigenvalues are the axis lengths.<br><br>
+This is the geometric heart of eigendecomposition: a matrix's entire "personality" -- what it does to any shape -- is summarized by its eigenvectors (which directions it cares about) and eigenvalues (how much it stretches in each of those directions). Everything else follows from those.
+</div>
+
+<div class="step-card"><span class="step-num">WHERE THIS SHOWS UP IN GRAPHICS (the payoff)</span>
+<strong>Oriented bounding boxes and PCA</strong>: given a cloud of vertices, build a covariance matrix from their positions. Find its eigenvectors. The eigenvector with the largest eigenvalue points in the direction the mesh is most elongated. That gives you a tight oriented bounding box (OBB) instead of an axis-aligned one. Same idea underlies blendshape basis construction.<br><br>
+<strong>The inverse-transpose normal trick</strong>: you can't transform surface normals with the model matrix when the scale is non-uniform -- it skews them. The fix is to use the <strong>inverse transpose</strong> of the model matrix instead. Why? Normals live in the "dual" of tangent space, and non-uniform scale changes eigenvalues differently for tangent vectors vs. normals. The inverse-transpose compensates exactly for this.<br><br>
+<strong>Cloth and soft-body simulation</strong>: stress tensors are matrices. Their eigenvectors are the directions of principal stress. Their eigenvalues say how much tension or compression exists in each direction. Knowing this lets you detect when cloth is about to tear or a soft body is being crushed.<br><br>
+<strong>Why solvers slow down</strong>: iterative physics solvers (conjugate gradient etc.) converge at a rate governed by the ratio of the largest to smallest eigenvalue of the system matrix. This ratio is called the <strong>condition number</strong>. A huge condition number means the solver is trying to squish a badly-shaped ellipse into a circle and it takes forever. Preconditioners exist to make that ellipse rounder.
+</div>
+
+<div class="step-card"><span class="step-num">ROTATION MATRICES -- the one real eigenvector</span>
+A 3D rotation matrix has exactly one real eigenvector: the <strong>rotation axis</strong> (eigenvalue = 1, because points on the axis literally don't move). The other two eigenvectors are complex numbers -- there's no real direction in the plane of rotation that stays fixed. This is the mathematical way of saying "a rotation has no preferred direction except its own axis." For 2D rotation matrices there are no real eigenvectors at all, which is why 2D rotation "feels" like pure circular motion with nothing staying put.
+</div>
+
+<div class="step-card"><span class="step-num">THE SYMMETRIC MATRIX SHORTCUT</span>
+Symmetric matrices -- where <code>M = M-transpose</code>, meaning the grid mirrors on its diagonal -- always have real eigenvectors that are perpendicular to each other. Covariance matrices are symmetric. Stress tensors are symmetric. So PCA and simulation always produce clean perpendicular principal axes. Rotation matrices are not symmetric -- hence their complex eigenvectors. If someone says "this matrix is symmetric positive definite," they mean: all eigenvalues are real, positive, and the eigenvectors are orthogonal. Basically: best-case matrix, solver's favourite.
+</div>
+
+`,
+shader: `// EIGENVALUE DEMO: deforming grid with eigenvector arrows
+// The grid shows what the matrix does to space.
+// Red arrow = eigenvector 1, Blue arrow = eigenvector 2.
+// Both arrows stay aligned with their eigenvectors as the matrix animates.
+// Everything else in the grid gets rotated/stretched around them.
+//
+// Try editing the constants at the top:
+//   ScaleX=3.0, ScaleY=1.0, Shear=0.0  -- clear stretch, axes are eigenvectors
+//   ScaleX=1.5, ScaleY=1.5, Shear=0.8  -- shear, eigenvectors tilt off-axis
+//   ScaleX=0.0, ScaleY=2.0, Shear=0.0  -- singular matrix, red arrow collapses
+//   ScaleX=2.0, ScaleY=2.0, Shear=0.0  -- uniform scale, EVERY direction qualifies
+
+precision mediump float;
+uniform float u_time;
+uniform vec2 u_resolution;
+
+const float ScaleX = 2.5;
+const float ScaleY = 1.2;
+const float Shear  = 0.4;
+
+vec2 applyM(vec2 p, float a, float b, float c, float d) {
+  return vec2(a*p.x + b*p.y, c*p.x + d*p.y);
+}
+
+float gridLine(float v, float spacing, float thickness) {
+  float f = abs(fract(v / spacing + 0.5) - 0.5) * spacing;
+  return smoothstep(thickness, thickness * 0.4, f);
+}
+
+float arrow(vec2 uv, vec2 from, vec2 to, float width) {
+  vec2 dir = to - from;
+  float len = length(dir);
+  if (len < 0.001) return 0.0;
+  vec2 n = dir / len;
+  vec2 perp = vec2(-n.y, n.x);
+  vec2 rel = uv - from;
+  float along = dot(rel, n);
+  float side  = dot(rel, perp);
+  float shaft = smoothstep(width, width*0.5, abs(side))
+              * smoothstep(-0.01, 0.01, along)
+              * smoothstep(len+0.02, len-0.02, along);
+  float tipAlong = along - (len - 0.06);
+  float tipWidth = (0.06 - tipAlong) * 1.8;
+  float head = smoothstep(0.01, -0.01, tipAlong - 0.06)
+             * smoothstep(0.0, -0.01, abs(side) - tipWidth)
+             * smoothstep(-0.01, 0.01, tipAlong);
+  return clamp(shaft + head, 0.0, 1.0);
+}
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy / u_resolution.xy) * 2.0 - 1.0;
+  uv.x *= u_resolution.x / u_resolution.y;
+
+  // Animate matrix: lerp between identity and target
+  float t = sin(u_time * 0.6) * 0.5 + 0.5;
+  float a = 1.0 + (ScaleX - 1.0) * t;
+  float b = Shear * t;
+  float c = 0.0;
+  float d = 1.0 + (ScaleY - 1.0) * t;
+
+  // Inverse-transform UV to draw pre-transform grid
+  float det = a*d - b*c;
+  vec2 preUV = (abs(det) > 0.001)
+    ? applyM(uv, d/det, -b/det, -c/det, a/det)
+    : uv;
+
+  float grid = gridLine(preUV.x, 0.25, 0.012) * 0.28
+             + gridLine(preUV.y, 0.25, 0.012) * 0.28;
+  grid += gridLine(preUV.x, 10.0, 0.016) * 0.5;
+  grid += gridLine(preUV.y, 10.0, 0.016) * 0.5;
+
+  vec3 col = vec3(0.07, 0.09, 0.13) + grid * vec3(0.25, 0.45, 0.75);
+
+  // Eigenvectors for [[a,b],[0,d]] (c=0):
+  //   ev1: (1,0) always works when c=0 -- eigenvalue = a
+  //   ev2: (b, a-d) normalized when a!=d; fallback (0,1) when a==d
+  vec2 ev1 = vec2(1.0, 0.0);
+  float lam1 = a;
+  vec2 ev2raw = (abs(a - d) > 0.001) ? vec2(b, a - d) : vec2(0.0, 1.0);
+  vec2 ev2 = normalize(length(ev2raw) > 0.001 ? ev2raw : vec2(0.0, 1.0));
+  float lam2 = d;
+
+  vec2 origin = vec2(0.0);
+  float w = 0.022;
+  // Animated arrows (scaled by eigenvalue * t)
+  float r = arrow(uv, origin, ev1 * lam1 * t, w);
+  float bl = arrow(uv, origin, ev2 * lam2 * t, w);
+  // Ghost arrows at fixed unit length show the eigenvector direction clearly
+  float rg = arrow(uv, origin,  ev1 * 0.38, w * 0.55) * 0.22;
+  float blg = arrow(uv, origin, ev2 * 0.38, w * 0.55) * 0.22;
+
+  col = mix(col, vec3(1.0, 0.28, 0.18), r + rg);
+  col = mix(col, vec3(0.18, 0.6, 1.0),  bl + blg);
+
+  col *= smoothstep(0.0, 1.2, u_time);
+  gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+}`
+}
+
+]; // end LESSONS
+
+
+
+// ═══════════════════════════════════════════════════
+//  WEBGL SETUP
+// ═══════════════════════════════════════════════════
+const canvas  = document.getElementById('shader-output');
+const gl      = canvas.getContext('webgl');
+const textarea = document.getElementById('glsl-code');
+const errorBox = document.getElementById('error-box');
+
+if (!gl) { errorBox.style.display='block'; errorBox.textContent='WebGL not supported'; }
+
+const VERT_SRC = `
+attribute vec2 a_position;
+void main(){ gl_Position = vec4(a_position, 0.0, 1.0); }
+`;
+
+let program = null, animId = null;
+let startTime = performance.now();
+
+function resize(){
+  const r = canvas.parentElement.getBoundingClientRect();
+  canvas.width  = Math.floor(r.width)  || 400;
+  canvas.height = Math.floor(r.height) || 220;
+  gl.viewport(0, 0, canvas.width, canvas.height);
+}
+
+function compileShader(src, type){
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  if(!gl.getShaderParameter(sh, gl.COMPILE_STATUS))
+    return { error: gl.getShaderInfoLog(sh) };
+  return sh;
+}
+
+function buildProgram(frag){
+  const v = compileShader(VERT_SRC, gl.VERTEX_SHADER);
+  if(v.error) return { error: 'VERT: ' + v.error };
+  const f = compileShader(frag, gl.FRAGMENT_SHADER);
+  if(f.error) return { error: f.error };
+  const p = gl.createProgram();
+  gl.attachShader(p, v);
+  gl.attachShader(p, f);
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p, gl.LINK_STATUS))
+    return { error: gl.getProgramInfoLog(p) };
+  return p;
+}
+
+const quadBuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  -1,-1,  1,-1,  -1,1,
+  -1, 1,  1,-1,   1,1
+]), gl.STATIC_DRAW);
+
+function render(){
+  if(!program) return;
+  gl.useProgram(program);
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+  const aPos = gl.getAttribLocation(program,'a_position');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos,2,gl.FLOAT,false,0,0);
+  const t = (performance.now()-startTime)/1000;
+  const uRes  = gl.getUniformLocation(program,'u_resolution');
+  const uTime = gl.getUniformLocation(program,'u_time');
+  if(uRes)  gl.uniform2f(uRes, canvas.width, canvas.height);
+  if(uTime) gl.uniform1f(uTime, t);
+  gl.drawArrays(gl.TRIANGLES,0,6);
+  animId = requestAnimationFrame(render);
+}
+
+function compileAndRun(){
+  if(animId) cancelAnimationFrame(animId);
+  if(program) gl.deleteProgram(program);
+  const result = buildProgram(textarea.value);
+  if(result.error){
+    errorBox.style.display = 'block';
+    errorBox.textContent   = result.error;
+    program = null; return;
+  }
+  errorBox.style.display = 'none';
+  program = result;
+  render();
+}
+textarea.addEventListener('keydown', e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); compileAndRun(); }
+});
+
+// ═══════════════════════════════════════════════════
+//  LESSON NAVIGATION
+// ═══════════════════════════════════════════════════
+let currentLesson = 0;
+function loadLesson(idx){
+  currentLesson = idx;
+  const L = LESSONS[idx];
+  document.getElementById('lesson-text').innerHTML = `
+    <div class="lesson-number">${L.subtitle}</div>
+    <div class="lesson-title">${L.title}</div>
+    <div class="lesson-body">${L.body}</div>`;
+  textarea.value = L.shader;
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  document.getElementById('progress').style.width = ((idx+1)/LESSONS.length*100).toFixed(1)+'%';
+  startTime = performance.now(); // reset shader clock on lesson change
+  compileAndRun();
+}
+
+const nav = document.getElementById('lesson-nav');
+LESSONS.forEach((L,i)=>{
+  const b = document.createElement('button');
+  b.className = 'nav-btn';
+  b.textContent = L.subtitle;
+  b.onclick = ()=>loadLesson(i);
+  nav.appendChild(b);
+});
+
+// ═══════════════════════════════════════════════════
+//  HERO CANVAS
+// ═══════════════════════════════════════════════════
+(function(){
+  const hc  = document.getElementById('hero');
+  const hgl = hc.getContext('webgl');
+  if(!hgl) return;
+  const hFrag=`precision mediump float;uniform vec2 u_resolution;uniform float u_time;
+  float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5);}
+  float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),u.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x),u.y);}
+  void main(){vec2 uv=gl_FragCoord.xy/u_resolution;float v=n(uv*4.+u_time*.15)+n(uv*8.-u_time*.1)*.5;gl_FragColor=vec4(mix(vec3(0.1,0.8,0.4),vec3(0.,0.3,0.8),v),1.);}`;
+  function rs(){hc.width=hc.parentElement.offsetWidth;hc.height=hc.parentElement.offsetHeight;hgl.viewport(0,0,hc.width,hc.height);}
+  rs(); window.addEventListener('resize',rs);
+  const vs=hgl.createShader(hgl.VERTEX_SHADER);hgl.shaderSource(vs,'attribute vec2 a;void main(){gl_Position=vec4(a,0,1);}');hgl.compileShader(vs);
+  const fs=hgl.createShader(hgl.FRAGMENT_SHADER);hgl.shaderSource(fs,hFrag);hgl.compileShader(fs);
+  const pr=hgl.createProgram();hgl.attachShader(pr,vs);hgl.attachShader(pr,fs);hgl.linkProgram(pr);
+  const b2=hgl.createBuffer();hgl.bindBuffer(hgl.ARRAY_BUFFER,b2);hgl.bufferData(hgl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),hgl.STATIC_DRAW);
+  const st=performance.now();
+  (function loop(){
+    hgl.useProgram(pr);hgl.bindBuffer(hgl.ARRAY_BUFFER,b2);
+    const p2=hgl.getAttribLocation(pr,'a');hgl.enableVertexAttribArray(p2);hgl.vertexAttribPointer(p2,2,hgl.FLOAT,false,0,0);
+    hgl.uniform2f(hgl.getUniformLocation(pr,'u_resolution'),hc.width,hc.height);
+    hgl.uniform1f(hgl.getUniformLocation(pr,'u_time'),(performance.now()-st)/1000);
+    hgl.drawArrays(hgl.TRIANGLES,0,6);requestAnimationFrame(loop);
+  })();
+})();
+
+resize();
+window.addEventListener('resize',resize);
+loadLesson(0);
+</script>
+</body>
+</html>

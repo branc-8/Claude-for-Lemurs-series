@@ -1,0 +1,2208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stocks for Lemurs 🐒 v3 — Market School</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap');
+:root{
+  --bg:#09090e;--panel:#0e0e14;--border:#1d1d2a;
+  --accent:#f5a623;--accent2:#ff4d6d;--accent3:#3dd68c;
+  --text:#e8e4d9;--muted:#66638a;--code-bg:#0b0b11;
+  --spam:#c8ff00;--spambg:#050f00;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+header{padding:2.5rem 2rem 2rem;text-align:center;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+header canvas#hero{position:absolute;inset:0;width:100%;height:100%;opacity:.18;pointer-events:none;}
+header .inner{position:relative;z-index:1;}
+.tagline-chip{display:inline-block;background:var(--accent);color:#000;font-family:'Space Mono',monospace;font-size:.65rem;padding:.25rem .75rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.8rem;}
+h1{font-size:clamp(2.2rem,5.5vw,4.5rem);font-weight:800;line-height:1;letter-spacing:-.02em;}
+h1 span{color:var(--accent);}
+.subtitle{font-family:'Space Mono',monospace;font-size:.82rem;color:var(--muted);margin-top:.6rem;}
+.disclaimer{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted);margin-top:.4rem;opacity:.55;}
+nav{display:flex;gap:.4rem;padding:.9rem 1.5rem;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:100;scrollbar-width:none;}
+nav::-webkit-scrollbar{display:none;}
+.nav-btn{flex-shrink:0;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:.68rem;padding:.38rem .75rem;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nav-btn.active{background:var(--accent);color:#000;border-color:var(--accent);}
+.nav-section{flex-shrink:0;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);padding:.38rem .4rem;opacity:.5;pointer-events:none;align-self:center;white-space:nowrap;}
+main{display:grid;grid-template-columns:1fr 1fr;gap:0;height:calc(100vh - 158px);min-height:520px;}
+@media(max-width:900px){main{grid-template-columns:1fr;height:auto;}}
+.lesson-panel{padding:2rem;overflow-y:auto;border-right:1px solid var(--border);scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.lesson-number{font-family:'Space Mono',monospace;font-size:.63rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.4rem;}
+.lesson-title{font-size:1.7rem;font-weight:800;line-height:1.1;margin-bottom:1rem;}
+.lesson-body{font-family:'Space Mono',monospace;font-size:.76rem;line-height:1.88;color:#b0accc;}
+.lesson-body p{margin-bottom:.9rem;}
+.lesson-body strong{color:var(--accent);}
+.lesson-body em{color:var(--accent3);font-style:normal;}
+.lesson-body .tip{background:#191208;border-left:3px solid var(--accent2);padding:.7rem 1rem;margin:.9rem 0;color:#d8d4c8;}
+.lesson-body .tip::before{content:'🐒 LEMUR TIP: ';color:var(--accent2);font-weight:700;}
+.lesson-body .step-card{background:#0d0d18;border:1px solid var(--border);border-left:3px solid var(--accent3);padding:.7rem 1rem;margin:.55rem 0;}
+.lesson-body .step-card .step-num{color:var(--accent3);font-weight:700;font-size:.62rem;letter-spacing:.12em;display:block;margin-bottom:.22rem;}
+.lesson-body .challenge{background:#12080e;border:1px solid var(--accent2);padding:.7rem 1rem;margin:.55rem 0;}
+.lesson-body .challenge::before{content:'⚡ TRY THIS: ';color:var(--accent2);font-weight:700;}
+.lesson-body code{background:#1a1a2e;color:var(--accent3);padding:.1em .4em;font-size:.85em;}
+/* SPAMTON callout — unhinged money energy */
+.lesson-body .spamton{background:var(--spambg);border:2px solid var(--spam);padding:.75rem 1rem;margin:1rem 0;color:var(--spam);position:relative;overflow:hidden;}
+.lesson-body .spamton::before{content:'💲 HELLO FRIEND: ';color:#ffff00;font-weight:700;letter-spacing:.05em;}
+.lesson-body .spamton .sp-small{font-size:.65em;opacity:.7;}
+.lesson-body .spamton strong{color:#ffff00;}
+/* VOCAB demystifier */
+.lesson-body .vocab{background:#080e14;border:1px solid #1a3040;border-left:3px solid var(--accent3);padding:.6rem 1rem;margin:.55rem 0;}
+.lesson-body .vocab::before{content:'📎 LABEL EXPLANATION: ';color:var(--accent3);font-weight:700;font-size:.7em;letter-spacing:.08em;}
+.lesson-body .vocab .vt{color:var(--accent);font-weight:700;}
+/* stat row */
+.lesson-body .stat-row{display:flex;gap:.5rem;margin:.5rem 0;flex-wrap:wrap;}
+.lesson-body .stat{background:#0f0e18;border:1px solid var(--border);padding:.35rem .65rem;font-size:.7rem;}
+.lesson-body .stat .lbl{color:var(--muted);display:block;font-size:.57rem;margin-bottom:.14rem;}
+.lesson-body .stat .val{color:var(--accent);font-weight:700;}
+.lesson-body .stat.red .val{color:var(--accent2);}
+.lesson-body .stat.grn .val{color:var(--accent3);}
+.lesson-body .stat.spam .val{color:var(--spam);}
+/* tool card */
+.lesson-body .tool-card{background:#0d0d18;border:1px solid var(--border);padding:.7rem 1rem;margin:.45rem 0;display:flex;align-items:flex-start;gap:.7rem;}
+.lesson-body .tool-card .tc-icon{font-size:1.2rem;flex-shrink:0;}
+.lesson-body .tool-card .tc-body .tc-name{color:var(--accent);font-weight:700;font-size:.78rem;}
+.lesson-body .tool-card .tc-body .tc-desc{color:var(--muted);font-size:.67rem;margin-top:.18rem;}
+.lesson-body .tool-card .tc-body .tc-url{color:var(--accent3);font-size:.63rem;margin-top:.18rem;}
+/* risk pill */
+.lesson-body .risk-pill{display:inline-block;font-size:.62rem;padding:.15rem .5rem;margin:.1rem .15rem;border:1px solid;}
+.risk-pill.low{border-color:#3dd68c;color:#3dd68c;}
+.risk-pill.med{border-color:#f5a623;color:#f5a623;}
+.risk-pill.hi{border-color:#ff4d6d;color:#ff4d6d;}
+.risk-pill.nuke{border-color:#ff0055;color:#ff0055;animation:flicker 1.5s infinite;}
+@keyframes flicker{0%,100%{opacity:1}50%{opacity:.5}}
+/* viz panel */
+.viz-panel{display:flex;flex-direction:column;background:var(--code-bg);}
+.canvas-area{flex:0 0 310px;position:relative;background:#030308;border-bottom:1px solid var(--border);overflow:hidden;}
+canvas#viz-out{width:100%;height:100%;display:block;}
+.canvas-label{position:absolute;top:.45rem;left:.7rem;font-family:'Space Mono',monospace;font-size:.56rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;z-index:2;}
+.prompt-toolbar{display:flex;justify-content:space-between;align-items:center;padding:.45rem .75rem;border-bottom:1px solid var(--border);background:var(--panel);}
+.prompt-toolbar span{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.1em;}
+.copy-btn{background:var(--accent);color:#000;border:none;font-family:'Space Mono',monospace;font-size:.67rem;font-weight:700;padding:.3rem .85rem;cursor:pointer;transition:all .2s;}
+.copy-btn:hover{opacity:.85;}
+.copy-btn.done{background:var(--accent3);}
+.prompt-area{flex:1;overflow:auto;}
+textarea#claude-prompt{width:100%;height:100%;background:var(--code-bg);color:#98e8c0;font-family:'Space Mono',monospace;font-size:.7rem;line-height:1.72;border:none;outline:none;padding:1rem;resize:none;tab-size:2;}
+.progress-bar{height:2px;background:var(--border);}
+.progress-fill{height:100%;background:var(--accent);transition:width .4s ease;}
+</style>
+</head>
+<body>
+<header>
+  <canvas id="hero"></canvas>
+  <div class="inner">
+    <div class="tagline-chip">🐒 Interactive Market School v2</div>
+    <h1>Stocks for <span>Lemurs</span></h1>
+    <p class="subtitle">// from genuinely broke → smugly market-literate → your money stops evaporating</p>
+    <p class="disclaimer">⚠ educational only — not financial advice — a real advisor would charge $400/hr for less of this</p>
+  </div>
+</header>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<nav id="lesson-nav"></nav>
+<main>
+  <div class="lesson-panel" id="lesson-text"></div>
+  <div class="viz-panel">
+    <div class="canvas-area">
+      <span class="canvas-label" id="viz-label">▶ live visualization</span>
+      <canvas id="viz-out"></canvas>
+    </div>
+    <div class="prompt-toolbar">
+      <span>CLAUDE PROMPT — copy, paste, customize &amp; send</span>
+      <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">⎘ COPY</button>
+    </div>
+    <div class="prompt-area"><textarea id="claude-prompt" spellcheck="false" readonly></textarea></div>
+  </div>
+</main>
+
+<script>
+const LESSONS = [
+
+// ══════════════════════════════════════
+// SECTION 1: THE BASICS
+// ══════════════════════════════════════
+{
+title:"The Market Is a Mood Ring",
+subtitle:"01 — What Even Is This",
+vizLabel:"▶ the order book — live auction in action",
+viz:"auction",
+body:`
+<p>The stock market is not a machine, a casino, or a velvet-rope club for people who wear khakis. It's just <strong>millions of people constantly arguing about what businesses are worth right now</strong>. That argument is live, 24/7, and you can join it with your phone. The argument has rules. This course teaches you the rules so you can argue smarter than the people who charge $200/hr to argue for you.</p>
+
+<p>When you buy a share of a company, you are buying <em>actual legal ownership</em> of a tiny slice of it. Apple has about 15.5 billion shares outstanding. Own one share and you own 1/15,500,000,000th of Apple Inc. You can vote on shareholder resolutions. You're a part owner. The certificate just lives in a database now instead of a safe.</p>
+
+<div class="vocab"><span class="vt">"The Market"</span> — just a label humans put on the collective result of everyone's buy/sell decisions. There is no single place or entity called "the market." It's a metaphor for aggregate behavior. Like calling the entire art world "the scene."</div>
+
+<p>The price of a stock at any moment is simply <strong>what the last two people agreed to trade at</strong>. That's it. No formula. No fairness. If someone is panicking and sells cheap, that's the new price. If someone is euphoric and pays too much, that's the new price.</p>
+
+<div class="step-card"><span class="step-num">THE ORDER BOOK — WHAT'S ON THE RIGHT</span>
+At any moment there are people posting bids (what they'll pay) and asks (what they'll sell for). When a bid and ask overlap, a trade happens. The stack of waiting orders at each price level IS the order book. The viz on the right shows this live. Notice the gap between green (buyers) and red (sellers)? That gap is called the <strong>spread</strong> — and whoever captures it is making money on every single trade (that's market makers, not you).
+</div>
+
+<p>Short term: the market is a <strong>voting machine</strong> (pure emotion — people vote with dollars on what they believe or fear). Long term: it's a <strong>weighing machine</strong> (actual business performance eventually wins). The entire game of investing is just exploiting the gap between these two modes.</p>
+
+<div class="tip">Think about how art prices work. A Basquiat isn't worth $110M because of canvas costs. It's worth that because enough credible people believe it is. Remove the belief and there's no floor. Stocks work exactly the same way — except business results eventually push back on unrealistic belief.</div>
+`,
+prompt:`I want to understand the stock market from scratch.
+
+I'm [describe yourself — artist, creative, etc.] with zero finance background.
+
+Please explain:
+1. What a share of stock is — actual ownership, what rights come with it
+2. How the price of a stock gets determined in real time (the order book mechanism)
+3. What "the market" actually means — NYSE vs NASDAQ vs OTC vs dark pools
+4. The difference between stocks, bonds, ETFs, and index funds in plain English — treat each term as a label someone made up and explain what the label describes
+5. Why the stock market exists at all — who benefits and how?
+6. How is the S&P 500 calculated and what it actually measures
+
+Use analogies from art, creative work, or everyday life. Explain every term before using it.`
+},
+
+{
+title:"All the Words, Decoded",
+subtitle:"02 — Vocabulary Is Just Labels",
+vizLabel:"▶ anatomy of a live stock quote",
+viz:"ticker",
+body:`
+<p>Finance people love their vocabulary. Not because the concepts are hard — most aren't — but because <strong>jargon creates a moat around the profession</strong>. If you don't know the words, you feel like you don't belong, you feel stupid, and then you pay someone to speak the language for you. That someone often earns 1-2% of your money annually for doing very little. We are defeating this today. Here's every label you'll encounter, with the label removed.</p>
+
+<div class="vocab"><span class="vt">"Market Capitalization"</span> — someone decided to multiply a company's share price by how many shares exist. That number became the shorthand for "how big is this company." The label makes it sound official. The math is: price × shares = market cap. That's all.</div>
+
+<div class="step-card"><span class="step-num">THE BIG NUMBERS</span>
+<strong>Price</strong> — what one share costs. Meaningless without context.<br>
+<strong>Market Cap</strong> — price × shares. The real size. Apple = ~$3T. Local bakery = maybe $2M.<br>
+<strong>Volume</strong> — shares traded today. High = attention. Low = nobody cares.<br>
+<strong>52W High/Low</strong> — price range over the past year. Where are we in that range?<br>
+<strong>Float</strong> — shares actually tradeable (not locked up by founders). Low float = more volatile.
+</div>
+
+<div class="step-card"><span class="step-num">THE RATIO TRIAD — "HOW EXPENSIVE IS THIS?"</span>
+<strong>P/E Ratio</strong> — Price ÷ Earnings Per Share. Dollars paid per dollar of annual profit. P/E of 20 means: "I'll pay $20 now for each $1 this company earns per year." Growth companies have high P/Es (you're paying for the future). Mature companies have low ones.<br><br>
+<strong>EPS (Earnings Per Share)</strong> — a company's annual profit divided by share count. Growing EPS = healthy. Shrinking EPS = problem.<br><br>
+<strong>Revenue vs Earnings</strong> — Revenue is all money coming in. Earnings is what's left after expenses. A company with $1B revenue and -$200M earnings is still losing money. Revenue is vanity. Profit is sanity.
+</div>
+
+<div class="vocab"><span class="vt">"Bull Market / Bear Market"</span> — Wall Street chose animals to describe direction. Bull = going up (the animal thrusts up with its horns). Bear = going down (the animal swipes down with its paws). These are just words for "generally rising prices over time" and "generally falling prices over time." No bulls or bears are involved.</div>
+
+<div class="stat-row">
+  <div class="stat"><span class="lbl">P/E RATIO</span><span class="val">28.4</span></div>
+  <div class="stat grn"><span class="lbl">EPS GROWTH</span><span class="val">▲ +19%</span></div>
+  <div class="stat"><span class="lbl">MKT CAP</span><span class="val">$847B</span></div>
+  <div class="stat red"><span class="lbl">DEBT/EQUITY</span><span class="val">2.4x ⚠</span></div>
+  <div class="stat grn"><span class="lbl">GROSS MARGIN</span><span class="val">68.2%</span></div>
+</div>
+
+<div class="tip">Market cap tiers are just labels humans agreed on: micro-cap (<$300M), small-cap (<$2B), mid-cap (<$10B), large-cap (<$200B), mega-cap (above). These numbers aren't physics. The point is: smaller companies are riskier and more volatile. Bigger companies are more stable. Size correlates with reliability, not quality.</div>
+`,
+prompt:`Please explain the following financial terms like I've never heard them before — treat each one as a label someone invented and explain what the label is describing:
+
+P/E ratio, EPS, Market Cap, Revenue vs Profit, Gross Margin vs Net Margin, Dividend Yield, Book Value, Price-to-Sales ratio, Debt-to-Equity ratio, Free Cash Flow, EBITDA
+
+For each:
+1. What is this actually measuring?
+2. Why did someone decide this was a useful thing to measure?
+3. What does a high number mean? What does a low number mean?
+4. What type of investor cares most about this metric and why?
+5. What's a number that would make you interested vs worried?
+
+No jargon without explanation. Pretend finance invented new words to describe totally normal business concepts.`
+},
+
+{
+title:"Reading Charts Without Crying",
+subtitle:"03 — Visual Market Grammar",
+vizLabel:"▶ annotated candlestick chart",
+viz:"chart",
+body:`
+<p>Price charts look like chaos. They're not. They're just history drawn as a picture. The whole "technical analysis" industry is built on one idea: <strong>prices move in patterns because humans behave in patterns</strong>. And humans behave in patterns because we all have the same fear/greed wiring.</p>
+
+<div class="vocab"><span class="vt">"Candlestick"</span> — Japanese rice traders in the 1700s invented this visualization. They needed a way to show four prices at once: where did trading start? where did it end? what was the highest point? the lowest? One candle shows all four. "Candlestick" because the shape looks like a candle with a wick.</div>
+
+<div class="step-card"><span class="step-num">THE CANDLE — ONE PERIOD OF PRICE ACTION</span>
+The fat body = from opening price to closing price.<br>
+The thin wick above = the highest price reached.<br>
+The thin wick below = the lowest price reached.<br>
+<em>Green candle</em> = closed higher than it opened (up day). <em>Red candle</em> = closed lower (down day).<br><br>
+A candle can represent 1 minute, 1 hour, 1 day, 1 week — whatever timeframe you're looking at. A giant wick means price went way up (or down) but pulled back. That tells a story about who won — buyers or sellers.
+</div>
+
+<div class="step-card"><span class="step-num">TREND — THE ONLY THING THAT MATTERS</span>
+<strong>Uptrend</strong>: higher highs, higher lows. Each rally goes higher than the last. Each pullback doesn't erase as much as the last rally gained. This is a healthy trend.<br>
+<strong>Moving Average</strong>: draw a line connecting the average closing price over N days. Price above the 50-day MA = generally in good shape. Price below the 200-day MA = be cautious. <em>The MA is just a smoothing function.</em> It takes out the noise so you can see the signal.
+</div>
+
+<div class="step-card"><span class="step-num">SUPPORT & RESISTANCE — FLOORS AND CEILINGS</span>
+<strong>Support</strong>: a price level where buyers keep appearing. The stock falls to $45, bounces. Falls to $45 again, bounces again. $45 is support. <em>Why?</em> Because everyone who missed it last time says "if it gets back to $45, I'm buying."<br>
+<strong>Resistance</strong>: a ceiling where sellers keep appearing. Usually an old high — people who bought at the top are waiting to "get out even."<br><br>
+When price breaks through resistance on heavy volume — that old ceiling becomes the new floor. This is called a breakout.
+</div>
+
+<div class="tip">The chart doesn't predict the future. It shows where human attention clusters. A stock at an all-time high isn't "expensive" — every dollar it has ever traded at was someone's buy price. All-time highs just mean everyone who ever owned it is in profit, reducing selling pressure.</div>
+`,
+prompt:`I'm looking at a chart for [TICKER SYMBOL] on TradingView. Walk me through a complete technical read.
+
+Please analyze:
+1. The primary trend: is it in an uptrend, downtrend, or sideways range? (Look at higher highs/lows)
+2. Key moving averages: is the stock above or below its 50-day and 200-day MA? What does this signal?
+3. Support levels: where does price tend to stop falling? (Recent lows, old highs that got broken)
+4. Resistance levels: where does price tend to stall going up?
+5. Volume analysis: is volume expanding on up moves or down moves? What does this tell us?
+6. Any classic chart patterns visible? (Cup and handle, head and shoulders, flag, pennant, etc.)
+7. RSI or momentum: is the stock overbought, oversold, or neutral?
+
+After the analysis: is this chart setup constructive for an entry, or would you wait for a better setup? Why?`
+},
+
+{
+title:"Is This Company Actually Good?",
+subtitle:"04 — Business Quality 101",
+vizLabel:"▶ business quality comparison",
+viz:"fundamentals",
+body:`
+<p>Charts tell you what price is doing. <strong>Fundamentals tell you what the business is actually doing</strong>. Price follows business quality — just not on a schedule anyone knows. The gap between price and business quality is where money gets made (and lost).</p>
+
+<p>Warren Buffett's actual philosophy, stripped of the Omaha oracle mysticism: <em>find businesses that make good money consistently, have structural advantages that protect those profits from copycats, are run by people who aren't destroying it, and buy them when the price is reasonable relative to those profits.</em> That's the whole thing. Every book, interview, and shareholder letter he's written is just elaboration on those four ideas.</p>
+
+<div class="step-card"><span class="step-num">THE FIVE THINGS THAT MATTER</span>
+<strong>1. Revenue growth</strong> — Is the business getting bigger? 15%+ annually is exciting. Flat is fine if profitable. Shrinking is concerning unless there's a deliberate reason (selling a bad division, etc.).<br><br>
+<strong>2. Margins</strong> — Revenue is vanity. Margins show efficiency. Apple's net margin ~25% means: for every $100 they make, $25 is profit. Grocery stores run at ~2%. Margins reveal how much pricing power and competitive protection a business has.<br><br>
+<strong>3. Moat</strong> — Warren Buffett's word for competitive advantage. What makes this business hard to copy? Patents, brand loyalty, network effects, switching costs, cost advantages. The wider the moat, the more durable the profits.<br><br>
+<strong>4. Balance sheet</strong> — Does it have more cash than debt? Or is it drowning in loans? Companies with strong cash positions can survive downturns. Companies with huge debt loads can't.<br><br>
+<strong>5. Management</strong> — Are executives buying shares with their own money? Do they hit their stated targets? Do they communicate clearly and honestly? Great management can rescue a mediocre business. Bad management destroys a great one.
+</div>
+
+<div class="vocab"><span class="vt">"Free Cash Flow"</span> — earnings on paper can be massaged by accounting choices. Free cash flow is the actual dollars that flowed into the company's bank account after all expenses. It's harder to fake. High FCF = the business genuinely makes real money.</div>
+
+<div class="tip">An artist analogy: revenue is how many pieces you sold. Profit margin is what you kept after materials, studio rent, and commissions. The moat is your unique style — why someone would pay you specifically vs any other artist. Balance sheet is whether you have savings or debt. Management is how disciplined you are about not spending everything on rent for a bigger studio you don't need yet.</div>
+`,
+prompt:`Give me a fundamental analysis of [COMPANY NAME] like you're a senior analyst briefing someone smart but not finance-trained.
+
+1. Business model: exactly how does this company make money? (Be specific — what triggers revenue?)
+2. Revenue trend: last 3 years. Growing, flat, or declining? At what rate?
+3. Profitability: gross margin, net margin — and whether they're improving or deteriorating
+4. The moat: what specifically prevents a competitor from just copying this business?
+5. Balance sheet: cash vs debt. Is this company vulnerable if revenue drops 30%?
+6. Management quality: any notable capital allocation decisions, share buybacks, dividends, acquisitions?
+7. Bear case: the one or two things that would make this investment go wrong
+8. Bull case: the scenario where this investment does really well
+
+Rate the business quality 1-10 with justification. Not the stock — the business.`
+},
+
+// ══════════════════════════════════════
+// SECTION 2: READING THE WORLD
+// ══════════════════════════════════════
+{
+title:"App Autopsy — Phone & Web",
+subtitle:"05 — How to Analyze Tech Companies",
+vizLabel:"▶ tech company metrics dashboard",
+viz:"appmetrics",
+body:`
+<p>You are already doing free market research every time you use your phone. The apps you open 10 times a day? That's DAU data. The apps you uninstalled after a week? That's churn. You have intuition here that most Wall Street analysts don't — <strong>they don't use the products; you do</strong>. The skill is learning to convert that intuition into a structured investment thesis.</p>
+
+<p>Tech companies use different metrics than traditional businesses — on purpose. Normal accounting doesn't capture what makes software valuable: <strong>scale with near-zero marginal cost</strong>. Adding the 500 millionth TikTok user costs approximately zero. That's why these companies look "expensive" by normal accounting standards but sometimes aren't — the numbers just aren't built for them.</p>
+
+<div class="vocab"><span class="vt">"DAU/MAU"</span> — someone needed to answer "of the people who have this app, how many actually use it every day?" Daily Active Users ÷ Monthly Active Users. WhatsApp ~80%. Instagram ~55%. A game that's downloaded 50M times but has a 4% DAU/MAU has 50M uninstalls waiting to happen.</div>
+
+<div class="step-card"><span class="step-num">🔦 THE PHONE TEST — START HERE BEFORE READING A SINGLE FILING</span>
+Before you buy stock in any consumer app company, spend one week noticing it in the real world:<br><br>
+— <strong>How often do you open it?</strong> Once a day unprompted = strong. Only when you remember it exists = weak.<br>
+— <strong>Do your friends use it?</strong> Not "did they try it" — do they actually use it regularly?<br>
+— <strong>Could you switch?</strong> Think about replacing Instagram with any competitor. How hard? That friction = moat.<br>
+— <strong>App Store ranking</strong> — go to App Store or Google Play, category rankings. Top 10 in category consistently = traction. Ranked #847 and sliding = problem. Rankings are free, real-time signal.<br>
+— <strong>App Store reviews</strong> — 1-star reviews in the last month are users describing problems in exact terms. Read 20. They're better than any analyst report.
+</div>
+
+<div class="step-card"><span class="step-num">THE CONSUMER APP vs B2B SaaS DISTINCTION</span>
+These are very different animals and get confused constantly:<br><br>
+<strong>Consumer apps (TikTok, Spotify, Uber, Instagram)</strong>: Revenue usually from ads or subscriptions. Valuation driven by scale + engagement. Key risk: trends shift, teens move on. Key advantage: network effects can be enormous. One bad quarter of engagement = stock gets crushed.<br><br>
+<strong>B2B SaaS (Salesforce, Slack, Figma, Notion)</strong>: Revenue from enterprise contracts. Sticky because switching costs are high — the company's whole team uses it and switching means re-training everyone. Key metric: Net Revenue Retention (NRR). Above 120% means existing customers are spending more each year — that's compounding without new customers.<br><br>
+The tell: who's writing the check? If it's your personal credit card → consumer. If it's a procurement department → B2B.
+</div>
+
+<div class="step-card"><span class="step-num">THE TECH METRIC CHEAT SHEET</span>
+<strong>DAU/MAU</strong> — engagement stickiness. >50% = strong. <20% = people installed it and forgot.<br><br>
+<strong>LTV/CAC</strong> — Lifetime Value ÷ Customer Acquisition Cost. Get a customer for $50, they spend $150 total = 3:1. Below 3:1 = losing money on growth. Above 5:1 = underinvesting in growth.<br><br>
+<strong>Churn Rate</strong> — % of customers leaving per month. 2%/month for SaaS = decent. 10%/month = leaky bucket, you're running to stand still.<br><br>
+<strong>Gross Margin</strong> — software companies should be 60-80%+. If a company calling itself "tech" has 15% gross margins, look harder — it's probably a logistics company with an app on top. DoorDash and Instacart learned this the hard way.<br><br>
+<strong>Rule of 40</strong> — growth rate + profit margin >40 = healthy SaaS. Growing 50% with -5% margins = 45 ✓. Growing 5% with 25% margins = 30, stagnating.<br><br>
+<strong>ARPU</strong> (Average Revenue Per User) — how much does one user generate in a year? Compare to the DAU/MAU count. Low ARPU + high user count = ad model. High ARPU + lower user count = subscription or enterprise.
+</div>
+
+<div class="step-card"><span class="step-num">FREE SIGNALS YOU CAN READ RIGHT NOW</span>
+<strong>Sensor Tower / data.ai (formerly App Annie)</strong> — app download rankings and revenue estimates. Free tier shows you trends. A consumer app with accelerating downloads in new countries = early global expansion signal.<br><br>
+<strong>App Store / Google Play Top Charts</strong> — Top Free, Top Paid, Top Grossing. "Top Grossing" is the important one — people are paying. An app that's #47 in Top Grossing month after month has sticky revenue.<br><br>
+<strong>Reddit / community pulse</strong> — r/[appname] subreddits. When users go from fans to critics, you'll see it here months before management acknowledges it in earnings calls. Users described Netflix's password crackdown with rage in early 2023; management called it a success. Who was right? Check the subscriber count now.<br><br>
+<strong>Product Hunt</strong> — where new apps launch. Browsing it weekly is free trend reconnaissance. When investors were early to Notion, Figma, and Linear, some noticed them on Product Hunt years before their IPO hype.
+</div>
+
+<div class="step-card"><span class="step-num">NETWORK EFFECTS — THE REAL MOAT</span>
+A product with network effects gets more valuable as more people use it. Instagram is worthless with 5 users, priceless with 2 billion. WhatsApp, Uber, Visa, LinkedIn — harder to displace <em>specifically because so many people already use them</em>. Network effects are the strongest moat in tech.<br><br>
+The test: <em>if this app had 10% of its current users, would it still be useful?</em> WhatsApp: no — messaging apps need everyone to be on them. Photoshop: yes — it's still useful alone. Single-player products have no network effects. Multiplayer products do.
+</div>
+
+<div class="spamton">YOU WANT TO FIND A <strong>[[NETWORK EFFECT BUSINESS]]</strong> EARLY?! The platform that has [[LOCK-IN]] today becomes the [[UNTOUCHABLE MONOPOLY]] of tomorrow!! Watch the App Store rankings!! Read the Reddit complaints!! <strong>[[THE SIGNAL IS FREE]]</strong>!! <span class="sp-small">— also: high user counts alone mean nothing. look at what % of users pay, and how much. 1 billion free users who never pay = worth less than 5 million subscribers at $15/month.</span></div>
+
+<div class="challenge">Open the App Store or Google Play right now. Go to "Top Charts" → "Top Grossing." Pick an app you don't recognize in the top 20. Google the company. Who owns it? How long has it been in the top 20? That consistency is a real revenue signal. Now check if it's publicly traded.</div>
+`,
+prompt:`Do a complete app/tech company analysis of [COMPANY / APP NAME] for me.
+
+I want both the product lens (as a user) and the business lens (as an investor).
+
+PRODUCT ANALYSIS
+1. What exactly does this app do and who uses it? (be specific — not marketing language)
+2. What does its App Store / Google Play rating look like, and what do the recent reviews say?
+3. Is it consumer, B2B, or both? Who's actually paying?
+4. What category of app is it? (social, utility, marketplace, game, productivity, etc.) — and what are the engagement expectations for that category?
+5. Is there a "natural daily habit" that brings users back, or does it require a reason to open?
+
+BUSINESS ANALYSIS
+6. Revenue model: ads, subscriptions, transaction fees, enterprise contracts? What % of each?
+7. DAU/MAU if reported — or estimate based on what you know
+8. Gross margins — is this actually software-grade or is there physical infrastructure drag?
+9. Network effects: does the product get harder to leave as more people join?
+10. Churn risk: what would make users leave and how many alternatives exist?
+11. Key growth vectors: where does the next 3 years of growth come from?
+
+RED FLAGS to specifically check:
+- Regulatory threat to the business model
+- Declining App Store rankings or reviews in recent months
+- Revenue concentrated in one country or customer
+
+Rate the business model quality 1-10, separate from stock price. Explain your rating.`
+},
+
+{
+title:"Where Is the Energy Right Now?",
+subtitle:"06 — Sectors, Rotation & Momentum",
+vizLabel:"▶ S&P 500 sector heatmap",
+viz:"heatmap",
+body:`
+<p>The market is not one uniform thing. It's 11 sectors with different personalities. Money constantly flows between them based on the economic environment. <strong>Understanding rotation means knowing where to look before everyone else does.</strong></p>
+
+<div class="step-card"><span class="step-num">SECTOR PERSONALITIES</span>
+<em>Technology</em> — grows fast, loves low interest rates, gets crushed when rates rise<br>
+<em>Healthcare</em> — defensive, people need medicine in any economy<br>
+<em>Financials</em> — loves rising rates (banks charge more), hates recessions<br>
+<em>Energy</em> — follows oil/gas prices, cyclical, geopolitical<br>
+<em>Consumer Staples</em> — Procter & Gamble, Coca-Cola — people keep buying soap even in recessions<br>
+<em>Consumer Discretionary</em> — Netflix, Nike — optional spending that people cut when scared<br>
+<em>Utilities</em> — boring, stable, high dividends, loved when investors are scared
+</div>
+
+<div class="step-card"><span class="step-num">SECTOR ROTATION — THE ECONOMIC CLOCK</span>
+Markets move through a cycle. Sectors that lead in each phase:<br><br>
+<strong>Early recovery</strong>: Financials, Consumer Discretionary, Real Estate<br>
+<strong>Expansion</strong>: Technology, Industrials, Materials<br>
+<strong>Late cycle</strong>: Energy, Industrials, Healthcare<br>
+<strong>Recession</strong>: Consumer Staples, Healthcare, Utilities (defensives hold up)<br><br>
+Knowing where we are in the cycle tells you where to point your binoculars first.
+</div>
+
+<div class="vocab"><span class="vt">"Relative Strength"</span> — someone invented this to answer: "is this stock outperforming or underperforming the market?" If the market drops 10% and your stock drops 2%, your stock has strong relative strength — it's showing up better in adversity. Stocks with strong relative strength tend to lead in the next rally. This is why professionals track it obsessively.</div>
+
+<div class="tip">The sector heat map is free on finviz.com/map.ashx. It color-codes every S&P 500 company by today's performance. Red sector = selling pressure. Green = buying pressure. But look at the 1-month and 3-month views to see which sectors are trending — one day of data is noise.</div>
+`,
+prompt:`I want to understand where market momentum is right now.
+
+Please analyze the current market environment:
+1. Which S&P 500 sectors have been strongest over 1 month and 3 months?
+2. Which sectors are weakest — and is that weakness due to macro factors or specific industry problems?
+3. Where are we in the economic cycle, roughly — early recovery, expansion, late cycle, or contraction?
+4. What does the Fed's current interest rate stance imply for sector preferences?
+5. Name 2-3 specific stocks in the leading sectors showing relative strength vs their peers
+6. Any sectors that look like they might be bottoming or starting to rotate into favor?
+
+Explain the "why" behind each sector's current behavior — what macro forces are driving it?`
+},
+
+// ══════════════════════════════════════
+// SECTION 3: PSYCHOLOGY & ANTHROPOLOGY
+// ══════════════════════════════════════
+{
+title:"Markets Are a Religion",
+subtitle:"07 — The Anthropology of Greed",
+vizLabel:"▶ historical bubble chart",
+viz:"anthropology",
+body:`
+<p>Let's drop the finance lens entirely. Put on the anthropologist coat. When you look at financial markets the way an anthropologist looks at a society — studying behavior, belief systems, rituals, power dynamics — something remarkable emerges: <strong>markets are a collective belief system, and bubbles are tent revivals</strong>. The preacher is whoever tells the best story. The congregation brings their savings.</p>
+
+<div class="step-card"><span class="step-num">MONEY ITSELF IS A COLLECTIVE HALLUCINATION</span>
+A dollar bill is a piece of cotton and linen. It has material value measured in fractions of a cent. Yet you will trade it for a sandwich, a year of rent, or a car. <em>Why?</em> Because you believe everyone else believes in it. That's it. Money is a consensus reality — it functions because everyone agrees it does. Stocks are the same, one layer deeper: the consensus about the consensus.
+</div>
+
+<div class="step-card"><span class="step-num">MIMETIC DESIRE — WE WANT WHAT OTHERS WANT</span>
+René Girard, a French anthropologist, proposed that humans don't develop desires independently. We want things because <em>other people want them</em>. Not because of intrinsic value. This is why the most-discussed stock becomes the most-owned stock becomes the most expensive stock — in a loop that has nothing to do with the underlying business. When Tesla was worth more than Toyota × Ford × GM combined, it wasn't a valuation. It was a desire cascade.
+</div>
+
+<div class="step-card"><span class="step-num">THE CARGO CULT INVESTOR</span>
+After WWII, Pacific islanders who'd seen Allied military bases bring wealth built fake runways and bamboo control towers, believing the ritual would summon the planes back. In investing, "cargo cult" behavior means: copying surface actions of successful investors without understanding their logic. Buying "what Buffett buys" without understanding why. Using charts because "technical analysis works" without understanding what you're actually reading about human behavior. The ritual without the mechanism.
+</div>
+
+<div class="step-card"><span class="step-num">BUBBLES ARE ALWAYS THE SAME STORY</span>
+Every major bubble in history shares five ingredients:<br><br>
+1. A genuinely new technology or asset class (tulips, railroads, dot-com, crypto)<br>
+2. A new class of people with money to deploy (newly wealthy merchants, retail investors with trading apps)<br>
+3. Leverage — borrowed money amplifying both gains and losses<br>
+4. A narrative that explains why "this time is different"<br>
+5. FOMO as social contagion — not investing feels like refusing to evolve<br><br>
+The tulip mania of 1637. The South Sea Bubble of 1720. The dot-com crash of 2000. GameStop 2021. Same five ingredients. Different costumes.
+</div>
+
+<div class="step-card"><span class="step-num">GAMESTOP WAS A PEASANT REVOLT</span>
+The sociological reading of GameStop in 2021: retail investors (historically powerless) identified that hedge funds had shorted a company more than 100% of its available shares (technically illegal-ish, practically ignored). They coordinated on Reddit not primarily for profit but as a <em>symbolic attack on financial power structures</em>. The price run was partly financial, partly a ritual of collective defiance. The hedge funds lost billions. The crowd mostly also lost money — but that was partially not the point. Understanding this psychology tells you when crowd behavior has a financial logic vs a social/symbolic one.
+</div>
+
+<div class="tip">Herding behavior — following the crowd — is an evolutionary adaptation. On the savanna, if everyone ran from a bush, you ran too. The ones who stopped to verify if there was a lion got eaten. This reflex is deeply wired and saves lives. In markets, it destroys wealth. The instinct that kept your ancestors alive is the same instinct that makes you buy at the peak of a bubble.</div>
+`,
+prompt:`I want to understand the behavioral and social forces behind a current market situation.
+
+Situation: [describe a recent market event, stock run-up, crypto mania, IPO frenzy, or meme stock situation]
+
+Please analyze through an anthropological/sociological lens:
+1. What psychological mechanisms are driving participant behavior? (mimetic desire, herding, status signaling, in-group identity, etc.)
+2. How does this compare to historical crowd behavior in past bubbles or manias?
+3. Is this a "cargo cult" situation — people copying behavior without understanding the mechanism?
+4. What social or economic conditions created the conditions for this to happen?
+5. What will the narrative be 2 years from now — how will this event be remembered?
+6. What's the rational kernel at the center of what might be irrational behavior?
+7. At what point does the crowd's behavior become self-fulfilling (belief makes the thing true) vs self-defeating?`
+},
+
+{
+title:"Your Brain Is Not Your Friend Here",
+subtitle:"08 — The Biases That Eat Money",
+vizLabel:"▶ the emotion cycle — where are you?",
+viz:"psychology",
+body:`
+<p>The biases below are not character flaws. They are <strong>features that evolved over millions of years for survival on the savanna</strong>. They are catastrophically mismatched to financial decision-making — the same way night vision goggles are useless in daylight. Not broken. Wrong environment.</p>
+
+<div class="spamton">THE [[FINANCE INDUSTRY]] WANTS YOUR EMOTIONS TO MAKE YOUR DECISIONS!! [[FEAR]] sells protection products!! [[GREED]] sells lottery tickets and options!! Your biases are <strong>[[THEIR REVENUE]]</strong>!! <span class="sp-small">— understanding your biases doesn't make them go away. but it creates a tiny gap between the impulse and the action. that gap is where wealth is built.</span></div>
+
+<div class="step-card"><span class="step-num">THE EMOTION CYCLE — WHAT THE CHART SHOWS</span>
+Every market cycle creates the same emotional arc. The dangerous insight: <strong>the maximum financial opportunity and the maximum psychological pain occur at the same moment</strong>. When everyone is screaming about what a terrible investment something is — that's often the best time to buy. When everyone is euphoric and calling it genius — that's often the time to question your position. Watch the animated dot on the right — that's "you" going through the cycle.
+</div>
+
+<div class="step-card"><span class="step-num">THE SIX BIASES MOST LIKELY TO HURT YOU</span>
+<strong>FOMO (Fear of Missing Out)</strong> — "everyone is making money and I'm not." This drives buying at tops. If a friend who doesn't invest is telling you about a hot stock, you are probably near the top.<br><br>
+<strong>Loss Aversion</strong> — losing $100 feels 2.5× worse than gaining $100 feels good (Daniel Kahneman's actual research). This causes investors to hold losers too long ("it'll come back") and sell winners too early ("lock in the gains").<br><br>
+<strong>Confirmation Bias</strong> — once you own a stock, you unconsciously read every piece of news as confirmation you were right. You stop updating your belief with new information.<br><br>
+<strong>Recency Bias</strong> — whatever just happened, you expect to keep happening. Market just crashed 20%? You expect more crashing. Market just ran up 30%? You expect more running. Recency bias is why people panic-sell bottoms and FOMO into tops.<br><br>
+<strong>Overconfidence</strong> — studies consistently show that people rate themselves above average at investing even after sustained losses. Three wins in a row does not make you smart. It makes you lucky, so far.<br><br>
+<strong>Disposition Effect</strong> — the tendency to sell your winners (they feel good to cash in) and keep your losers (selling means admitting you were wrong). Professional traders do the opposite: cut losses fast, let winners run.
+</div>
+
+<div class="tip">The antidote to all biases is the same: <strong>a written plan made before you enter a trade</strong>. Write down: why am I buying this? What would prove me wrong? At what price will I exit if I'm wrong? At what price will I take profits? Tape it to your monitor. Your future emotional self will try to override it. Don't let them.</div>
+`,
+prompt:`Help me audit a recent investment decision for behavioral biases.
+
+Decision: [describe a trade or investment decision you made — buying, selling, holding, or not buying something]
+
+Please analyze:
+1. Which specific cognitive biases might have influenced this decision? (FOMO, loss aversion, confirmation bias, recency bias, overconfidence, anchoring, herding, etc.)
+2. What would a purely rational actor have done with the same information?
+3. What information did I probably seek out vs avoid in making this decision? (confirmation bias test)
+4. If the outcome was bad: was it bad because of bad reasoning, or bad luck? (These are different.)
+5. If the outcome was good: was it good because of good reasoning, or good luck?
+6. What decision process changes would make me less vulnerable to these biases in the future?
+
+Be direct. I want to learn, not be validated.`
+},
+
+// ══════════════════════════════════════
+// SECTION 4: THE MACRO PICTURE
+// ══════════════════════════════════════
+{
+title:"The Fed Runs Everything",
+subtitle:"09 — Interest Rates & Your Money",
+vizLabel:"▶ rates vs. market — the see-saw",
+viz:"macro",
+body:`
+<p>There is one group of about 12 people whose decisions ripple through every stock price, bond yield, mortgage rate, car loan, and savings account on Earth. They meet 8 times per year in Washington. They are the <strong>Federal Open Market Committee</strong>. When people say "the market is reacting to the Fed," this is who they mean. Understanding what they're doing — and the mechanics of why it matters — unlocks about 60% of "why is the market doing that."</p>
+
+<div class="spamton">[[THE FED]] CONTROLS THE [[PRICE OF MONEY]] ITSELF!! Everything chains off their decisions!! Learning to read their statements is like <strong>[[LEARNING TO READ THE WEATHER]]</strong>!! Free, public, and <span class="sp-small">extremely dry to read but genuinely worth doing. the statements are published at federalreserve.gov immediately after each meeting. the language is careful and deliberately hedged. "patient" = not moving soon. "data dependent" = they have no idea. "attentive to risks" = they are nervous.</span></div>
+
+<div class="vocab"><span class="vt">"Interest Rate"</span> — when you borrow money, someone charges you for the use of it. That charge, expressed as a percentage of what you borrowed, is the interest rate. The Fed doesn't directly set mortgage rates or car loan rates — it sets the "federal funds rate," which is what banks charge each other overnight. But everything else chains off this number. It's the price floor for all borrowed money.</div>
+
+<div class="step-card"><span class="step-num">WHY RATES MOVE EVERYTHING</span>
+<strong>Low rates</strong>: borrowing is cheap. Companies borrow to invest and grow. People borrow to buy houses and cars. The economy expands. Investors, seeking return, accept more risk — so stocks go up. Tech stocks (future profits matter) go up especially, because cheap money makes distant future profits worth more today.<br><br>
+<strong>High rates</strong>: borrowing is expensive. Growth slows. Bonds now pay decent interest — maybe 5% risk-free. Suddenly, owning stocks (risky) for the same 5% expected return looks less attractive. Money flows into bonds. Tech stocks (which rely on cheap growth capital) get hit hardest.<br><br>
+The see-saw: rates up → stocks often down, especially growth. Rates down → stocks often up.
+</div>
+
+<div class="step-card"><span class="step-num">INFLATION — YOUR CASH IS MELTING</span>
+Inflation means the same dollar buys less over time. At 3% inflation, $100 today = $97 of buying power next year. At 8% inflation (2022 levels), your cash savings are losing 8% per year just sitting in a bank account earning 0.01% interest.<br><br>
+This is why investing exists. <strong>Stocks, on average, return ~7-10% per year over long periods</strong>. They beat inflation. Cash doesn't. Owning a business (which raises prices as inflation rises) protects against inflation. Owning cash does not. This is the entire case for investing in one paragraph.
+</div>
+
+<div class="vocab"><span class="vt">"Yield Curve"</span> — a graph that plots interest rates for different loan durations (1 year, 2 years, 10 years). Normally, longer loans pay higher rates (more risk for the lender). When the curve "inverts" — short-term rates exceed long-term rates — it means the market expects rates to fall, which historically precedes recessions. An inverted yield curve has predicted every US recession since the 1960s. Not guaranteed, but worth watching.</div>
+
+<div class="tip">When the Fed speaks, the market moves. Watch the Fed's quarterly press conferences on YouTube or read the meeting minutes on federalreserve.gov. The language they use is deliberately careful — learn to parse it. "Patient" means "not moving soon." "Data dependent" means "we have no idea." "Concerned about inflation" means "rates might go up."</div>
+`,
+prompt:`Help me understand how the current macroeconomic environment should affect my investment strategy.
+
+Current situation: [describe what you know — e.g., "inflation is around X%, the Fed recently raised/lowered rates, GDP growth is..."]
+
+Please explain:
+1. What is the Fed's current stance and what does it imply for different asset classes?
+2. Where are we in the interest rate cycle — are we near the peak, trough, or middle?
+3. Which sectors and asset classes historically do best in this macro environment?
+4. What does the current inflation level mean for someone holding cash vs owning stocks vs owning bonds?
+5. What's the "yield curve" currently saying, and should I care?
+6. What macro data should I be watching monthly to stay oriented? (What are the most important reports and why?)
+
+Help me build a mental model of how macro forces affect my investments, not just a one-time answer.`
+},
+
+// ══════════════════════════════════════
+// SECTION 5: CRYPTO
+// ══════════════════════════════════════
+{
+title:"Crypto: What It Actually Is",
+subtitle:"10 — The Blockchain Demystified",
+vizLabel:"▶ blockchain as a shared ledger",
+viz:"crypto",
+body:`
+<p>Cryptocurrency has more hype, more scams, more genuine innovation, and more confusion per square inch than any other asset class. Let's do surgery on it and look at what's actually inside.</p>
+
+<div class="vocab"><span class="vt">"Blockchain"</span> — someone needed to describe a database that nobody owns and everyone can see, where every entry is permanent and verified by thousands of computers. They called it a blockchain because the records are organized into "blocks" that are "chained" together cryptographically. Once written, nothing can be deleted or modified without redoing the work on every computer simultaneously. It's just a new kind of database with those specific properties.</div>
+
+<div class="step-card"><span class="step-num">BITCOIN — WHAT IS THE ACTUAL PITCH</span>
+Bitcoin is the first cryptocurrency, created in 2009 by an anonymous person or group called Satoshi Nakamoto. The pitch, stripped of mythology:<br><br>
+— There will <strong>only ever be 21 million Bitcoin</strong>. Built into the code. Cannot be changed without everyone agreeing.<br>
+— No government controls it. No bank can freeze it.<br>
+— You can send it to anyone on earth in minutes with no intermediary taking a cut (except tiny network fees).<br>
+— It is <em>digital scarcity</em>. Before Bitcoin, any digital file could be copied infinitely. Bitcoin cannot be.<br><br>
+The bear case: it's slow for payments, uses enormous energy, and is mostly held, not used. The bull case: it's digital gold. Gold doesn't "do" anything either. It just has agreed-upon scarcity.
+</div>
+
+<div class="step-card"><span class="step-num">ETHEREUM — A COMPUTER YOU CAN'T TURN OFF</span>
+Ethereum is different in a key way: it's a programmable blockchain. You can deploy code to it (called "smart contracts") that run automatically when conditions are met, forever, without any company maintaining them.<br><br>
+This enables: DeFi (loans and trading without banks), NFTs (proof of ownership of digital items), DAOs (organizations run by code instead of executives). Most of it is very early and experimental. Some of it will change how institutions work. Most of the current applications are speculative.
+</div>
+
+<div class="step-card"><span class="step-num">ALTCOINS — BE HONEST</span>
+There are 20,000+ cryptocurrencies. The vast majority are: solutions looking for problems, copies of Bitcoin/Ethereum with slight modifications, or outright scams. A few have genuine technical innovations or specific use cases.<br><br>
+The honest question to ask of any altcoin: <em>what specific problem does this solve that Bitcoin or Ethereum can't, and who actually needs this solved urgently enough to pay for it?</em> If you can't answer that clearly, proceed with maximum skepticism.
+</div>
+
+<div class="spamton">CONGRATULATIONS!! You have discovered a [[NEW TOKEN]] with a [[1000X POTENTIAL]]!! The founder is <strong>[[DEFINITELY NOT ANONYMOUS]]</strong> and the whitepaper is <strong>[[TOTALLY REAL]]</strong>! Only 48 hours to get in on the presale!! <span class="sp-small">— this is what a rug pull looks like. if someone is this excited about a coin, they want you to buy so they can sell.</span></div>
+
+<div class="risk-pill hi">VOLATILE</div>
+<div class="risk-pill hi">REGULATORY RISK</div>
+<div class="risk-pill nuke">ALTCOIN ROULETTE</div>
+`,
+prompt:`Explain [CRYPTOCURRENCY NAME] to me like I'm a skeptical but genuinely curious person.
+
+Cover:
+1. What specific problem was this designed to solve? (Not what it became — what was the original engineering goal?)
+2. How does it actually work technically — in plain English, not marketing language
+3. Who actually uses this and for what real-world purpose right now?
+4. What makes it different from Bitcoin and Ethereum — and is that difference meaningful?
+5. Tokenomics: how many exist? Is there a supply cap? Who owns the largest amounts?
+6. The team: are they identifiable, credible, and do they have skin in the game?
+7. The honest bear case: why might this be worth nothing in 5 years?
+8. The honest bull case: what would have to be true for this to succeed?
+
+Don't hype it and don't dismiss it. I want an honest engineering and business assessment.`
+},
+
+{
+title:"Crypto: How Not to Get Wrecked",
+subtitle:"11 — Surviving the Wild West",
+vizLabel:"▶ crypto risk spectrum",
+viz:"cryptorisk",
+body:`
+<p>The crypto space produces more genuine millionaires and more genuine devastated people per year than any other asset class. The difference between them is almost entirely about <strong>risk management and scam recognition</strong> — not timing or genius.</p>
+
+<div class="step-card"><span class="step-num">THE SCAM TAXONOMY</span>
+<strong>Rug Pull</strong>: developers create a token, hype it up, attract investment, then drain the liquidity pool and disappear with the money. Signs: anonymous team, no audited code, massive promises, aggressive referral programs.<br><br>
+<strong>Pump and Dump</strong>: coordinated buying to inflate a low-volume coin's price, then mass selling into the spike. Telegram and Discord groups run these constantly. If you're getting "alpha" in a group chat, you're the exit liquidity.<br><br>
+<strong>Phishing</strong>: fake websites, fake support, fake MetaMask extensions asking for your seed phrase. <em>Nobody legitimate ever needs your seed phrase.</em> Write it down. Store it offline. Give it to no one.<br><br>
+<strong>Yield Farming Traps</strong>: "100% APY on your crypto!" Sometimes real (briefly). Usually either inflated with the protocol's own worthless token, or about to be rugged.
+</div>
+
+<div class="step-card"><span class="step-num">THE LEGITIMATE RISK SPECTRUM</span>
+<em>Bitcoin</em> — most established, most liquid, most regulated. Still wildly volatile vs stocks.<br>
+<em>Ethereum</em> — strong network effects, real usage, institutional adoption. More volatile than BTC.<br>
+<em>Large-cap altcoins (Solana, etc.)</em> — more volatile, more speculative, higher potential gain AND loss.<br>
+<em>Mid-cap projects</em> — often 80-99% losses in bear markets. Only buy what you've genuinely researched.<br>
+<em>New / low-cap tokens</em> — assume most go to zero. Size accordingly.<br>
+<em>Memecoins</em> — pure speculation and community gambling. Treat as lottery tickets or entertainment.
+</div>
+
+<div class="vocab"><span class="vt">"Seed Phrase / Recovery Phrase"</span> — when you create a crypto wallet, you get 12 or 24 random words. These words, in that exact order, ARE your wallet. They generate your private keys. Anyone who has these words owns your crypto. There is no customer service. No recovery. If you lose it and someone else finds it, your crypto is gone forever. Treat it like the only key to a vault with your life savings.</div>
+
+<div class="spamton">MAKE [[PASSIVE INCOME]] WITH YOUR CRYPTO!! Just give us your <strong>[[SEED PHRASE]]</strong> and we'll stake it for you!! [[100% SAFE]] GUARANTEED RETURNS!! <span class="sp-small">— again. never. your seed phrase is the master key. nobody needs it for any legitimate reason ever.</span></div>
+
+<div class="tip">The single safest crypto strategy for most people: buy Bitcoin and/or Ethereum on a regulated exchange (Coinbase, Kraken, Fidelity Crypto), move it to cold storage (a Ledger hardware wallet), and don't touch it for 4+ years. Boring. Effective. No yield farming required.</div>
+`,
+prompt:`Help me think through a crypto strategy that matches my actual risk tolerance.
+
+My situation: [describe yourself — how much you have to invest, what you know, what you're hoping for]
+
+Please walk through:
+1. What percentage of my portfolio should realistically be in crypto, given my situation?
+2. What's the case for Bitcoin specifically as a base position before anything else?
+3. What should I look for before buying any altcoin? (Team, tokenomics, real usage, etc.)
+4. How do I evaluate if a DeFi protocol or yield opportunity is legitimate vs a trap?
+5. What are the 3 most common ways people lose crypto, and how do I prevent each?
+6. Cold storage vs exchange — when does moving to cold storage make sense?
+7. Tax implications of crypto trades in my country — what do I need to know?
+
+I want to participate without being reckless. Help me build guardrails.`
+},
+
+// ══════════════════════════════════════
+// SECTION 6: STRATEGIES
+// ══════════════════════════════════════
+{
+title:"The Broke Person's Playbook",
+subtitle:"12 — Starting With Almost Nothing",
+vizLabel:"▶ dollar-cost averaging — $100/month",
+viz:"dca",
+body:`
+<p>The biggest lie in finance: "you need money to make money." The second biggest lie: that you need to be in the US on a specific platform using specific accounts. The gap between $0 and $25/month is smaller than you think. What you actually need: a phone, a bank account, and the stubbornness to start before you feel ready.</p>
+
+<div class="spamton">BECOME A [[BIG SHOT]] WITH JUST <strong>[[$1]]</strong>!! Fractional shares mean you can own [[APPLE]] and [[NVIDIA]] and [[AMAZON]] TODAY with pocket change!! The [[RICH PEOPLE]] DON'T WANT YOU TO KNOW!! <span class="sp-small">— this is actually true though. fractional shares changed everything for small investors. this is a real democratization moment. but you still need a plan. a plan!</span></div>
+
+<div class="step-card"><span class="step-num">STEP 0 — DO THIS BEFORE ANY INVESTING (NON-NEGOTIABLE)</span>
+<strong>1. Kill high-interest debt first.</strong> A credit card charging 22% APR is a guaranteed 22% loss per year. The S&P 500 averages about 10% annually. You mathematically cannot invest your way out of high-interest debt. Minimum payments on everything, avalanche the highest-rate debt first.<br><br>
+<strong>2. Build a baby emergency fund.</strong> $1,000 sitting somewhere boring (a high-yield savings account). Without this, one car repair wipes out months of investing and forces you to sell at the worst time.<br><br>
+<strong>3. High-Yield Savings Account (HYSA)</strong> — regular savings accounts pay 0.01% interest. HYSAs (Marcus by Goldman, Ally, SoFi, Wealthfront Cash) pay 4-5%+ on cash. Move your emergency fund there first. That's already better than most managed funds, risk-free, right now. It's not investing but it beats nothing by a mile.
+</div>
+
+<div class="step-card"><span class="step-num">STEP 1 — FREE MONEY FIRST (IF YOU HAVE A JOB IN THE US)</span>
+<strong>401k employer match = literal free money, no debate.</strong> If your employer matches 50% of contributions up to 6% of salary — and you don't contribute — you are leaving free money on the table. This is the only guaranteed 50-100% return in investing. Always, always take the full match before any other investing.
+</div>
+
+<div class="step-card"><span class="step-num">STEP 2 — THE ACCOUNTS THAT SAVE YOU TAXES (US)</span>
+<strong>Roth IRA — the GOAT for most people starting out</strong><br>
+Contribute after-tax dollars. All growth is tax-free forever. Withdraw the gains tax-free after 59½. 2025 limit: <em>$7,000/year</em> (or your earned income, whichever is less). On $100/month DCA for 30 years at 7% real return → ~$122K. You invested $36K. You owe <strong>zero tax</strong> on the $86K gain. Open one at Fidelity, Schwab, or Vanguard for free.<br><br>
+<strong>HSA — the Triple Tax Advantage</strong><br>
+Only available if you have a High-Deductible Health Plan. Contributions are pre-tax. Growth is tax-free. Withdrawals for medical expenses are tax-free. Zero other account in existence does all three. 2025 limit: $4,300 individual / $8,550 family. Don't touch it for medical costs now — invest it and let it compound. After 65 you can withdraw for anything (like a traditional IRA).<br><br>
+<strong>If your income is too high for Roth IRA directly</strong> — look up "Backdoor Roth IRA." Legal, legitimate workaround for higher earners.
+</div>
+
+<div class="step-card"><span class="step-num">STEP 3 — THE APPS (BY WHERE YOU LIVE)</span>
+<em>🇺🇸 USA</em><br>
+<strong>Fidelity</strong> — best overall. $1 fractional shares. No fees. Excellent research. Trust it with your Roth IRA.<br>
+<strong>Charles Schwab</strong> — $5 fractional shares (Stock Slices). Excellent long-term option. Strong research tools.<br>
+<strong>Robinhood</strong> — $1 fractional. Clean UI. Robinhood Gold ($5/mo) gives 3% IRA match on contributions — actually significant. Payment-for-order-flow model means your trades are sold to market makers (not a dealbreaker, just know it).<br>
+<strong>M1 Finance</strong> — build custom "pies" of stocks/ETFs, auto-rebalances. Good for set-and-forget investing.<br>
+<strong>Acorns</strong> — rounds up every purchase to nearest dollar and invests the change. $3/month. Psychologically brilliant for people who can't bring themselves to manually invest.<br>
+<strong>Public</strong> — fractional shares from $5. Social features. Good for learning alongside others.<br><br>
+<em>🇬🇧 UK</em><br>
+<strong>Freetrade</strong> — commission-free stocks and ETFs. ISA available (UK's tax-free wrapper = similar to Roth IRA). Clean app.<br>
+<strong>Trading 212</strong> — commission-free, fractional from £1. ISA included. Very popular with beginners.<br>
+<strong>Vanguard UK</strong> — low-cost index funds. Boring. Perfect.<br><br>
+<em>🇪🇺 Europe</em><br>
+<strong>Trade Republic</strong> (Germany-based, EU-wide) — €1 per trade, commission-free savings plans. Fast-growing, regulated by BaFin.<br>
+<strong>Lightyear</strong> — commission-free ETFs, multi-currency. Available across most of EU.<br>
+<strong>DEGIRO</strong> — low fees, massive selection, available in 18+ European countries.<br><br>
+<em>🌍 Global (anywhere)</em><br>
+<strong>Interactive Brokers</strong> — available in 200+ countries. Commission-free in US, very low elsewhere. Best for people outside US/EU who want access to US markets. Slightly more complex UI.<br>
+<strong>eToro</strong> — available in 140+ countries. Copy Trading feature lets you mirror verified investors. Commission-free stocks but 1% crypto spread.
+</div>
+
+<div class="step-card"><span class="step-num">STEP 4 — DOLLAR-COST AVERAGING — YOUR ONLY JOB</span>
+Invest the same fixed amount every month. Rain or shine. Market up or down. $50, $100, $25 — whatever is real for you. This does something magical:<br><br>
+— When market is DOWN your $100 buys <em>more shares</em><br>
+— When market is UP your $100 buys fewer shares<br>
+— Over time, you automatically buy more when cheap and less when expensive<br>
+— You permanently escape the impossible question: "is now a good time?"<br><br>
+<em>The math, concretely:</em> $100/month × 30 years × 7% real return = ~$122,000. You contributed $36,000. The other $86,000 is your shares generating more shares generating more shares. That's compound interest and it's the only force in finance that unambiguously works for you, not against you.
+</div>
+
+<div class="step-card"><span class="step-num">STEP 5 — WHAT TO ACTUALLY BUY (THE BORING TRUTH)</span>
+<strong>SPY or VOO</strong> — S&P 500. The 500 biggest US companies. ~0.03-0.09% annual fee. This is what ~95% of professional fund managers fail to beat over 20 years.<br>
+<strong>VTI</strong> — Total US market. Everything, not just top 500. Marginally more diversification.<br>
+<strong>VT</strong> — Total World. US + international. One fund, whole planet. Vanguard, ~0.07% fee.<br>
+<strong>QQQ or QQQM</strong> — Nasdaq 100. Heavy tech. More volatile. Better returns in bull markets, worse in downturns. Only if you understand what you're getting.<br><br>
+For most people: 80% VTI or SPY + 20% international (VXUS or VEA) is sufficient for a decade or more. Add individual stocks only when you have a clear thesis that beats the index case.
+</div>
+
+<div class="step-card"><span class="step-num">STEP 6 — DRIP — LET DIVIDENDS COMPOUND FOR FREE</span>
+Dividend Reinvestment Plan: instead of receiving quarterly dividends as cash, automatically reinvest them in more shares. Most brokerages let you turn this on with one click. Why it matters: a $10,000 S&P 500 portfolio held 20 years WITHOUT dividend reinvestment grew to ~$112,000. WITH reinvestment: ~$196,000. Same stock. Same time. $84,000 more. The difference is DRIP. Turn it on everywhere.
+</div>
+
+<div class="tip">If you're not in the US, look up your country's equivalent of tax-advantaged accounts: UK has ISAs, Canada has TFSAs, Australia has Superannuation, France has PEA plans. These are the equivalent of Roth IRAs — use them before taxable accounts. The specific rules differ but the principle is the same: government lets you invest tax-free in certain wrappers because they want you to save.</div>
+
+<div class="challenge">Right now: open the App Store and download Fidelity (US), Freetrade (UK), or Trade Republic (EU). Creating an account takes 10 minutes. You don't have to put money in yet. Just see what it looks like. Most people who "plan to start investing" never touch an actual brokerage interface. That's the actual barrier. Not knowledge. Interface.</div>
+`,
+prompt:`I want to start investing with a small amount. Build me a concrete action plan.
+
+My situation:
+- I have $[STARTING AMOUNT] to put in right now
+- I can contribute $[MONTHLY] per month going forward
+- I'm [age] years old
+- I live in [country]
+- My current debt situation: [describe high-interest debt if any]
+- I have / don't have an employer 401k with matching
+
+Please give me a priority-ordered action plan:
+
+STEP 1: BEFORE INVESTING
+- Should I pay off any debt first? At what interest rate does that math flip?
+- Do I have an emergency fund? How much should it be for my situation?
+- Is there a high-yield savings account I should use for cash?
+
+STEP 2: ACCOUNTS
+- What's the best account type for my country and situation? (Roth IRA / ISA / TFSA / taxable?)
+- Which brokerage app should I open? Why that one vs competitors?
+- What order of priority: employer match → HSA → Roth IRA → taxable?
+
+STEP 3: WHAT TO BUY
+- What specific ETFs or index funds should I start with? Give me ticker symbols.
+- Should I touch individual stocks yet? Why or why not?
+- What does my portfolio look like in 5, 10, 20 years at this contribution rate?
+
+STEP 4: AUTOMATION
+- How do I set up automatic monthly contributions?
+- How do I enable DRIP (dividend reinvestment)?
+
+Give me the boring-but-effective plan, not the exciting-but-risky one.`
+},
+
+{
+title:"IPOs & New Launches",
+subtitle:"13 — Getting In Early (Carefully)",
+vizLabel:"▶ IPO price cycle — hype vs reality",
+viz:"ipo",
+body:`
+<p>Every tech giant — Apple, Google, Amazon, Facebook — was once a private company that "went public." Being early to a great company going public sounds like free money. It often isn't. Understanding why separates the informed from the hopeful.</p>
+
+<div class="vocab"><span class="vt">"IPO (Initial Public Offering)"</span> — a private company decides to sell shares to the public for the first time. "Initial" because it's the first time. "Public" because anyone can buy. "Offering" because the company is offering shares at a set price. Investment banks manage the process, set the price, and take a 2-7% fee. The company uses the money raised to grow, pay debts, or let early investors/employees cash out.</div>
+
+<div class="step-card"><span class="step-num">THE IPO PROCESS — WHAT'S ACTUALLY HAPPENING</span>
+1. Company hires investment banks (Goldman, Morgan Stanley, etc.)<br>
+2. Files an S-1 document with the SEC — this is your research bible. It's public. Read it.<br>
+3. Roadshow: executives pitch the company to large institutional investors to build demand<br>
+4. Price is set based on institutional demand<br>
+5. Shares open for public trading — often pop significantly on day one<br>
+6. Lock-up period (90-180 days): insiders can't sell. When this expires, expect selling pressure.<br><br>
+The average IPO pops ~20% on day one — but most retail investors buy <em>after</em> that pop, not at the IPO price. They buy at the peak of hype, not at the offering price.
+</div>
+
+<div class="step-card"><span class="step-num">SPAC vs. DIRECT LISTING vs. IPO</span>
+<strong>SPAC (Special Purpose Acquisition Company)</strong> — a blank check company that goes public to raise money, then finds a private company to merge with. Faster than IPO, less regulatory scrutiny. Red flag: often brings worse companies public without the same disclosure requirements. SPAC sponsors are highly incentivized regardless of outcome.<br><br>
+<strong>Direct Listing</strong> — the company doesn't issue new shares, just lets existing shareholders sell publicly. Spotify and Coinbase did this. No underwriter premium. Fairer opening price discovery. Worth paying attention to.
+</div>
+
+<div class="step-card"><span class="step-num">HOW TO FIND NEW LAUNCHES WORTH WATCHING (BEFORE THE S-1)</span>
+<strong>Pre-IPO signals — where organic traction shows up first:</strong><br><br>
+— <strong>Product Hunt (producthunt.com)</strong> — the daily leaderboard of new tech products. Products that hit #1 Product of the Day and maintain strong community engagement are showing real product-market fit. Notion, Figma, Robinhood, Loom, and Linear all launched here years before their IPO hype. Browsing it weekly is free trend reconnaissance. Companies like Vercel, Notion, and Airtable had passionate PH communities long before press ever noticed them.<br><br>
+— <strong>App Store / Google Play Top Grossing charts</strong> — a consumer app consistently ranked in the Top Grossing chart is making real, recurring revenue. If a company claims strong mobile engagement but doesn't appear anywhere in Top Grossing, probe that.<br><br>
+— <strong>Sensor Tower / Similarweb</strong> — download trend charts. A consumer app with 6 consecutive months of accelerating downloads across multiple geographies is showing pre-IPO growth.<br><br>
+— <strong>IPO Calendar on Nasdaq.com</strong> — free, upcoming IPO dates and size<br>
+— <strong>SEC EDGAR S-1 filings</strong> — read the actual filing before analysts spin it<br>
+— <strong>Renaissance Capital IPO ETF (ticker: IPO)</strong> — a fund of recent IPOs, tracks the sector as a whole<br>
+— <strong>r/wallstreetbets, VC firm portfolios (a16z, Sequoia)</strong> — when portfolio companies file S-1s, the firm's track record tells you something about quality
+</div>
+
+<div class="spamton">[[HOT NEW IPO]] — only the [[BIG SHOTS]] get in at the offering price!! You will buy it [[6 MONTHS LATER]] at 3× the offering price after the lockup expires and insiders dump their shares!! <span class="sp-small">— this is why "getting in on IPOs" rarely works for regular people. the institutional investors set the price and get the initial allocation. you see it after the first-day pop. waiting 6-12 months post-IPO often produces better entry points.</span></div>
+`,
+prompt:`Analyze the upcoming or recent IPO for [COMPANY NAME] as if I'm considering buying within the first 6 months.
+
+From the S-1 filing (or your knowledge), please cover:
+1. Why is this company going public now? (Raise capital? Cash out VCs? Currency for acquisitions?)
+2. Revenue trend, growth rate, and path to profitability — are the numbers real or is this "growth at all costs"?
+3. Who are the major shareholders and what's their lock-up expiration date?
+4. What does management say in the risk factors section — what could go wrong?
+5. How does the IPO valuation compare to comparable public companies? (Cheap, fair, expensive?)
+6. What's the story vs. the substance — is this a real business or a compelling narrative?
+7. Is there a better entry point likely in 6-12 months (post-lockup, first few earnings reports)?
+
+Red flags to specifically look for: excessive related-party transactions, multiple share classes with founder control, declining gross margins, no clear path to profitability.`
+},
+
+{
+title:"Options: The Betting Window",
+subtitle:"14 — Power Tool or Trap",
+vizLabel:"▶ options payoff diagram",
+viz:"options",
+body:`
+<p>Options are not for most beginners. They're also not the dark mysterious art that finance makes them sound like. They're just <strong>contracts that give you the right to buy or sell something at a set price by a set date</strong>. Once you understand this, you understand 90% of options. The other 10% is the Greeks, which are just Greek letters attached to normal concepts like "how much does this move when the stock moves."</p>
+
+<div class="spamton">[[OPTIONS]] ARE HOW THE [[BIG SHOTS]] MAKE MONEY!! Buy a [[CALL]] and [[10X]] your investment in a week!! <span class="sp-small">— also: approximately 80% of retail options expire worthless. the people who consistently make money on options are usually the ones selling them, not buying them. this is a "know what you're doing first" zone.</span></div>
+
+<div class="vocab"><span class="vt">"Option"</span> — just a contract. Someone invented the word "option" because the contract gives you the "option" (choice) to do something — you're not obligated. If the trade goes against you, you can let the option expire worthless and lose only what you paid for it. This is unlike buying a stock outright, where losses have no cap until zero.</div>
+
+<div class="step-card"><span class="step-num">CALLS vs. PUTS — THE ONLY TWO TYPES</span>
+<strong>CALL option</strong> = the right to BUY 100 shares at the "strike price" before the expiration date. You buy a call when you think the stock will go UP. If Apple is at $180 and you buy a $200 call expiring in 3 months, you're betting Apple will exceed $200 before then.<br><br>
+<strong>PUT option</strong> = the right to SELL 100 shares at the strike price before expiration. You buy a put when you think the stock will go DOWN — or to insure a position you already own against a drop. A put on Apple is exactly like buying insurance on your house.
+</div>
+
+<div class="step-card"><span class="step-num">THETA — THE CLOCK IS YOUR ENEMY</span>
+Options have an expiration date. Every day that passes, the option loses value simply from time passing — called "time decay" or theta. A 3-month option that's going nowhere loses value every single day.<br><br>
+This is why retail traders who buy out-of-the-money calls and puts mostly lose money: they're buying something that decays every day, betting on a big move that doesn't come before expiration. The statistics: ~80% of retail options expire worthless. <em>The people selling options collect that 80%.</em>
+</div>
+
+<div class="step-card"><span class="step-num">THE LEGITIMATE USES OF OPTIONS</span>
+<strong>Buying puts as insurance</strong> — own $10,000 of stock, buy $100 in put options. If the stock crashes, your puts pay out. This is how professionals hedge positions.<br><br>
+<strong>Selling covered calls</strong> — own 100 shares of a stock. Sell the right for someone to buy them at a higher price by a certain date. If the stock stays flat, you collect the premium. Boring, consistent income on a long position.<br><br>
+<strong>Understanding institutional positioning</strong> — large unusual options activity often precedes big moves. Learning to read options flow is like watching where smart money is placing bets.
+</div>
+
+<div class="tip">Start by understanding options before trading them. Paper trade options for 3 months first. The "lottery ticket" approach (buying cheap out-of-the-money options hoping for a huge move) is how people turn $5,000 into $0 faster than any other method. The professional approach is usually selling options, not buying them.</div>
+`,
+prompt:`Explain options to me like I'm genuinely curious but have never traded them.
+
+Specifically:
+1. What is a call option — walk through a real example with numbers (Apple at $180, $200 call, 90 days out, $3 premium)
+2. What is a put option — same thing, real example
+3. What is the "premium" — what am I actually paying for when I buy an option?
+4. What are the "Greeks" (delta, theta, vega, gamma) and why do they matter in plain English?
+5. Why do most people who buy options lose money? What's the math against them?
+6. What are the three most legitimate uses of options for a regular investor? (Not speculation)
+7. Walk me through what "selling a covered call" means and how it generates income
+8. What's the riskiest thing you can do with options and why?
+
+Give me enough understanding to not do something stupid, and to know if/when options would genuinely be useful to me.`
+},
+
+{
+title:"Whales, Dark Pools & Manipulation",
+subtitle:"15 — How the Big Money Moves",
+vizLabel:"▶ unusual options activity + dark pool",
+viz:"whales",
+body:`
+<p>The version of markets you see on your screen is not the whole market. Large institutions operate in ways that are largely invisible to retail investors — by design. Understanding this doesn't mean you're paranoid. It means you're realistic.</p>
+
+<div class="vocab"><span class="vt">"Dark Pool"</span> — private trading venues where large institutions trade without the orders being visible to the public until after they execute. This exists because if BlackRock tried to buy $500 million of Apple stock on the public exchange, every algorithmic trader would see the order coming and front-run it — buying Apple first and selling it back at a higher price. Dark pools solve this by hiding the order until it's done. Legal, common, accounts for ~40% of US stock trading volume.</div>
+
+<div class="step-card"><span class="step-num">THE 13F — WHAT BUFFETT BOUGHT, 45 DAYS LATER</span>
+Any institution managing more than $100 million must file a quarterly "13F" report with the SEC, disclosing all their equity holdings. This is public. Free. On EDGAR.<br><br>
+Warren Buffett's Berkshire Hathaway files 13Fs. You can see exactly what he bought and sold each quarter — just 45 days after the fact. Sites like dataroma.com and whalewisdom.com aggregate this data beautifully. You're not getting the same entry price as Buffett, but you're getting his analysis for free.
+</div>
+
+<div class="step-card"><span class="step-num">UNUSUAL OPTIONS ACTIVITY — READING THE BETS</span>
+Before major corporate announcements — earnings, FDA approvals, acquisitions — unusual options activity often appears. Someone buys an unusual number of calls at an unusual strike price with an unusual expiration. This could be:<br><br>
+— A legitimate hedge fund making an educated bet<br>
+— Insider trading (illegal, but it happens)<br>
+— A coincidence<br><br>
+Sites like Unusual Whales and Barchart track this. It's not a trading signal by itself, but combined with other analysis, it tells you where large players are positioning.
+</div>
+
+<div class="step-card"><span class="step-num">SHORT SELLING — THE PESSIMIST'S BET</span>
+Short selling means borrowing shares, selling them now, and hoping to buy them back cheaper later. If you're right, you profit from the decline. If you're wrong, losses are theoretically unlimited (the stock can keep rising).<br><br>
+Short sellers are often the market's best researchers — they need to be right about the stock AND the timing. Companies like Enron, Theranos, and Wirecard were identified as fraudulent by short sellers years before regulators caught up. A high "short interest" (% of shares sold short) in a stock means skeptics are betting against it. Worth knowing why.
+</div>
+
+<div class="spamton">HAVE YOU HEARD ABOUT [[MARKET MANIPULATION]]?! HEDGE FUNDS SHORT YOUR [[FAVORITE STOCKS]] and then <strong>[[WRITE NEGATIVE REPORTS]]</strong> to make the price fall!! Sometimes this is true! Sometimes the report is also [[CORRECT]]!! <span class="sp-small">— short sellers do sometimes coordinate pressure campaigns. short sellers also do sometimes catch genuine fraud. both are true. read the actual arguments before assuming motive.</span></div>
+`,
+prompt:`I want to understand how institutional money moves and how I can observe it.
+
+Please explain:
+1. What is a dark pool, why do institutions use it, and how does it affect retail traders?
+2. How do I read 13F filings — where do I find them, and what do I look for beyond "what did they buy"?
+3. How do I use sites like Unusual Whales or Barchart to track unusual options activity? What patterns are meaningful vs noise?
+4. What does "short interest" tell me about a stock, and how do I find it? (What % short interest should get my attention?)
+5. How does a short squeeze work mechanically? (GameStop / AMC style) — what has to happen for it to occur?
+6. Are there legal ways for me to "follow smart money" — and what are the limitations?
+7. What are the signs that short seller reports or activist campaigns are credible vs motivated purely by their position?`
+},
+
+// ══════════════════════════════════════
+// SECTION 7: TOOLS & EXECUTION
+// ══════════════════════════════════════
+{
+title:"Free Tools That Slap",
+subtitle:"16 — Your Entire Arsenal",
+vizLabel:"▶ tool overview",
+viz:"tools",
+body:`
+<p>Wall Street pays analysts $200K+/year for research. You have better tools, for free. Here's the complete arsenal:</p>
+
+<div class="tool-card"><span class="tc-icon">📊</span><div class="tc-body"><div class="tc-name">TradingView</div><div class="tc-desc">The best charting platform on Earth. Free tier is extraordinary. Every chart type, 100+ indicators, screeners, community ideas, paper trading. Learn this first.</div><div class="tc-url">tradingview.com</div></div></div>
+
+<div class="tool-card"><span class="tc-icon">🔬</span><div class="tc-body"><div class="tc-name">Finviz</div><div class="tc-desc">The screener. Filter every stock by P/E, revenue growth, insider buying, sector, short interest, performance. The S&P 500 heatmap at finviz.com/map.ashx is worth bookmarking forever.</div><div class="tc-url">finviz.com</div></div></div>
+
+<div class="tool-card"><span class="tc-icon">📈</span><div class="tc-body"><div class="tc-name">Stock Analysis</div><div class="tc-desc">Clean, comprehensive fundamentals. Revenue/earnings history, valuation, financials — all on one beautiful page. Better than most paid tools.</div><div class="tc-url">stockanalysis.io</div></div></div>
+
+<div class="tool-card"><span class="tc-icon">🏛️</span><div class="tc-body"><div class="tc-name">SEC EDGAR</div><div class="tc-desc">Primary source. Every 10-K (annual), 10-Q (quarterly), S-1 (IPO filing), 13F (hedge fund holdings), 8-K (material events). When you want the real story, go here.</div><div class="tc-url">sec.gov/edgar</div></div></div>
+
+<div class="tool-card"><span class="tc-icon">🐋</span><div class="tc-body"><div class="tc-name">Unusual Whales</div><div class="tc-desc">Options flow, dark pool activity, congressional stock trades (yes, this is public). Tracks unusual institutional positioning. Free tier available.</div><div class="tc-url">unusualwhales.com</div></div></div>
+
+<div class="tool-card"><span class="tc-icon">🧠</span><div class="tc-body"><div class="tc-name">Dataroma / Whalewisdom</div><div class="tc-desc">Aggregates 13F filings from top investors. See exactly what Buffett, Druckenmiller, Ackman are holding. Free. Updated quarterly.</div><div class="tc-url">dataroma.com / whalewisdom.com</div></div></div>
+
+<div class="tool-card"><span class="tc-icon">🌐</span><div class="tc-body"><div class="tc-name">Macro Axes — FRED</div><div class="tc-desc">Federal Reserve Economic Data. Free. Every macro data series that exists: inflation, yield curves, unemployment, housing starts. The Fed's own data.</div><div class="tc-url">fred.stlouisfed.org</div></div></div>
+
+<div class="tool-card"><span class="tc-icon">🔑</span><div class="tc-body"><div class="tc-name">For Crypto: Coinglass / Dune Analytics</div><div class="tc-desc">Coinglass: liquidation levels and open interest across crypto. Dune: on-chain data analytics, custom dashboards of blockchain activity.</div><div class="tc-url">coinglass.com / dune.com</div></div></div>
+`,
+prompt:`Help me build a 20-minute daily market research routine using only free tools.
+
+My goals: [describe your investment approach — long-term growth investing? swing trading? crypto? all of the above?]
+
+Please design:
+1. A morning checklist: what do I check first, second, third? (Macro conditions → sector → individual stocks → alerts)
+2. Specific Finviz screener settings for my style — what filters to set
+3. What to look for on TradingView when doing a quick chart check (3 things only)
+4. How to set price alerts so I'm not staring at screens all day
+5. How to use EDGAR for quick fundamental checks without reading 200 pages
+6. How to track unusual options activity without getting overwhelmed by noise
+7. Weekly vs daily tasks — what needs to be done every day vs once a week
+
+Make it a literal step-by-step routine, like a recipe. Not concepts. Actual clicks.`
+},
+
+{
+title:"Build Your Edge With Claude",
+subtitle:"17 — AI as Analyst, Coder & Devil's Advocate",
+vizLabel:"▶ what you can build — examples",
+viz:"aitools",
+body:`
+<p>Most people use Claude as a search engine with better grammar. You can use it as a research analyst, a financial translator, a strategy stress-tester, and a code generator. The combination makes your research depth comparable to a small professional operation — for free.</p>
+
+<div class="step-card"><span class="step-num">TRANSLATE FILINGS IN SECONDS</span>
+10-K annual reports are 200 pages of legal/accounting language. Paste any section into Claude with: "explain this like I'm intelligent but not a financial professional. What is this actually saying? Any red flags or unusually hedged language?" You'll understand in 30 seconds what a CFA studies for 3 years to parse.
+</div>
+
+<div class="step-card"><span class="step-num">STRESS-TEST YOUR THESIS</span>
+You think you found a great investment. Paste your thesis into Claude: "play devil's advocate. What are the strongest bear cases? What assumptions am I making that could be wrong? What would a short seller say about this?" This catches 80% of bad trades before they happen.
+</div>
+
+<div class="step-card"><span class="step-num">BUILD ACTUAL TOOLS WITH ZERO CODE</span>
+Ask Claude to build you:<br>
+— A position size calculator in HTML<br>
+— A portfolio tracker that calculates weighted returns<br>
+— A trade journal that computes your win rate and average R:R<br>
+— A dividend income calculator showing when you'll reach passive income goals<br>
+— A crypto portfolio tracker that shows allocation and cost basis<br><br>
+Describe what you want in plain English. It writes the code. You copy-paste and open in any browser. No programming required. The prompt to the right builds you a full trade journal tool right now.
+</div>
+
+<div class="step-card"><span class="step-num">COMPARE COMPANIES AT SCALE</span>
+"Compare Apple, Microsoft, and Google on P/E, revenue growth, gross margin, and moat quality. Present as a table. Which looks most attractively valued given growth rate?" In 10 seconds you have a competitive analysis that a junior analyst would take a day to produce.
+</div>
+
+<div class="challenge">Right now: take a stock you're curious about. Open Claude. Type: "I'm considering investing in [company]. Give me the 5 best arguments for buying it and the 5 best arguments against. Then tell me what I should look up or verify myself before deciding." That's your first real research session.</div>
+`,
+prompt:`Build me a complete trade journal as a single HTML file I can run in any browser.
+
+The journal should:
+
+TRADE ENTRY FORM
+- Ticker symbol, entry date, entry price
+- Stop loss price (auto-calculates stop loss %)
+- Target price (auto-calculates target %)
+- Position size in dollars
+- Thesis (text area — why am I taking this trade?)
+- Setup type (dropdown: breakout, pullback, earnings play, value buy, other)
+
+AUTO-CALCULATIONS
+- Risk/reward ratio (auto-calculated from entry/stop/target)
+- Dollar risk = (entry - stop) × shares, where shares = position size ÷ entry price
+- Portfolio risk % (if I input my portfolio size)
+
+TRADE LIST
+- All saved trades in a table
+- Color code: green = target hit, red = stop hit, grey = open
+- Running statistics: win rate %, average R:R, total return
+
+CLOSE TRADE FLOW
+- Mark trade closed with exit price and date
+- Add post-trade notes (what I learned)
+
+Style: dark theme, clean, Space Mono font if available. No external libraries needed. Pure HTML/CSS/JS. Store data in localStorage.`
+},
+
+{
+title:"The Art of Not Losing",
+subtitle:"18 — Risk Is the Only Thing You Control",
+vizLabel:"▶ position size calculator",
+viz:"risk",
+body:`
+<p>Every professional trader agrees on one thing: <strong>the first goal isn't making money — it's not losing everything</strong>. Survival is the prerequisite for profit. This isn't pessimism. It's mathematics. And it's the thing nobody tells beginners because "boring risk math" doesn't sell courses.</p>
+
+<div class="spamton">RISK MANAGEMENT IS <strong>[[BORING]]</strong>!! Nobody posts their risk-adjusted returns on social media!! They post the wins!! The [[LOSS TWEETS]] are deleted!! <span class="sp-small">— the boring math below is why professional traders are still trading after 20 years while the exciting ones blow up and disappear. surviving is the whole game.</span></div>
+
+<div class="step-card"><span class="step-num">THE BRUTAL MATH OF LOSSES</span>
+Lose 10% → need 11.1% gain to recover.<br>
+Lose 20% → need 25% gain.<br>
+Lose 50% → need 100% gain.<br>
+Lose 75% → need 300% gain.<br><br>
+Keeping losses small isn't "playing it safe." It's keeping your ability to participate in the next opportunity.
+</div>
+
+<div class="step-card"><span class="step-num">THE 1-2% RULE — THE ONLY RULE THAT MATTERS</span>
+Never risk more than 1-2% of your total portfolio on any single trade. With $10,000, that's max $100-$200 of potential loss per position. If your stop loss is $5 below entry, you can buy 20-40 shares max.<br><br>
+This sounds extremely conservative. It's why professionals survive. You'd need 50+ consecutive losing trades to lose half your money. Even bad traders don't lose 50 trades in a row.
+</div>
+
+<div class="step-card"><span class="step-num">POSITION SIZING — THE MATH</span>
+1. Decide max dollar risk: 1% of $10,000 = $100<br>
+2. Decide stop loss: entry at $50, stop at $46 = $4 risk per share<br>
+3. Max shares = $100 ÷ $4 = 25 shares<br>
+4. Position size = 25 × $50 = $1,250 (12.5% of portfolio)<br>
+5. Check: if you're wrong and it hits the stop, you lose exactly $100<br><br>
+Use the calculator in the viz panel. This math is the single most important skill in trading.
+</div>
+
+<div class="vocab"><span class="vt">"Risk/Reward Ratio"</span> — someone invented this phrase for a simple calculation: how much could I gain divided by how much could I lose. A 3:1 ratio means: if I'm right I make $300; if I'm wrong I lose $100. Professional traders typically won't enter trades below 2:1, and prefer 3:1 or better. With 3:1 R:R, you only need to be right 25% of the time to break even. The math is in your favor.</div>
+
+<div class="tip">The hardest part of risk management isn't knowing the rules — it's following them when a stock you love is falling and you tell yourself it'll come back. Write your stop loss on paper before you buy. Take a screenshot. Set an actual price alert. Your future emotional self will argue. Don't negotiate with them.</div>
+`,
+prompt:`Help me develop a complete risk management framework for my portfolio.
+
+My situation:
+- Portfolio size: $[AMOUNT]
+- I plan to make approximately [NUMBER] trades per month
+- My typical hold time: [days/weeks/months]
+- I'm [risk tolerant / risk averse / somewhere in between]
+
+Please calculate and explain:
+1. My maximum dollar risk per trade at 1% and 2% of portfolio
+2. How to calculate correct position size for any trade (entry, stop, portfolio %)
+3. What is a good maximum concentration in any single position? (% of portfolio)
+4. How many positions should I run simultaneously for my portfolio size?
+5. How do I think about "portfolio heat" — total amount at risk across all open positions?
+6. When should I take partial profits vs let winners run?
+7. Create a worked example: $[AMOUNT] portfolio, stock at $[PRICE], stop at $[STOP], target at $[TARGET]
+
+Show me the math at every step.`
+},
+
+{
+title:"Your First Real Move",
+subtitle:"19 — From Learning to Doing",
+vizLabel:"▶ pre-trade checklist — click to check",
+viz:"checklist",
+body:`
+<p>You've read 19 lessons. At this point you know more market structure than the average person who invests. That's not a brag — that's a statistical observation. Most people buy things because they heard about them at a party, hold too long, and sell at the wrong time. You have a framework now. <strong>The gap between knowing and doing is not more knowledge — it's action.</strong></p>
+
+<div class="step-card"><span class="step-num">STEP 1 — OPEN THE RIGHT ACCOUNT (FREE)</span>
+<strong>Best for most people</strong>: Fidelity (most trustworthy, great tools, fractional shares, zero fees) or Charles Schwab (excellent research, strong long-term focus). Interactive Brokers for active traders. Avoid payment-for-order-flow brokers. Takes 10 minutes. Fund it with whatever you're comfortable having go to zero — that's your real tuition.
+</div>
+
+<div class="step-card"><span class="step-num">STEP 2 — PAPER TRADE FOR 30 DAYS</span>
+TradingView has free paper trading (fake money, real prices). Track every virtual trade in a journal. The goal isn't to win — it's to discover your psychological patterns before real money is involved. Most people skip this. Most people lose money in their first year. These two facts are related.
+</div>
+
+<div class="step-card"><span class="step-num">STEP 3 — START WITH INDEX FUNDS</span>
+<strong>SPY</strong> (S&P 500), <strong>QQQ</strong> (Nasdaq 100), or <strong>VTI</strong> (total US market). Set up automatic monthly contributions. This is how most professional fund managers don't beat the market — by simply owning it. Not glamorous. Works.
+</div>
+
+<div class="step-card"><span class="step-num">STEP 4 — YOUR FIRST INDIVIDUAL STOCK</span>
+Use the checklist in the viz panel. Every box must be checkable. If you can't check all 9 boxes — wait. There is always another trade. The ones you don't take cannot hurt you.
+</div>
+
+<p>You now know: what the market is, how to read numbers and charts, how to evaluate a business and a tech company, what macro forces drive everything, how psychology and crowd dynamics move prices, the full crypto landscape, how to start with almost nothing, how to find new launches, what options are, how institutions move money, what tools to use, and how to manage risk.</p>
+
+<p>That's the whole game. <strong>The rest is just practice and humility.</strong></p>
+
+<div class="spamton">YOU ARE NOW A [[MARKET SCHOLAR]]!! You understand things that <strong>[[MOST PEOPLE]]</strong> never will!! Proceed with [[APPROPRIATE HUMILITY]] because the market will still humble you many times!! This is [[NORMAL]]!! Even [[WARREN BUFFETT]] has lost [[BILLIONS]]!! <span class="sp-small">— the market is ultimately humbling for everyone. the edge isn't never being wrong. it's being wrong small and right big.</span></div>
+`,
+prompt:`I'm ready to make my first real investment. Help me think it through.
+
+I'm considering: [describe what you're thinking — an index fund, a specific company, crypto, or combination]
+
+Run a complete pre-investment checklist:
+
+BUSINESS / ASSET CHECK
+- Do I understand what this is and how it makes money (or what gives it value)?
+- Is it growing? What's the growth rate?
+- Is it profitable or on a clear path to profitability?
+- Does it have competitive advantages? What are they?
+
+CHART / MARKET CHECK
+- Is the broader market environment currently favorable for this type of investment?
+- Is the asset in a healthy trend?
+- Is there a logical level where I'd know I'm wrong?
+
+RISK CHECK
+- Where is my stop loss and why that level?
+- What is my price target and why?
+- What is my reward:risk ratio?
+- What % of my portfolio is this?
+
+PSYCHOLOGY CHECK
+- Am I buying because of genuine conviction or because everyone's talking about it?
+- Can I articulate both the bull AND bear case in 2 sentences each?
+- Will I be able to sleep if this drops 15% the day after I buy?
+
+Give me honest feedback on each point.`
+},
+
+// ══════════════════════════════════════
+// BONUS: REFERENCE
+// ══════════════════════════════════════
+{
+title:"The Complete Vocabulary Myth-Bust",
+subtitle:"20 — Every Term Demystified",
+vizLabel:"▶ financial dictionary — no jargon allowed",
+viz:"vocab",
+body:`
+<p>Finance invented specialized vocabulary for the same reason any profession does: <strong>precision, communication efficiency, and gatekeeping</strong>. The first two are legitimate. The third is the one we're defeating here. Every term below is demystified from first principles.</p>
+
+<div class="step-card"><span class="step-num">THINGS THAT ARE JUST WORDS FOR NUMBERS</span>
+<strong>Yield</strong> — just the return expressed as a percentage. A bond paying $50/year on a $1000 investment has a 5% yield. Someone decided "yield" sounded more professional than "return rate."<br>
+<strong>EBITDA</strong> — Earnings Before Interest, Taxes, Depreciation, and Amortization. Invented to show profitability before accounting decisions (how fast you depreciate equipment, etc.) obscure the underlying business performance. The joke: "earnings before all the bad stuff." Useful for comparing businesses across different tax environments. Easy to abuse by companies hiding real problems behind it.<br>
+<strong>Basis Points</strong> — 0.01% = 1 basis point. "100 basis points" = 1%. Used because saying "the rate went from 3.00% to 3.25%" sounds more precise than "a quarter percent." It is marginally more precise. It also sounds more authoritative, which Wall Street enjoys.
+</div>
+
+<div class="step-card"><span class="step-num">THINGS THAT ARE JUST CONCEPTS WITH FANCY NAMES</span>
+<strong>Alpha</strong> — return above and beyond the market benchmark. If the S&P 500 returns 10% and your portfolio returns 14%, you generated 4% alpha. Someone labeled this to make "beating the market" sound like a scientific achievement.<br>
+<strong>Beta</strong> — how much your stock moves relative to the market. Beta of 1.5 = if market drops 10%, stock typically drops 15%. Not a prediction. Just historical correlation in a number. Someone labeled this to make "volatile" sound mathematical.<br>
+<strong>Liquidity</strong> — how easily can you convert this to cash without moving the price? A $100 bill is perfectly liquid. Your beach house is illiquid. Most large-cap stocks are highly liquid. Many small-cap stocks and all real estate are less so. "Liquidity" just means "cashability."
+</div>
+
+<div class="step-card"><span class="step-num">THINGS THAT SOUND COMPLICATED BUT ARE SIMPLE</span>
+<strong>Derivatives</strong> — any financial contract whose value "derives from" something else. Options derive from stocks. Futures derive from commodities or indices. Mortgage-backed securities derive from mortgages. They're just contracts about other things. Most of the 2008 financial crisis was derivatives-on-derivatives (contracts about contracts about contracts about mortgages). It got confusing enough that nobody knew what anything was worth.<br>
+<strong>Quantitative Easing</strong> — the central bank creates new money and uses it to buy bonds from banks, injecting cash into the financial system. Labeled "quantitative easing" because "printing money to give to banks" sounded politically problematic in 2008.<br>
+<strong>Hedging</strong> — making a second investment designed to offset losses in the first. Buying a stock and buying a put option on it = hedged position. You're insured against a big drop.
+</div>
+
+<div class="spamton">THE [[FINANCIAL INDUSTRY]] SPENT DECADES making this sound complicated so you'd [[HIRE THEM]]!! Now you know their [[SECRET LANGUAGE]]!! Use it to make them [[UNCOMFORTABLE]] at dinner parties!! <span class="sp-small">— the concepts genuinely aren't hard. the implementation and discipline are hard. but that's true of everything worth doing.</span></div>
+`,
+prompt:`I encountered this financial term or concept I don't fully understand: [TERM OR CONCEPT]
+
+Please demystify it completely:
+1. What is this actually describing — in plain English, without using other jargon?
+2. Why did someone invent this label or concept? What problem were they solving?
+3. Show me a concrete, real-world example with actual numbers
+4. When would I actually encounter this and why would it matter to me?
+5. What's the most common way this concept is misunderstood or misused?
+6. How does understanding this concept give me an edge vs someone who doesn't know it?
+7. What related concept should I learn next to build on this?
+
+Treat me as intelligent but not trained in finance. Use analogies from everyday life.`
+}
+
+]; // end LESSONS
+
+// ──────────────────────────────────────
+//  CANVAS VISUALIZATIONS
+// ──────────────────────────────────────
+const canvas = document.getElementById('viz-out');
+const ctx    = canvas.getContext('2d');
+let animId   = null;
+let startTime = Date.now();
+let currentViz = 'auction';
+
+function resizeCanvas(){
+  const a = canvas.parentElement;
+  canvas.width  = a.clientWidth  || 600;
+  canvas.height = a.clientHeight || 310;
+}
+
+function lerp(a,b,t){ return a+(b-a)*t; }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function seededRand(seed){ let s=seed; return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
+function ease(t){ return t*t*(3-2*t); }
+
+// ── ORDER BOOK ──
+function vizAuction(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const mid=W/2, priceCenter=H/2;
+  const basePrice=142.50 + Math.sin(t*0.4)*0.8 + Math.sin(t*0.15)*0.3;
+  const rng=seededRand(42);
+  const LEVELS=11, levelH=20;
+  for(let i=0;i<LEVELS;i++){
+    const bidPrice=basePrice-(i+1)*0.13;
+    const askPrice=basePrice+(i+1)*0.13;
+    const bidSize=(rng()*380+120)*(1-i*0.04)*(1+Math.sin(t*0.3+i)*0.1);
+    const askSize=(rng()*380+120)*(1-i*0.04)*(1+Math.cos(t*0.25+i)*0.1);
+    const maxBar=mid-65;
+    const bidW=clamp(bidSize/650*maxBar,0,maxBar-4);
+    const alpha=0.15+(1-i/LEVELS)*0.55;
+    const y=priceCenter-5+i*levelH;
+    ctx.fillStyle=`rgba(61,214,140,${alpha*0.35})`; ctx.fillRect(mid-4-bidW,y-8,bidW,15);
+    ctx.fillStyle=`rgba(61,214,140,${alpha})`; ctx.font='9px Space Mono,monospace';
+    ctx.textAlign='right'; ctx.fillText(bidPrice.toFixed(2),mid-8,y+3);
+    ctx.fillStyle='rgba(61,214,140,0.45)'; ctx.textAlign='left';
+    ctx.fillText(Math.round(bidSize),8,y+3);
+    const y2=priceCenter-5-(i+1)*levelH;
+    if(y2>10){
+      const askW=clamp(askSize/650*maxBar,0,maxBar-4);
+      ctx.fillStyle=`rgba(255,77,109,${alpha*0.35})`; ctx.fillRect(mid+4,y2-8,askW,15);
+      ctx.fillStyle=`rgba(255,77,109,${alpha})`; ctx.textAlign='left';
+      ctx.fillText(askPrice.toFixed(2),mid+8,y2+3);
+      ctx.fillStyle='rgba(255,77,109,0.45)'; ctx.textAlign='right';
+      ctx.fillText(Math.round(askSize),W-8,y2+3);
+    }
+  }
+  ctx.strokeStyle='rgba(245,166,35,0.5)'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(50,priceCenter); ctx.lineTo(W-50,priceCenter); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#f5a623'; ctx.font='bold 14px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText(`$${basePrice.toFixed(2)}`,mid,priceCenter-2);
+  ctx.fillStyle='#66638a'; ctx.font='8px Space Mono,monospace';
+  ctx.fillText('LAST TRADE',mid,priceCenter+14);
+  ctx.fillStyle='#3dd68c'; ctx.textAlign='left'; ctx.font='bold 9px Space Mono,monospace';
+  ctx.fillText('◀ BIDS',8,16);
+  ctx.fillStyle='#ff4d6d'; ctx.textAlign='right';
+  ctx.fillText('ASKS ▶',W-8,16);
+  ctx.fillStyle='#66638a'; ctx.textAlign='center'; ctx.font='8px Space Mono,monospace';
+  ctx.fillText('← SPREAD →',mid,priceCenter+26);
+}
+
+// ── TICKER ──
+function vizTicker(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const price=182.45+Math.sin(t*0.3)*1.2+Math.sin(t*0.7)*0.4;
+  const change=price-180.21, changePct=(change/180.21)*100, isUp=change>=0;
+  const col=isUp?'#3dd68c':'#ff4d6d';
+  const cx=W/2, cy=H/2-20;
+  ctx.fillStyle='#0d0d18'; ctx.fillRect(cx-200,cy-75,400,138);
+  ctx.strokeStyle='#1d1d2a'; ctx.lineWidth=1; ctx.strokeRect(cx-200,cy-75,400,138);
+  ctx.font='bold 34px Space Mono,monospace'; ctx.fillStyle='#e8e4d9'; ctx.textAlign='center';
+  ctx.fillText('AAPL',cx,cy-32);
+  ctx.font='bold 25px Space Mono,monospace'; ctx.fillStyle=col;
+  ctx.fillText(`$${price.toFixed(2)}`,cx,cy+8);
+  ctx.font='11px Space Mono,monospace';
+  ctx.fillText(`${isUp?'+':''}${change.toFixed(2)} (${isUp?'+':''}${changePct.toFixed(2)}%)`,cx,cy+27);
+  ctx.font='9px Space Mono,monospace'; ctx.fillStyle='#66638a';
+  ctx.fillText('VOL: 52.8M  MKT CAP: $2.82T  P/E: 29.4',cx,cy+50);
+  const tickerData=['MSFT +0.8%','GOOG -0.3%','AMZN +1.2%','TSLA -2.1%','NVDA +3.4%','META +0.6%','BTC -1.8%','ETH +2.3%','SPY +0.4%','   '];
+  const tickerStr=tickerData.join('  ·  ');
+  const totalW2=tickerStr.length*8.4, offset=(t*38)%totalW2;
+  ctx.fillStyle='#0a0a14'; ctx.fillRect(0,H-26,W,26);
+  ctx.strokeStyle='#1d1d2a'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(0,H-26); ctx.lineTo(W,H-26); ctx.stroke();
+  ctx.font='9px Space Mono,monospace'; ctx.textAlign='left';
+  ctx.save(); ctx.rect(0,H-26,W,26); ctx.clip();
+  for(let rep=0;rep<3;rep++){
+    let px=rep*totalW2-offset+8;
+    tickerData.forEach(part=>{
+      ctx.fillStyle=part.includes('+')?'#3dd68c':'#ff4d6d';
+      ctx.fillText(part,px,H-8); px+=(part.length+3)*8.4;
+    });
+  }
+  ctx.restore();
+}
+
+// ── CANDLESTICK CHART ──
+function vizChart(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const rng=seededRand(17), N=34;
+  const prices=[100];
+  for(let i=1;i<N+2;i++) prices.push(Math.max(78,prices[i-1]+(rng()-0.46)*2.5));
+  const candles=[];
+  for(let i=0;i<N;i++){
+    const o=prices[i],c=prices[i+1];
+    const h=Math.max(o,c)+Math.abs(rng()-0.5)*3.8;
+    const l=Math.min(o,c)-Math.abs(rng()-0.5)*3.8;
+    candles.push({o,c,h,l});
+  }
+  const fp=(Math.sin(t*0.5)+1)/2;
+  candles[N-1].c=candles[N-1].o+(prices[N]-candles[N-1].o)*fp;
+  const pad={l:44,r:18,t:28,b:52};
+  const cW=(W-pad.l-pad.r)/N;
+  const allP=candles.flatMap(c=>[c.h,c.l]);
+  const pMin=Math.min(...allP)-2, pMax=Math.max(...allP)+2, pRange=pMax-pMin;
+  const chartH2=H-pad.t-pad.b;
+  const toY=p=>pad.t+chartH2*(1-(p-pMin)/pRange);
+  const ma14=candles.map((_,i)=>{
+    if(i<13) return null;
+    return candles.slice(i-13,i+1).reduce((s,c2)=>s+(c2.o+c2.c)/2,0)/14;
+  });
+  ctx.strokeStyle='rgba(29,29,42,0.8)'; ctx.lineWidth=1;
+  for(let p=Math.ceil(pMin/5)*5;p<=pMax;p+=5){
+    const y2=toY(p); ctx.beginPath(); ctx.moveTo(pad.l,y2); ctx.lineTo(W-pad.r,y2); ctx.stroke();
+    ctx.fillStyle='#55517a'; ctx.font='8px Space Mono,monospace'; ctx.textAlign='right';
+    ctx.fillText(`$${p.toFixed(0)}`,pad.l-3,y2+3);
+  }
+  const supportY=toY(Math.min(...candles.slice(N-20).map(c=>c.l))+0.4);
+  const resistY=toY(Math.max(...candles.slice(N-20).map(c=>c.h))-0.4);
+  ctx.fillStyle='rgba(61,214,140,0.06)'; ctx.fillRect(pad.l,supportY-3,W-pad.l-pad.r,6);
+  ctx.strokeStyle='rgba(61,214,140,0.35)'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(pad.l,supportY); ctx.lineTo(W-pad.r,supportY); ctx.stroke();
+  ctx.fillStyle='rgba(255,77,109,0.06)'; ctx.fillRect(pad.l,resistY-3,W-pad.l-pad.r,6);
+  ctx.strokeStyle='rgba(255,77,109,0.35)';
+  ctx.beginPath(); ctx.moveTo(pad.l,resistY); ctx.lineTo(W-pad.r,resistY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font='7px Space Mono,monospace';
+  ctx.fillStyle='#3dd68c'; ctx.textAlign='right'; ctx.fillText('SUPPORT',W-pad.r-2,supportY-5);
+  ctx.fillStyle='#ff4d6d'; ctx.fillText('RESISTANCE',W-pad.r-2,resistY-5);
+  ctx.strokeStyle='rgba(245,166,35,0.65)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); let mStart=false;
+  ma14.forEach((v,i)=>{ if(!v) return; const mx=pad.l+i*cW+cW/2; if(!mStart){ctx.moveTo(mx,toY(v));mStart=true;}else ctx.lineTo(mx,toY(v)); });
+  ctx.stroke();
+  candles.forEach((c,i)=>{
+    const x=pad.l+i*cW, xc=x+cW/2, isUp=c.c>=c.o, col2=isUp?'#3dd68c':'#ff4d6d';
+    const bodyY=toY(Math.max(c.o,c.c)), bodyH=Math.max(1,Math.abs(toY(c.o)-toY(c.c)));
+    ctx.strokeStyle=col2; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(xc,toY(c.h)); ctx.lineTo(xc,toY(c.l)); ctx.stroke();
+    ctx.fillStyle=isUp?'rgba(61,214,140,0.8)':'rgba(255,77,109,0.8)';
+    ctx.fillRect(x+1.5,bodyY,cW-3,bodyH);
+  });
+  const vH2=18, vY=H-pad.b+12;
+  candles.forEach((c,i)=>{
+    const vol=200+seededRand(i*3)()*300;
+    const vx=pad.l+i*cW;
+    ctx.fillStyle=c.c>=c.o?'rgba(61,214,140,0.3)':'rgba(255,77,109,0.3)';
+    ctx.fillRect(vx+1,vY+vH2-vol/500*vH2,cW-2,vol/500*vH2);
+  });
+  ctx.fillStyle='#3dd68c'; ctx.font='7px Space Mono,monospace'; ctx.textAlign='left';
+  ctx.fillText('14 MA',pad.l,toY(ma14[N-1]||96)-5);
+}
+
+// ── FUNDAMENTALS ──
+function vizFundamentals(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const companies=[
+    {name:'HIGH QUALITY CO',color:'#3dd68c',metrics:[
+      {label:'Rev Growth',val:0.82,text:'+24%/yr'},{label:'Net Margin',val:0.75,text:'22.5%'},
+      {label:'ROE',val:0.90,text:'38%'},{label:'Debt/Equity',val:0.35,text:'0.4x'},
+      {label:'EPS Growth',val:0.78,text:'+19%/yr'}]},
+    {name:'LOW QUALITY CO',color:'#ff4d6d',metrics:[
+      {label:'Rev Growth',val:0.22,text:'+3%/yr'},{label:'Net Margin',val:0.18,text:'2.1%'},
+      {label:'ROE',val:0.15,text:'6%'},{label:'Debt/Equity',val:0.85,text:'3.2x'},
+      {label:'EPS Growth',val:0.08,text:'-4%/yr'}]}
+  ];
+  const colW=(W-60)/2;
+  const animP=clamp((t-0.3)/1.5,0,1);
+  const e=1-Math.pow(1-animP,3);
+  companies.forEach((co,ci)=>{
+    const cx=30+ci*(colW+20);
+    ctx.fillStyle='#0d0d18'; ctx.fillRect(cx,18,colW-10,H-36);
+    ctx.strokeStyle=co.color+'44'; ctx.lineWidth=1; ctx.strokeRect(cx,18,colW-10,H-36);
+    ctx.fillStyle=co.color; ctx.font='bold 10px Space Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(co.name,cx+colW/2-5,36);
+    co.metrics.forEach((m,mi)=>{
+      const my=52+mi*42;
+      ctx.fillStyle='#181825'; ctx.fillRect(cx+8,my+14,colW-26,11);
+      const fillW=(colW-26)*m.val*e;
+      ctx.fillStyle=co.color+'bb'; ctx.fillRect(cx+8,my+14,fillW,11);
+      ctx.fillStyle='#b0accc'; ctx.font='8px Space Mono,monospace'; ctx.textAlign='left';
+      ctx.fillText(m.label,cx+8,my+10);
+      ctx.fillStyle=co.color; ctx.textAlign='right'; ctx.fillText(m.text,cx+colW-18,my+10);
+    });
+    const score=co.metrics.reduce((s,m)=>s+m.val,0)/co.metrics.length;
+    ctx.fillStyle='#66638a'; ctx.font='7px Space Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText('QUALITY',cx+colW/2-5,H-26);
+    ctx.fillStyle=co.color; ctx.font='bold 17px Space Mono,monospace';
+    ctx.fillText(`${(score*10*e).toFixed(1)}/10`,cx+colW/2-5,H-10);
+  });
+}
+
+// ── APP METRICS ──
+function vizAppmetrics(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const apps=[
+    {name:'HIGH ENGAGEMENT',dau:82,churn:1.5,ltvcac:6.2,color:'#3dd68c'},
+    {name:'MID ENGAGEMENT',dau:45,churn:5.0,ltvcac:2.8,color:'#f5a623'},
+    {name:'LOW ENGAGEMENT',dau:12,churn:15,ltvcac:0.9,color:'#ff4d6d'},
+  ];
+  const rowH=(H-44)/apps.length;
+  ctx.fillStyle='#66638a'; ctx.font='bold 9px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('APP QUALITY METRICS',W/2,16);
+  apps.forEach((app,ai)=>{
+    const y=34+ai*rowH;
+    ctx.fillStyle='#0a0a14'; ctx.fillRect(8,y,W-16,rowH-6);
+    ctx.strokeStyle=app.color+'33'; ctx.lineWidth=1; ctx.strokeRect(8,y,W-16,rowH-6);
+    ctx.fillStyle=app.color; ctx.font='bold 9px Space Mono,monospace'; ctx.textAlign='left';
+    ctx.fillText(app.name,14,y+16);
+    const metrics=[
+      {label:`DAU/MAU: ${app.dau}%`,val:app.dau/100,max:1},
+      {label:`CHURN: ${app.churn}%/mo`,val:1-Math.min(app.churn/20,1),max:1},
+      {label:`LTV/CAC: ${app.ltvcac}x`,val:Math.min(app.ltvcac/8,1),max:1},
+    ];
+    metrics.forEach((m,mi)=>{
+      const bx=14+(W-28)/3*mi, bY=y+24, bW=(W-28)/3-8;
+      ctx.fillStyle='#181825'; ctx.fillRect(bx,bY,bW,10);
+      const fw=bW*m.val*clamp((t-0.3)/1.2,0,1);
+      ctx.fillStyle=app.color+'99'; ctx.fillRect(bx,bY,fw,10);
+      ctx.fillStyle='#b0accc'; ctx.font='7px Space Mono,monospace'; ctx.textAlign='left';
+      ctx.fillText(m.label,bx,bY-3);
+    });
+  });
+  ctx.fillStyle='#66638a'; ctx.font='7px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('higher = better for first two, higher = better for LTV/CAC',W/2,H-5);
+}
+
+// ── HEATMAP ──
+function vizHeatmap(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const sectors=[
+    {name:'Technology',base:0.6,sz:28},{name:'Healthcare',base:0.3,sz:14},
+    {name:'Financials',base:0.2,sz:13},{name:'Cons.Discret.',base:-0.3,sz:11},
+    {name:'Comm.Svcs',base:0.5,sz:9},{name:'Industrials',base:0.1,sz:9},
+    {name:'Cons.Staples',base:-0.1,sz:7},{name:'Energy',base:-0.8,sz:5},
+    {name:'Utilities',base:-0.4,sz:3},{name:'Real Estate',base:-0.2,sz:3},
+    {name:'Materials',base:0.4,sz:3},
+  ];
+  const cols=4, rows=3, pad2=7;
+  const cW2=(W-pad2*(cols+1))/cols, cH2=(H-pad2*(rows+1)-22)/rows;
+  sectors.forEach((s,i)=>{
+    if(i>=cols*rows) return;
+    const col=i%cols, row=Math.floor(i/cols);
+    const x=pad2+(cW2+pad2)*col, y=26+pad2+(cH2+pad2)*row;
+    const perf=s.base+Math.sin(t*0.4+i*0.8)*0.35;
+    const blend=clamp((perf+1)/2,0,1);
+    const r2=lerp(255,61,blend), g2=lerp(77,214,blend), b2=lerp(109,140,blend);
+    ctx.fillStyle=`rgba(${r2},${g2},${b2},${0.15+Math.abs(blend-0.5)*0.45})`;
+    ctx.fillRect(x,y,cW2,cH2);
+    ctx.strokeStyle=`rgba(${r2},${g2},${b2},0.4)`; ctx.lineWidth=1;
+    ctx.strokeRect(x,y,cW2,cH2);
+    ctx.fillStyle=`rgb(${r2},${g2},${b2})`;
+    ctx.font=`bold ${8+s.sz/14}px Space Mono,monospace`; ctx.textAlign='center';
+    ctx.fillText(s.name,x+cW2/2,y+cH2/2);
+    ctx.font='9px Space Mono,monospace';
+    ctx.fillText(`${perf>=0?'+':''}${perf.toFixed(1)}%`,x+cW2/2,y+cH2/2+13);
+  });
+  ctx.fillStyle='#66638a'; ctx.font='bold 8px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('SECTOR HEATMAP — S&P 500',W/2,16);
+}
+
+// ── ANTHROPOLOGY: HISTORICAL BUBBLES ──
+function vizAnthropology(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const bubbles=[
+    {name:'TULIP MANIA',year:'1637',peak:1.0,crash:0.02,col:'#f5a623'},
+    {name:'SOUTH SEA',year:'1720',peak:0.88,crash:0.08,col:'#ff4d6d'},
+    {name:'DOT-COM',year:'2000',peak:0.82,crash:0.2,col:'#3dd68c'},
+    {name:'CRYPTO \'17',year:'2018',peak:0.75,crash:0.12,col:'#c8ff00'},
+    {name:'MEME STOCKS',year:'2021',peak:0.7,crash:0.15,col:'#ff9f43'},
+  ];
+  const pad3={l:8,r:8,t:30,b:20};
+  const chartW=W-pad3.l-pad3.r, chartH3=H-pad3.t-pad3.b;
+  const bW=chartW/bubbles.length-8;
+  ctx.fillStyle='#66638a'; ctx.font='bold 9px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('EVERY BUBBLE — SAME STORY, DIFFERENT COSTUME',W/2,18);
+  const animP=clamp((t-0.2)/2.5,0,1);
+  bubbles.forEach((b,i)=>{
+    const x=pad3.l+4+i*(bW+8);
+    const phaseOff=i*0.15;
+    const prog=clamp((animP-phaseOff)/0.7,0,1);
+    const eased=ease(prog);
+    const peakH=chartH3*b.peak*eased;
+    const crashH=chartH3*b.crash*eased;
+    // Rise bar
+    ctx.fillStyle=b.col+'44'; ctx.fillRect(x,pad3.t+chartH3-peakH,bW,peakH);
+    // Post-crash remaining
+    ctx.fillStyle=b.col+'88'; ctx.fillRect(x,pad3.t+chartH3-crashH,bW,crashH);
+    // Crash line
+    if(prog>0.5){
+      const crashProg=clamp((prog-0.5)/0.5,0,1);
+      ctx.strokeStyle=b.col; ctx.lineWidth=1.5;
+      ctx.beginPath();
+      ctx.moveTo(x+bW/2,pad3.t+chartH3-peakH);
+      ctx.lineTo(x+bW/2,pad3.t+chartH3-lerp(peakH,crashH,ease(crashProg)));
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x+bW/2,pad3.t+chartH3-lerp(peakH,crashH,ease(crashProg)));
+      ctx.lineTo(x+bW/2,pad3.t+chartH3-crashH);
+      ctx.strokeStyle=b.col+'66';
+      ctx.stroke();
+    }
+    ctx.fillStyle=b.col; ctx.font='bold 7px Space Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(b.name,x+bW/2,H-22);
+    ctx.fillStyle='#66638a'; ctx.font='7px Space Mono,monospace';
+    ctx.fillText(b.year,x+bW/2,H-10);
+    if(prog>0.4){
+      ctx.fillStyle=b.col; ctx.font='8px Space Mono,monospace';
+      ctx.fillText(`-${Math.round((1-b.crash/b.peak)*100)}%`,x+bW/2,pad3.t+chartH3-peakH-6);
+    }
+  });
+  ctx.fillStyle='#66638a'; ctx.font='7px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('peak → crash % loss shown per bubble',W/2,H-2);
+}
+
+// ── PSYCHOLOGY CYCLE ──
+function vizPsychology(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const pad4={l:38,r:18,t:38,b:48};
+  const cW3=W-pad4.l-pad4.r, cH4=H-pad4.t-pad4.b;
+  const emotions=[
+    {x:0.0,y:0.4,label:'Optimism',risk:'L'},{x:0.1,y:0.6,label:'Excitement',risk:''},
+    {x:0.2,y:0.8,label:'Thrill',risk:''},{x:0.28,y:1.0,label:'EUPHORIA',risk:'SELL'},
+    {x:0.38,y:0.75,label:'Anxiety',risk:''},{x:0.45,y:0.55,label:'Denial',risk:''},
+    {x:0.52,y:0.35,label:'Fear',risk:''},{x:0.60,y:0.1,label:'PANIC',risk:''},
+    {x:0.68,y:0.08,label:'Capitulation',risk:''},{x:0.75,y:0.12,label:'Despondency',risk:'BUY'},
+    {x:0.82,y:0.25,label:'Depression',risk:''},{x:0.90,y:0.35,label:'Hope',risk:''},
+    {x:1.0,y:0.4,label:'Relief',risk:'L'},
+  ];
+  ctx.beginPath(); ctx.moveTo(pad4.l,pad4.t+cH4);
+  emotions.forEach(e=>ctx.lineTo(pad4.l+e.x*cW3,pad4.t+cH4-e.y*cH4*0.82));
+  ctx.lineTo(pad4.l+cW3,pad4.t+cH4); ctx.closePath();
+  const grad2=ctx.createLinearGradient(0,pad4.t,0,pad4.t+cH4);
+  grad2.addColorStop(0,'rgba(245,166,35,0.07)'); grad2.addColorStop(1,'rgba(245,166,35,0.01)');
+  ctx.fillStyle=grad2; ctx.fill();
+  ctx.beginPath();
+  emotions.forEach((e,i)=>{ const x2=pad4.l+e.x*cW3,y2=pad4.t+cH4-e.y*cH4*0.82; if(i===0)ctx.moveTo(x2,y2);else ctx.lineTo(x2,y2); });
+  ctx.strokeStyle='#f5a623'; ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle='rgba(255,77,109,0.07)'; ctx.fillRect(pad4.l+0.18*cW3,pad4.t,0.15*cW3,cH4);
+  ctx.fillStyle='rgba(61,214,140,0.07)'; ctx.fillRect(pad4.l+0.70*cW3,pad4.t,0.12*cW3,cH4);
+  ctx.font='7px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillStyle='rgba(255,77,109,0.7)'; ctx.fillText('SELL',pad4.l+0.255*cW3,pad4.t+8);
+  ctx.fillStyle='rgba(61,214,140,0.7)'; ctx.fillText('BUY',pad4.l+0.76*cW3,pad4.t+8);
+  emotions.forEach((e,i)=>{
+    const x2=pad4.l+e.x*cW3, y2=pad4.t+cH4-e.y*cH4*0.82;
+    const isD=e.label==='EUPHORIA'||e.label==='Thrill';
+    const isO=e.label==='Despondency'||e.label==='PANIC'||e.label==='Capitulation';
+    ctx.fillStyle=isD?'#ff4d6d':isO?'#3dd68c':'#66638a';
+    ctx.beginPath(); ctx.arc(x2,y2,3,0,Math.PI*2); ctx.fill();
+    if(i%2===0||isD||isO){
+      ctx.font=isD||isO?'bold 8px Space Mono,monospace':'7px Space Mono,monospace';
+      ctx.textAlign='center'; ctx.fillText(e.label,x2,y2-(e.y>0.5?14:-14));
+    }
+  });
+  const cp=(t*0.12)%1;
+  const ci2=emotions.findIndex(e=>e.x>cp);
+  if(ci2>0){
+    const prev=emotions[ci2-1],next=emotions[ci2];
+    const frac2=(cp-prev.x)/(next.x-prev.x);
+    const dx=pad4.l+(prev.x+(next.x-prev.x)*frac2)*cW3;
+    const dy=pad4.t+cH4-((prev.y+(next.y-prev.y)*frac2)*cH4*0.82);
+    ctx.beginPath(); ctx.arc(dx,dy,5,0,Math.PI*2);
+    ctx.fillStyle='#fff'; ctx.fill();
+    ctx.strokeStyle='#f5a623'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#f5a623'; ctx.font='bold 7px Space Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText('YOU',dx,dy-12);
+  }
+  ctx.fillStyle='#66638a'; ctx.font='8px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('← TIME / PRICE CYCLE →',W/2,H-6);
+}
+
+// ── MACRO: RATES vs MARKET ──
+function vizMacro(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const N=60, pad5={l:44,r:16,t:28,b:44};
+  const chartW2=W-pad5.l-pad5.r, chartH5=H-pad5.t-pad5.b;
+  const rng2=seededRand(33);
+  // Rate: rises then falls
+  const rates=Array.from({length:N},(_,i)=>{
+    const base=2+Math.sin(i/N*Math.PI)*4+rng2()*0.3;
+    return Math.max(0.25,base);
+  });
+  // Market: inversely correlated with rates (generally)
+  const market=rates.map((r,i)=>{
+    const inv=10-r*0.8+Math.sin(i*0.4)*2+i*0.05;
+    return Math.max(5,inv);
+  });
+  const maxR=Math.max(...rates), minR=Math.min(...rates);
+  const maxM=Math.max(...market), minM=Math.min(...market);
+  const toY2=(v,mn,mx)=>pad5.t+chartH5*(1-(v-mn)/(mx-mn+0.01));
+  // Grid
+  ctx.strokeStyle='rgba(29,29,42,0.8)'; ctx.lineWidth=1;
+  [0,0.25,0.5,0.75,1].forEach(f=>{
+    const y2=pad5.t+chartH5*f; ctx.beginPath(); ctx.moveTo(pad5.l,y2); ctx.lineTo(W-pad5.r,y2); ctx.stroke();
+  });
+  // Market line
+  ctx.strokeStyle='rgba(61,214,140,0.8)'; ctx.lineWidth=2; ctx.beginPath();
+  market.forEach((v,i)=>{ const x2=pad5.l+i/N*chartW2; if(i===0)ctx.moveTo(x2,toY2(v,minM,maxM));else ctx.lineTo(x2,toY2(v,minM,maxM)); });
+  ctx.stroke();
+  // Rate line
+  ctx.strokeStyle='rgba(255,77,109,0.8)'; ctx.lineWidth=2; ctx.beginPath();
+  rates.forEach((v,i)=>{ const x2=pad5.l+i/N*chartW2; if(i===0)ctx.moveTo(x2,toY2(v,minR,maxR));else ctx.lineTo(x2,toY2(v,minR,maxR)); });
+  ctx.stroke();
+  // Moving dot
+  const di=Math.floor((Math.sin(t*0.5)*0.5+0.5)*(N-1));
+  const mx2=pad5.l+di/N*chartW2;
+  ctx.beginPath(); ctx.arc(mx2,toY2(market[di],minM,maxM),4,0,Math.PI*2);
+  ctx.fillStyle='#3dd68c'; ctx.fill();
+  ctx.beginPath(); ctx.arc(mx2,toY2(rates[di],minR,maxR),4,0,Math.PI*2);
+  ctx.fillStyle='#ff4d6d'; ctx.fill();
+  // Labels
+  ctx.font='bold 9px Space Mono,monospace';
+  ctx.fillStyle='#3dd68c'; ctx.textAlign='left'; ctx.fillText('■ STOCKS',8,16);
+  ctx.fillStyle='#ff4d6d'; ctx.textAlign='left'; ctx.fillText('■ RATES',90,16);
+  ctx.fillStyle='#66638a'; ctx.textAlign='right'; ctx.font='8px Space Mono,monospace';
+  ctx.fillText('when rates go up, stocks often go down',W-8,H-6);
+  ctx.fillStyle='#f5a623'; ctx.textAlign='center'; ctx.font='8px Space Mono,monospace';
+  ctx.fillText('↑ RATES → ↓ GROWTH STOCKS',W/2,16);
+}
+
+// ── CRYPTO ──
+function vizCrypto(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const rng3=seededRand(71);
+  // Blockchain visualization: chain of blocks
+  const BLOCKS=8;
+  const bW2=Math.min((W-20)/(BLOCKS+0.5)-4, 60);
+  const bH=36, bY=(H-bH)/2-20;
+  const animP2=clamp(t/3,0,1);
+  for(let i=0;i<BLOCKS;i++){
+    const prog=clamp((animP2-i*0.12)/0.5,0,1);
+    const x2=10+i*(bW2+4);
+    const alpha=ease(prog);
+    ctx.fillStyle=`rgba(29,29,42,${alpha})`;
+    ctx.fillRect(x2,bY,bW2,bH);
+    ctx.strokeStyle=`rgba(61,214,140,${alpha*0.6})`; ctx.lineWidth=1;
+    ctx.strokeRect(x2,bY,bW2,bH);
+    if(alpha>0.3){
+      ctx.fillStyle=`rgba(245,166,35,${alpha})`; ctx.font='7px Space Mono,monospace';
+      ctx.textAlign='center'; ctx.fillText(`#${i+1001}`,x2+bW2/2,bY+12);
+      ctx.fillStyle=`rgba(61,214,140,${alpha*0.7})`;
+      ctx.fillText(`${Math.floor(rng3()*99)}tx`,x2+bW2/2,bY+24);
+    }
+    if(i<BLOCKS-1 && alpha>0.5){
+      ctx.strokeStyle=`rgba(245,166,35,${alpha*0.5})`; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(x2+bW2,bY+bH/2); ctx.lineTo(x2+bW2+4,bY+bH/2); ctx.stroke();
+    }
+  }
+  // Price comparison
+  const coins=[
+    {name:'BTC',cap:'$1.2T',color:'#f5a623',vol:'HIGH'},
+    {name:'ETH',cap:'$400B',color:'#7b8cde',vol:'HIGH'},
+    {name:'SOL',cap:'$70B',color:'#9945ff',vol:'V.HIGH'},
+    {name:'DOGE',cap:'$12B',color:'#c3a634',vol:'EXTREME'},
+    {name:'???COIN',cap:'$2M',color:'#ff4d6d',vol:'⚠️ RUG?'},
+  ];
+  const coinY=bY+bH+24, coinH=26, coinW=(W-20)/coins.length-4;
+  ctx.fillStyle='#66638a'; ctx.font='8px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('CRYPTO RISK SPECTRUM',W/2,bY+bH+16);
+  coins.forEach((c,i)=>{
+    const cx2=10+i*(coinW+4);
+    ctx.fillStyle='#0a0a14'; ctx.fillRect(cx2,coinY,coinW,coinH*2.2);
+    ctx.strokeStyle=c.color+'55'; ctx.lineWidth=1; ctx.strokeRect(cx2,coinY,coinW,coinH*2.2);
+    ctx.fillStyle=c.color; ctx.font='bold 9px Space Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(c.name,cx2+coinW/2,coinY+14);
+    ctx.fillStyle='#66638a'; ctx.font='7px Space Mono,monospace';
+    ctx.fillText(c.cap,cx2+coinW/2,coinY+25);
+    ctx.fillStyle=c.vol.includes('⚠')?'#ff4d6d':'#b0accc';
+    ctx.fillText(c.vol,cx2+coinW/2,coinY+37);
+  });
+  ctx.fillStyle='#66638a'; ctx.font='7px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('each block = cryptographically linked to prev — immutable',W/2,H-5);
+}
+
+// ── CRYPTO RISK PYRAMID ──
+function vizCryptorisk(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const levels=[
+    {label:'MEMECOINS / NEW TOKENS',desc:'probably zero',color:'#ff0040',w:0.9},
+    {label:'MID-CAP ALTCOINS',desc:'high risk/reward',color:'#ff4d6d',w:0.72},
+    {label:'LARGE CAP ALTS',desc:'Solana, etc.',color:'#f5a623',w:0.55},
+    {label:'ETHEREUM',desc:'smart contract layer',color:'#7b8cde',w:0.38},
+    {label:'BITCOIN',desc:'digital gold baseline',color:'#3dd68c',w:0.22},
+  ];
+  const totalH=H-60;
+  const animP3=clamp((t-0.3)/2.5,0,1);
+  levels.forEach((lv,i)=>{
+    const lH=totalH/levels.length-3;
+    const y=30+i*(lH+3);
+    const lW=W*lv.w*ease(clamp((animP3-i*0.1)/0.5,0,1));
+    const x=(W-lW)/2;
+    ctx.fillStyle=lv.color+'33'; ctx.fillRect(x,y,lW,lH);
+    ctx.strokeStyle=lv.color+'77'; ctx.lineWidth=1; ctx.strokeRect(x,y,lW,lH);
+    ctx.fillStyle=lv.color; ctx.font='bold 9px Space Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(lv.label,W/2,y+lH/2);
+    ctx.fillStyle='#66638a'; ctx.font='7px Space Mono,monospace';
+    ctx.fillText(lv.desc,W/2,y+lH/2+12);
+  });
+  ctx.fillStyle='#66638a'; ctx.font='bold 8px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('CRYPTO RISK PYRAMID — start from bottom',W/2,18);
+  const pulsing=Math.sin(t*3)*0.3+0.7;
+  ctx.fillStyle=`rgba(255,0,64,${pulsing})`;
+  ctx.font='7px Space Mono,monospace'; ctx.textAlign='right';
+  ctx.fillText('← MOST PEOPLE START HERE (wrong)',W-8,30+(totalH/levels.length-3)/2);
+}
+
+// ── DCA VISUALIZATION ──
+function vizDca(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const months=24;
+  const rng4=seededRand(55);
+  const prices=[100];
+  for(let i=1;i<months+1;i++){
+    const p=prices[i-1]*(1+(rng4()-0.42)*0.15+0.003);
+    prices.push(Math.max(60,p));
+  }
+  const pad6={l:48,r:16,t:28,b:50};
+  const chartW3=W-pad6.l-pad6.r, chartH6=H-pad6.t-pad6.b;
+  const pMin2=Math.min(...prices)*0.95, pMax2=Math.max(...prices)*1.05;
+  const toY3=p=>pad6.t+chartH6*(1-(p-pMin2)/(pMax2-pMin2));
+  const cW2=chartW3/months;
+  const animM=Math.floor(clamp(t/0.3,1,months));
+  // Price line
+  ctx.beginPath();
+  prices.slice(0,animM+1).forEach((p,i)=>{ const x2=pad6.l+i*cW2; if(i===0)ctx.moveTo(x2,toY3(p));else ctx.lineTo(x2,toY3(p)); });
+  ctx.strokeStyle='rgba(245,166,35,0.8)'; ctx.lineWidth=1.5; ctx.stroke();
+  // DCA entry dots
+  const fixedDollar=100, firstP=prices[0];
+  let totalInvested=0,totalShares=0;
+  prices.slice(0,animM).forEach((p,i)=>{
+    const x2=pad6.l+i*cW2;
+    const shares=fixedDollar/p;
+    totalShares+=shares; totalInvested+=fixedDollar;
+    ctx.beginPath(); ctx.arc(x2,toY3(p),3,0,Math.PI*2);
+    ctx.fillStyle='#3dd68c'; ctx.fill();
+  });
+  const avgCost=totalInvested/totalShares;
+  // Avg cost line
+  ctx.strokeStyle='rgba(61,214,140,0.5)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(pad6.l,toY3(avgCost)); ctx.lineTo(pad6.l+animM*cW2,toY3(avgCost)); ctx.stroke();
+  ctx.setLineDash([]);
+  // Current value
+  const curP=prices[Math.min(animM,months-1)];
+  const curVal=totalShares*curP;
+  const gain=curVal-totalInvested;
+  // Stats
+  ctx.fillStyle='#0a0a14'; ctx.fillRect(W-150,H-50,142,44);
+  ctx.strokeStyle='#3dd68c44'; ctx.lineWidth=1; ctx.strokeRect(W-150,H-50,142,44);
+  ctx.font='8px Space Mono,monospace'; ctx.textAlign='left';
+  ctx.fillStyle='#66638a'; ctx.fillText(`Invested: $${totalInvested.toFixed(0)}`,W-146,H-36);
+  ctx.fillStyle=gain>=0?'#3dd68c':'#ff4d6d';
+  ctx.fillText(`Value: $${curVal.toFixed(0)}`,W-146,H-24);
+  ctx.fillStyle=gain>=0?'#3dd68c':'#ff4d6d';
+  ctx.fillText(`Gain: ${gain>=0?'+':''}$${gain.toFixed(0)}`,W-146,H-12);
+  ctx.fillStyle='#f5a623'; ctx.font='8px Space Mono,monospace'; ctx.textAlign='right';
+  ctx.fillText('avg cost →',pad6.l+animM*cW2-2,toY3(avgCost)-5);
+  ctx.fillStyle='#66638a'; ctx.font='bold 9px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('DCA: $100/month — green dots = your purchases',W/2,16);
+  // Y axis
+  [pMin2,pMax2].forEach(p=>{ ctx.fillStyle='#55517a'; ctx.font='8px Space Mono,monospace'; ctx.textAlign='right'; ctx.fillText(`$${p.toFixed(0)}`,pad6.l-3,toY3(p)+3); });
+}
+
+// ── IPO CYCLE ──
+function vizIpo(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const pad7={l:44,r:18,t:32,b:50};
+  const cW4=W-pad7.l-pad7.r, cH7=H-pad7.t-pad7.b;
+  // IPO price curve: hype pop → reality dump → stabilize
+  const points=[
+    {x:0,y:0.4},{x:0.05,y:0.4},{x:0.08,y:0.55}, // listing day pop
+    {x:0.12,y:0.72},{x:0.15,y:0.85}, // first day frenzy
+    {x:0.2,y:0.65},{x:0.25,y:0.58}, // reality sets in
+    {x:0.32,y:0.45},{x:0.38,y:0.38}, // post lock-up selling
+    {x:0.45,y:0.35},{x:0.5,y:0.32},  // trough
+    {x:0.6,y:0.38},{x:0.7,y:0.42},  // fundamentals emerge
+    {x:0.8,y:0.52},{x:0.9,y:0.6},
+    {x:1.0,y:0.65},
+  ];
+  const animP4=clamp((t-0.3)/4,0,1);
+  // Draw curve up to animP
+  ctx.beginPath();
+  const drawn=points.filter(p=>p.x<=animP4);
+  drawn.forEach((p,i)=>{ const x2=pad7.l+p.x*cW4, y2=pad7.t+cH7*(1-p.y*0.85); if(i===0)ctx.moveTo(x2,y2);else ctx.lineTo(x2,y2); });
+  ctx.strokeStyle='#f5a623'; ctx.lineWidth=2; ctx.stroke();
+  // IPO offering price line
+  const offeringY=pad7.t+cH7*(1-0.4*0.85);
+  ctx.strokeStyle='rgba(61,214,140,0.4)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(pad7.l,offeringY); ctx.lineTo(W-pad7.r,offeringY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(61,214,140,0.7)'; ctx.font='8px Space Mono,monospace'; ctx.textAlign='left';
+  ctx.fillText('← IPO PRICE',pad7.l+2,offeringY-5);
+  // Annotations
+  const annotations=[
+    {x:0.15,y:0.87,label:'Day 1 pop\nRetail buys here',col:'#ff4d6d'},
+    {x:0.38,y:0.36,label:'Lock-up expires\nInsiders sell',col:'#f5a623'},
+    {x:0.5,y:0.30,label:'Trough\nBetter entry',col:'#3dd68c'},
+  ];
+  annotations.forEach(a=>{
+    if(animP4<a.x+0.02) return;
+    const ax=pad7.l+a.x*cW4, ay=pad7.t+cH7*(1-a.y*0.85);
+    ctx.beginPath(); ctx.arc(ax,ay,4,0,Math.PI*2); ctx.fillStyle=a.col; ctx.fill();
+    ctx.font='7px Space Mono,monospace'; ctx.textAlign='center'; ctx.fillStyle=a.col;
+    a.label.split('\n').forEach((line,li)=>ctx.fillText(line,ax,ay-10-li*10));
+  });
+  ctx.fillStyle='#66638a'; ctx.font='bold 9px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('TYPICAL IPO PRICE CYCLE',W/2,18);
+  ctx.font='8px Space Mono,monospace';
+  ctx.fillText('→ retail often buys at peak, not at offering price',W/2,H-5);
+}
+
+// ── OPTIONS PAYOFF ──
+function vizOptions(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const pad8={l:44,r:18,t:30,b:44};
+  const cW5=W-pad8.l-pad8.r, cH8=H-pad8.t-pad8.b;
+  const strike=180, premium=5;
+  const stockPrices=Array.from({length:80},(_,i)=>140+i*1.1);
+  const callPL=stockPrices.map(p=>Math.max(-premium,p-strike-premium));
+  const putPL=stockPrices.map(p=>Math.max(-premium,strike-p-premium));
+  const maxVal=Math.max(...callPL,Math.max(...putPL))+5;
+  const minVal=Math.min(...callPL,...putPL)-5;
+  const toY4=v=>pad8.t+cH8*(1-(v-minVal)/(maxVal-minVal));
+  const toX=i=>pad8.l+i/stockPrices.length*cW5;
+  // zero line
+  const zeroY=toY4(0);
+  ctx.strokeStyle='rgba(102,99,138,0.5)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad8.l,zeroY); ctx.lineTo(W-pad8.r,zeroY); ctx.stroke();
+  // strike line
+  const strikeIdx=stockPrices.findIndex(p=>p>=strike);
+  const strikeX=toX(strikeIdx);
+  ctx.strokeStyle='rgba(245,166,35,0.4)'; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(strikeX,pad8.t); ctx.lineTo(strikeX,H-pad8.b); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(245,166,35,0.7)'; ctx.font='8px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText(`STRIKE $${strike}`,strikeX,pad8.t+8);
+  // animate current price
+  const curP=155+Math.sin(t*0.6)*30;
+  const curIdx=stockPrices.findIndex(p=>p>=curP);
+  // Call payoff line
+  const animP5=clamp((t-0.3)/2,0,1);
+  const drawN=Math.floor(stockPrices.length*animP5);
+  ctx.strokeStyle='#3dd68c'; ctx.lineWidth=2; ctx.beginPath();
+  callPL.slice(0,drawN).forEach((v,i)=>{ if(i===0)ctx.moveTo(toX(i),toY4(v));else ctx.lineTo(toX(i),toY4(v)); });
+  ctx.stroke();
+  // Put payoff line
+  ctx.strokeStyle='#ff4d6d'; ctx.lineWidth=2; ctx.beginPath();
+  putPL.slice(0,drawN).forEach((v,i)=>{ if(i===0)ctx.moveTo(toX(i),toY4(v));else ctx.lineTo(toX(i),toY4(v)); });
+  ctx.stroke();
+  // Current price dot
+  if(curIdx>0&&curIdx<stockPrices.length){
+    ctx.beginPath(); ctx.arc(toX(curIdx),toY4(callPL[curIdx]),4,0,Math.PI*2);
+    ctx.fillStyle='#3dd68c'; ctx.fill();
+    ctx.beginPath(); ctx.arc(toX(curIdx),toY4(putPL[curIdx]),4,0,Math.PI*2);
+    ctx.fillStyle='#ff4d6d'; ctx.fill();
+    ctx.fillStyle='#f5a623'; ctx.font='8px Space Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(`$${curP.toFixed(0)}`,toX(curIdx),pad8.t+18);
+  }
+  // Legend
+  ctx.fillStyle='#3dd68c'; ctx.font='bold 9px Space Mono,monospace'; ctx.textAlign='left';
+  ctx.fillText('■ CALL ($180 strike)',8,16);
+  ctx.fillStyle='#ff4d6d'; ctx.fillText('■ PUT ($180 strike)',8,28);
+  ctx.fillStyle='#66638a'; ctx.font='8px Space Mono,monospace'; ctx.textAlign='right';
+  ctx.fillText(`premium paid: $${premium}`,W-8,H-5);
+  // Y axis labels
+  ctx.fillStyle='#55517a'; ctx.font='8px Space Mono,monospace'; ctx.textAlign='right';
+  [0,10,-5,-premium].forEach(v=>{
+    ctx.fillText(`$${v}`,pad8.l-3,toY4(v)+3);
+  });
+}
+
+// ── WHALES ──
+function vizWhales(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const rng5=seededRand(88);
+  // Dark pool activity bars
+  ctx.fillStyle='#66638a'; ctx.font='bold 9px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('UNUSUAL OPTIONS ACTIVITY + DARK POOL FLOW',W/2,16);
+  const TICKERS2=['AAPL','TSLA','NVDA','MSFT','SPY','META','AMD','AMZN'];
+  const rowH2=(H-36)/TICKERS2.length;
+  TICKERS2.forEach((ticker,i)=>{
+    const y=26+i*rowH2;
+    const isUnusual=rng5()>0.55;
+    const sentiment=rng5()>0.5?1:-1;
+    const size=(rng5()*0.8+0.2)*(isUnusual?1:0.4);
+    const pulse=isUnusual?(Math.sin(t*2+i)*0.3+0.7):1;
+    ctx.fillStyle=`rgba(13,13,24,0.9)`; ctx.fillRect(8,y,W-16,rowH2-3);
+    if(isUnusual){
+      ctx.strokeStyle=sentiment>0?`rgba(61,214,140,0.4)`:`rgba(255,77,109,0.4)`;
+      ctx.lineWidth=1; ctx.strokeRect(8,y,W-16,rowH2-3);
+    }
+    ctx.fillStyle=isUnusual?(sentiment>0?'#3dd68c':'#ff4d6d'):'#66638a';
+    ctx.font='bold 9px Space Mono,monospace'; ctx.textAlign='left';
+    ctx.fillText(ticker,14,y+rowH2/2+3);
+    const barX=60, barW=W-80;
+    const midX=barX+barW/2;
+    ctx.fillStyle='#1a1a2e'; ctx.fillRect(barX,y+3,barW,rowH2-9);
+    const fillW=barW/2*size*ease(clamp((t-0.5-i*0.08)/0.4,0,1));
+    const col=sentiment>0?`rgba(61,214,140,${0.6*pulse})`:`rgba(255,77,109,${0.6*pulse})`;
+    ctx.fillStyle=col;
+    if(sentiment>0) ctx.fillRect(midX,y+3,fillW,rowH2-9);
+    else ctx.fillRect(midX-fillW,y+3,fillW,rowH2-9);
+    ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fillRect(midX,y+3,1,rowH2-9);
+    if(isUnusual){
+      ctx.fillStyle=sentiment>0?'#3dd68c':'#ff4d6d'; ctx.font='7px Space Mono,monospace';
+      ctx.textAlign='right'; ctx.fillText(sentiment>0?'UNUSUAL CALLS':'UNUSUAL PUTS',W-12,y+rowH2/2+3);
+    }
+  });
+}
+
+// ── TOOLS ──
+function vizTools(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const tools=[
+    {icon:'📊',name:'TradingView',url:'tradingview.com',desc:'Best free charts'},
+    {icon:'🔬',name:'Finviz',url:'finviz.com',desc:'Screener + heatmap'},
+    {icon:'📈',name:'StockAnalysis',url:'stockanalysis.io',desc:'Clean fundamentals'},
+    {icon:'🏛️',name:'SEC EDGAR',url:'sec.gov/edgar',desc:'Primary filings'},
+    {icon:'🐋',name:'Unusual Whales',url:'unusualwhales.com',desc:'Options + dark pool'},
+    {icon:'🧠',name:'Dataroma',url:'dataroma.com',desc:'13F / big money'},
+    {icon:'🌐',name:'FRED',url:'fred.stlouisfed.org',desc:'Macro / Fed data'},
+    {icon:'🔑',name:'Coinglass',url:'coinglass.com',desc:'Crypto liquidations'},
+  ];
+  const cols=2, rows=4;
+  const cW6=(W-24)/cols, cH9=(H-18)/rows;
+  tools.forEach((tool,i)=>{
+    const col=i%cols, row=Math.floor(i/cols);
+    const x=8+col*(cW6+8), y=8+row*(cH9+4);
+    const hov=(Math.sin(t*0.8+i*1.2)*0.5+0.5);
+    ctx.fillStyle=`rgba(13,13,24,${0.85+hov*0.08})`; ctx.fillRect(x,y,cW6-2,cH9-2);
+    ctx.strokeStyle=`rgba(61,214,140,${0.08+hov*0.18})`; ctx.lineWidth=1; ctx.strokeRect(x,y,cW6-2,cH9-2);
+    ctx.font='16px serif'; ctx.textAlign='left'; ctx.fillText(tool.icon,x+7,y+20);
+    ctx.fillStyle='#f5a623'; ctx.font='bold 9px Space Mono,monospace'; ctx.fillText(tool.name,x+26,y+14);
+    ctx.fillStyle='#b0accc'; ctx.font='7px Space Mono,monospace'; ctx.fillText(tool.desc,x+26,y+25);
+    ctx.fillStyle='#3dd68c'; ctx.font='7px Space Mono,monospace'; ctx.fillText(tool.url,x+7,y+cH9-7);
+  });
+}
+
+// ── AI TOOLS ──
+function vizAitools(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const examples=[
+    {tag:'FILING TRANSLATION',prompt:'Explain this 10-K risk section to me',output:'The company is disclosing that their key supplier...'},
+    {tag:'DEVIL\'S ADVOCATE',prompt:'What\'s the bear case for owning NVDA?',output:'Valuation assumes AI capex stays high; if it...'},
+    {tag:'SCREENER BUILDER',prompt:'Build Finviz filters for quality growth',output:'P/E<35, EPS Growth>15, Rev Growth>12, Inst Own...'},
+    {tag:'TOOL BUILDER',prompt:'Build me a trade journal in HTML/JS',output:'Here is a complete trade journal with P&L...'},
+  ];
+  const eH=(H-20)/examples.length;
+  examples.forEach((ex,i)=>{
+    const y=10+i*eH;
+    const flash=Math.sin(t*0.7+i*1.5)*0.5+0.5;
+    ctx.fillStyle='#0a0a14'; ctx.fillRect(8,y,W-16,eH-5);
+    ctx.strokeStyle=`rgba(245,166,35,${0.08+flash*0.12})`; ctx.lineWidth=1;
+    ctx.strokeRect(8,y,W-16,eH-5);
+    ctx.fillStyle='#f5a623'; ctx.font='bold 7px Space Mono,monospace'; ctx.textAlign='left';
+    ctx.fillText(ex.tag,14,y+12);
+    ctx.fillStyle='rgba(245,166,35,0.6)'; ctx.font='8px Space Mono,monospace';
+    ctx.fillText('▶ '+ex.prompt,14,y+24);
+    ctx.fillStyle='#3dd68c';
+    ctx.fillText('◀ '+ex.output,14,y+36);
+    if(i===examples.length-1){
+      const cursor=Math.floor(t*2)%2===0?'█':'';
+      ctx.fillStyle='#3dd68c';
+      ctx.fillText(cursor,14+ctx.measureText('◀ '+ex.output).width,y+36);
+    }
+  });
+}
+
+// ── RISK CALCULATOR ──
+function vizRisk(){
+  const W=canvas.width, H=canvas.height;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const portfolio=10000, riskPct=1.5, entryPrice=50, stopPct=8, targetPct=24;
+  const riskDollars=portfolio*(riskPct/100);
+  const stopPrice=entryPrice*(1-stopPct/100);
+  const targetPrice=entryPrice*(1+targetPct/100);
+  const stopDist=entryPrice-stopPrice;
+  const shares=Math.floor(riskDollars/stopDist);
+  const positionSize=shares*entryPrice;
+  const positionPct=(positionSize/portfolio)*100;
+  const rr=targetPct/stopPct;
+  const items=[
+    {label:'PORTFOLIO SIZE',val:`$${portfolio.toLocaleString()}`,color:'#e8e4d9'},
+    {label:'MAX RISK/TRADE (1.5%)',val:`$${riskDollars.toFixed(0)}`,color:'#ff4d6d'},
+    {label:'ENTRY PRICE',val:`$${entryPrice.toFixed(2)}`,color:'#e8e4d9'},
+    {label:'STOP LOSS',val:`$${stopPrice.toFixed(2)} (-${stopPct}%)`,color:'#ff4d6d'},
+    {label:'TARGET PRICE',val:`$${targetPrice.toFixed(2)} (+${targetPct}%)`,color:'#3dd68c'},
+    {label:'SHARES TO BUY',val:`${shares}`,color:'#f5a623'},
+    {label:'POSITION SIZE',val:`$${positionSize.toFixed(0)} (${positionPct.toFixed(1)}%)`,color:'#f5a623'},
+    {label:'REWARD:RISK RATIO',val:`${rr.toFixed(1)}:1 ✓`,color:rr>=3?'#3dd68c':'#ff4d6d'},
+  ];
+  const rowH3=(H-52)/items.length;
+  items.forEach((item,i)=>{
+    const y=28+i*rowH3;
+    ctx.fillStyle='#0a0a14'; ctx.fillRect(8,y,W-16,rowH3-2);
+    ctx.fillStyle='#66638a'; ctx.font='8px Space Mono,monospace'; ctx.textAlign='left';
+    ctx.fillText(item.label,14,y+rowH3/2+3);
+    ctx.fillStyle=item.color; ctx.font='bold 9px Space Mono,monospace'; ctx.textAlign='right';
+    ctx.fillText(item.val,W-14,y+rowH3/2+3);
+  });
+  const barY=H-25, barW=W-36;
+  ctx.fillStyle='#0d0d18'; ctx.fillRect(18,barY,barW,14);
+  const gainW=barW*(rr/(rr+1));
+  ctx.fillStyle='rgba(61,214,140,0.55)'; ctx.fillRect(18,barY,gainW,14);
+  ctx.fillStyle='rgba(255,77,109,0.55)'; ctx.fillRect(18+gainW,barY,barW-gainW,14);
+  ctx.fillStyle='#fff'; ctx.font='7px Space Mono,monospace';
+  ctx.textAlign='left'; ctx.fillText(`+$${(shares*(targetPrice-entryPrice)).toFixed(0)}`,22,barY+10);
+  ctx.textAlign='right'; ctx.fillText(`-$${riskDollars.toFixed(0)}`,W-22,barY+10);
+  ctx.fillStyle='#66638a'; ctx.font='bold 8px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('POSITION SIZE CALCULATOR',W/2,16);
+}
+
+// ── CHECKLIST ──
+let checklistState=Array(9).fill(false);
+function vizChecklist(){
+  const W=canvas.width, H=canvas.height;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const items2=[
+    'I understand this business in one sentence',
+    'Revenue grew 3+ consecutive years',
+    'Profit margins stable or improving',
+    'Stock above its 200-day moving average',
+    'I have a written stop-loss level',
+    'Reward:Risk is at least 2:1',
+    'Position is ≤5% of total portfolio',
+    'I\'m NOT buying due to FOMO or hype',
+    'I know what would break my thesis',
+  ];
+  const total=checklistState.filter(Boolean).length;
+  const rowH4=(H-48)/items2.length;
+  items2.forEach((item,i)=>{
+    const y=28+i*rowH4;
+    const checked=checklistState[i];
+    ctx.fillStyle=checked?'rgba(61,214,140,0.07)':'#080810'; ctx.fillRect(8,y,W-16,rowH4-2);
+    if(checked){ ctx.strokeStyle='rgba(61,214,140,0.25)'; ctx.lineWidth=1; ctx.strokeRect(8,y,W-16,rowH4-2); }
+    ctx.strokeStyle=checked?'#3dd68c':'#66638a'; ctx.lineWidth=1.5;
+    ctx.strokeRect(14,y+4,11,11);
+    if(checked){
+      ctx.strokeStyle='#3dd68c'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(17,y+9.5); ctx.lineTo(19.5,y+13); ctx.lineTo(23,y+6); ctx.stroke();
+    }
+    ctx.fillStyle=checked?'#3dd68c':'#b0accc';
+    ctx.font=(checked?'bold ':'')+'8px Space Mono,monospace'; ctx.textAlign='left';
+    ctx.fillText(item,30,y+rowH4/2+3);
+  });
+  const pct=total/items2.length;
+  ctx.fillStyle='#0d0d18'; ctx.fillRect(8,H-22,W-16,14);
+  ctx.fillStyle=pct===1?'#3dd68c':pct>0.6?'#f5a623':'#ff4d6d';
+  ctx.fillRect(8,H-22,(W-16)*pct,14);
+  ctx.fillStyle='#fff'; ctx.font='bold 8px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText(`${total}/${items2.length} — ${pct===1?'READY':'keep going'}`,W/2,H-12);
+  ctx.fillStyle='#66638a'; ctx.font='bold 8px Space Mono,monospace';
+  ctx.fillText('PRE-TRADE CHECKLIST — tap to check',W/2,16);
+}
+
+// ── VOCAB VISUAL ──
+function vizVocab(){
+  const W=canvas.width, H=canvas.height, t=(Date.now()-startTime)/1000;
+  ctx.fillStyle='#030308'; ctx.fillRect(0,0,W,H);
+  const terms=[
+    {word:'BULL/BEAR',plain:'going up / going down',col:'#f5a623'},
+    {word:'YIELD',plain:'return rate (%)',col:'#3dd68c'},
+    {word:'ALPHA',plain:'beating the market',col:'#7b8cde'},
+    {word:'BETA',plain:'volatility vs market',col:'#ff9f43'},
+    {word:'LIQUIDITY',plain:'how cashable is it?',col:'#3dd68c'},
+    {word:'HEDGING',plain:'insurance on a trade',col:'#ff4d6d'},
+    {word:'EBITDA',plain:'profit before tax tricks',col:'#f5a623'},
+    {word:'QE',plain:'Fed prints + buys bonds',col:'#c8ff00'},
+    {word:'DERIVATIVES',plain:'contracts about things',col:'#7b8cde'},
+  ];
+  const cols=3, rows=3;
+  const cW7=(W-20)/cols, cH10=(H-28)/rows;
+  ctx.fillStyle='#66638a'; ctx.font='bold 9px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('FINANCE JARGON → PLAIN ENGLISH',W/2,16);
+  terms.forEach((term,i)=>{
+    const col=i%cols, row=Math.floor(i/cols);
+    const x=8+col*(cW7+4), y=24+row*(cH10+4);
+    const hov=Math.sin(t*0.6+i*1.4)*0.5+0.5;
+    ctx.fillStyle='#0a0a14'; ctx.fillRect(x,y,cW7-2,cH10-2);
+    ctx.strokeStyle=term.col+`${Math.round((0.1+hov*0.2)*255).toString(16).padStart(2,'0')}`;
+    ctx.lineWidth=1; ctx.strokeRect(x,y,cW7-2,cH10-2);
+    ctx.fillStyle=term.col; ctx.font='bold 9px Space Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(term.word,x+cW7/2-1,y+cH10/2-2);
+    ctx.strokeStyle=term.col+'44'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(x+10,y+cH10/2+2); ctx.lineTo(x+cW7-12,y+cH10/2+2); ctx.stroke();
+    ctx.fillStyle='#b0accc'; ctx.font='7px Space Mono,monospace';
+    ctx.fillText(term.plain,x+cW7/2-1,y+cH10/2+13);
+  });
+}
+
+canvas.addEventListener('click',function(e){
+  if(currentViz!=='checklist') return;
+  const rect=canvas.getBoundingClientRect();
+  const scaleX=canvas.width/rect.width, scaleY=canvas.height/rect.height;
+  const cx=(e.clientX-rect.left)*scaleX, cy=(e.clientY-rect.top)*scaleY;
+  const rowH4=(canvas.height-48)/9;
+  const idx=Math.floor((cy-28)/rowH4);
+  if(idx>=0&&idx<9) checklistState[idx]=!checklistState[idx];
+});
+
+// ─────────────────────────────────────────────
+//  VIZ DISPATCHER
+// ─────────────────────────────────────────────
+const vizMap={
+  auction:vizAuction, ticker:vizTicker, chart:vizChart,
+  fundamentals:vizFundamentals, appmetrics:vizAppmetrics,
+  heatmap:vizHeatmap, anthropology:vizAnthropology,
+  psychology:vizPsychology, macro:vizMacro,
+  crypto:vizCrypto, cryptorisk:vizCryptorisk,
+  dca:vizDca, ipo:vizIpo, options:vizOptions,
+  whales:vizWhales, tools:vizTools, aitools:vizAitools,
+  risk:vizRisk, checklist:vizChecklist, vocab:vizVocab,
+};
+
+function animLoop(){
+  if(vizMap[currentViz]) vizMap[currentViz]();
+  requestAnimationFrame(animLoop);
+}
+
+// ─────────────────────────────────────────────
+//  LESSON NAVIGATION
+// ─────────────────────────────────────────────
+let currentLesson=0;
+function loadLesson(idx){
+  currentLesson=idx;
+  const L=LESSONS[idx];
+  document.getElementById('lesson-text').innerHTML=`
+    <div class="lesson-number">${L.subtitle}</div>
+    <div class="lesson-title">${L.title}</div>
+    <div class="lesson-body">${L.body}</div>`;
+  document.getElementById('claude-prompt').value=L.prompt;
+  document.getElementById('viz-label').textContent=L.vizLabel;
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  document.getElementById('progress').style.width=((idx+1)/LESSONS.length*100).toFixed(1)+'%';
+  currentViz=L.viz;
+  startTime=Date.now();
+  const btn=document.getElementById('copy-btn');
+  btn.textContent='⎘ COPY'; btn.classList.remove('done');
+}
+function copyPrompt(){
+  navigator.clipboard.writeText(document.getElementById('claude-prompt').value).then(()=>{
+    const btn=document.getElementById('copy-btn');
+    btn.textContent='✓ COPIED'; btn.classList.add('done');
+    setTimeout(()=>{btn.textContent='⎘ COPY';btn.classList.remove('done');},2000);
+  });
+}
+
+const nav=document.getElementById('lesson-nav');
+const sections={0:'THE BASICS',4:'READING THE WORLD',6:'PSYCH + ANTHRO',8:'MACRO',9:'CRYPTO',11:'STRATEGIES',15:'TOOLS',18:'EXECUTION',19:'REFERENCE'};
+LESSONS.forEach((L,i)=>{
+  if(sections[i]){
+    const sep=document.createElement('span');
+    sep.className='nav-section'; sep.textContent='// '+sections[i];
+    nav.appendChild(sep);
+  }
+  const b=document.createElement('button');
+  b.className='nav-btn'; b.textContent=L.subtitle;
+  b.onclick=()=>loadLesson(i);
+  nav.appendChild(b);
+});
+
+// ─────────────────────────────────────────────
+//  HERO CANVAS
+// ─────────────────────────────────────────────
+(function(){
+  const hc=document.getElementById('hero');
+  const hctx=hc.getContext('2d');
+  function rsz(){ hc.width=hc.parentElement.offsetWidth; hc.height=hc.parentElement.offsetHeight; }
+  rsz(); window.addEventListener('resize',rsz);
+  const hStart=Date.now();
+  function heroRng(seed){ let s=seed; return()=>{s=(s*9301+49297)%233280;return s/233280;}; }
+  const prices2=[]; const rng2=heroRng(7); let p2=100;
+  for(let i=0;i<300;i++){ p2+=(rng2()-0.47)*3; prices2.push(p2); }
+  (function loop(){
+    const W2=hc.width, H2=hc.height;
+    if(!W2||!H2){requestAnimationFrame(loop);return;}
+    hctx.clearRect(0,0,W2,H2);
+    const t2=(Date.now()-hStart)/1000;
+    const off=t2*25;
+    const vC=Math.floor(W2/4);
+    const sI=Math.floor(off)%prices2.length;
+    const vis=Array.from({length:vC},(_,i)=>prices2[(sI+i)%prices2.length]);
+    const mn=Math.min(...vis), mx=Math.max(...vis);
+    hctx.beginPath();
+    vis.forEach((v,i)=>{
+      const x=(i/vC)*W2, y=H2*0.3+((v-mn)/(mx-mn+0.01))*(H2*0.4);
+      if(i===0)hctx.moveTo(x,y);else hctx.lineTo(x,y);
+    });
+    hctx.strokeStyle='rgba(245,166,35,0.55)'; hctx.lineWidth=1.5; hctx.stroke();
+    hctx.lineTo(W2,H2); hctx.lineTo(0,H2); hctx.closePath();
+    const g2=hctx.createLinearGradient(0,0,0,H2);
+    g2.addColorStop(0,'rgba(245,166,35,0.04)'); g2.addColorStop(1,'rgba(245,166,35,0)');
+    hctx.fillStyle=g2; hctx.fill();
+    requestAnimationFrame(loop);
+  })();
+})();
+
+window.addEventListener('resize',resizeCanvas);
+resizeCanvas();
+loadLesson(0);
+animLoop();
+</script>
+</body>
+</html>
