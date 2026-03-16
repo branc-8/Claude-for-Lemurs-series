@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Godot Physics for Lemurs 🐒</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap');
+:root{
+  --bg:#09090e;--panel:#0e0e14;--border:#1d1d2a;
+  --accent:#ff7b3a;--accent2:#ff4d6b;--accent3:#3dd68c;
+  --text:#e8e4d9;--muted:#66638a;--code-bg:#0b0b11;
+  --spam:#c8ff00;--spambg:#050f00;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;display:flex;flex-direction:column;}
+header{flex-shrink:0;padding:1.6rem 2rem 1.2rem;text-align:center;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+header canvas#hero{position:absolute;inset:0;width:100%;height:100%;opacity:.15;pointer-events:none;}
+header .inner{position:relative;z-index:1;}
+.tagline-chip{display:inline-block;background:var(--accent);color:#000;font-family:'Space Mono',monospace;font-size:.6rem;padding:.2rem .7rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.5rem;font-weight:700;}
+h1{font-size:clamp(1.5rem,3.5vw,2.8rem);font-weight:800;line-height:1;letter-spacing:-.02em;}
+h1 span{color:var(--accent);}
+.subtitle{font-family:'Space Mono',monospace;font-size:.72rem;color:var(--muted);margin-top:.35rem;}
+.disclaimer{font-family:'Space Mono',monospace;font-size:.57rem;color:var(--muted);margin-top:.25rem;opacity:.6;}
+.progress-bar{flex-shrink:0;height:2px;background:var(--border);}
+.progress-fill{height:100%;background:var(--accent);transition:width .4s ease;}
+nav{flex-shrink:0;display:flex;gap:.35rem;padding:.6rem 1.2rem;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--panel);scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+nav::-webkit-scrollbar{display:none;}
+.nav-btn{flex-shrink:0;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:.65rem;padding:.3rem .65rem;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nav-btn.active{background:var(--accent);color:#000;border-color:var(--accent);}
+.nav-section{flex-shrink:0;font-family:'Space Mono',monospace;font-size:.55rem;color:var(--muted);padding:.3rem .3rem;opacity:.45;pointer-events:none;align-self:center;white-space:nowrap;}
+main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
+.lesson-panel{overflow-y:auto;padding:1.6rem;border-right:1px solid var(--border);scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.lesson-number{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.4rem;}
+.lesson-title{font-size:1.45rem;font-weight:800;line-height:1.1;margin-bottom:.8rem;}
+.lesson-body{font-family:'Space Mono',monospace;font-size:.74rem;line-height:1.85;color:#b0a8cc;}
+.lesson-body p{margin-bottom:.85rem;}
+.lesson-body strong{color:var(--accent);}
+.lesson-body em{color:var(--accent3);font-style:normal;}
+.lesson-body code{background:#1a1a2e;color:var(--accent3);padding:.1em .35em;font-size:.84em;word-break:break-all;}
+/* ── Mobile tab bar ── */
+.mobile-tabs{display:none;}
+/* ── MOBILE ── */
+@media(max-width:860px){
+  html,body{overflow:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+  body{height:auto;min-height:100vh;display:block;}
+  header{padding:1.2rem 1rem .9rem;}
+  .subtitle{font-size:.65rem;}
+  .disclaimer{font-size:.52rem;}
+  nav{padding:.5rem .8rem;gap:.3rem;position:sticky;top:0;z-index:100;}
+  .nav-btn{font-size:.7rem;padding:.4rem .7rem;min-height:2rem;}
+  .nav-section{display:none;}
+  main{display:flex;flex-direction:column;overflow:visible;height:auto;}
+  .lesson-panel{overflow:visible;padding:1.2rem 1rem;border-right:none;border-bottom:1px solid var(--border);order:2;}
+  .lesson-title{font-size:1.3rem;}
+  .lesson-body{font-size:.82rem;line-height:1.9;}
+  .lesson-body code{font-size:.78em;}
+  .viz-panel{order:1;min-height:auto;border-bottom:1px solid var(--border);}
+  .canvas-area{flex:none;height:220px;min-height:220px;}
+  .mobile-tabs{display:flex;background:var(--panel);border-bottom:1px solid var(--border);}
+  .mobile-tabs button{flex:1;background:none;border:none;color:var(--muted);font-family:'Space Mono',monospace;font-size:.72rem;padding:.55rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+  .mobile-tabs button.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .snippet-area{max-height:250px;}
+  pre#code-snippet{font-size:.72rem;padding:.75rem;}
+  .code-toolbar{display:none;}
+  .copy-btn{font-size:.68rem;padding:.3rem .8rem;}
+  .lesson-panel{padding-bottom:3rem;}
+  .lesson-body .vocab,.lesson-body .step-card,.lesson-body .tip,.lesson-body .artists,
+  .lesson-body .spamton,.lesson-body .challenge,.lesson-body .net-note,.lesson-body .perf{
+    padding:.7rem .8rem;font-size:.8rem;margin:.7rem 0;
+  }
+  .snippet-area{display:none;}
+}
+.lesson-body .tip{background:#1a0e06;border-left:3px solid var(--accent2);padding:.65rem .9rem;margin:.85rem 0;color:#ccd0d8;}
+.lesson-body .tip::before{content:'\1F412 LEMUR TIP: ';color:var(--accent2);font-weight:700;}
+.lesson-body .step-card{background:#0d0d18;border:1px solid var(--border);border-left:3px solid var(--accent3);padding:.65rem .9rem;margin:.5rem 0;}
+.lesson-body .step-card .step-num{color:var(--accent3);font-weight:700;font-size:.6rem;letter-spacing:.12em;display:block;margin-bottom:.2rem;}
+.lesson-body .challenge{background:#12080e;border:1px solid var(--accent2);padding:.65rem .9rem;margin:.5rem 0;}
+.lesson-body .challenge::before{content:'\u26A1 TRY THIS: ';color:var(--accent2);font-weight:700;}
+.lesson-body .vocab{background:#080e14;border:1px solid #1a3040;border-left:3px solid var(--accent3);padding:.6rem .9rem;margin:.55rem 0;}
+.lesson-body .vocab::before{content:'\1F4CE VOCAB: ';color:var(--accent3);font-weight:700;font-size:.7em;letter-spacing:.08em;}
+.lesson-body .vocab .vt{color:var(--accent);font-weight:700;}
+.lesson-body .spamton{background:var(--spambg);border:2px solid var(--spam);padding:.75rem 1rem;margin:1rem 0;color:var(--spam);position:relative;overflow:hidden;}
+.lesson-body .spamton::before{content:'\1F4B2 HELLO FRIEND: ';color:#ffff00;font-weight:700;letter-spacing:.05em;}
+.lesson-body .spamton strong{color:#ffff00;}
+.lesson-body .artists{background:#120c06;border-left:3px solid var(--accent);padding:.65rem .9rem;margin:.85rem 0;color:#ccd0d8;}
+.lesson-body .artists::before{content:'\1F3AE SEE IT IN: ';color:var(--accent);font-weight:700;}
+.lesson-body .net-note{background:#080e18;border-left:3px solid #3ecfff;padding:.65rem .9rem;margin:.85rem 0;color:#ccd0d8;}
+.lesson-body .net-note::before{content:'\1F310 MULTIPLAYER: ';color:#3ecfff;font-weight:700;}
+.lesson-body .perf{background:#140c08;border-left:3px solid #ffd080;padding:.65rem .9rem;margin:.85rem 0;color:#ccd0d8;}
+.lesson-body .perf::before{content:'\u26A1 PERF: ';color:#ffd080;font-weight:700;}
+.lesson-body .phys-eq{background:#0d0d18;border:1px solid var(--border);padding:.5rem 1rem;margin:.55rem 0;text-align:center;font-family:'Space Mono',monospace;color:var(--accent);font-size:.85rem;letter-spacing:.05em;}
+.viz-panel{display:flex;flex-direction:column;background:var(--code-bg);min-height:0;}
+.canvas-area{flex:0 0 280px;position:relative;background:#040608;border-bottom:1px solid var(--border);overflow:hidden;touch-action:none;}
+canvas#viz-out{width:100%;height:100%;display:block;touch-action:none;}
+.canvas-label{position:absolute;top:.4rem;left:.7rem;font-family:'Space Mono',monospace;font-size:.55rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.code-toolbar{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:.4rem .75rem;border-bottom:1px solid var(--border);background:var(--panel);}
+.code-toolbar span{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted);letter-spacing:.08em;}
+.copy-btn{background:var(--accent);color:#000;border:none;font-family:'Space Mono',monospace;font-size:.62rem;font-weight:700;padding:.25rem .75rem;cursor:pointer;}
+.copy-btn.done{background:var(--accent3);}
+.snippet-area{flex:1;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+pre#code-snippet{padding:.85rem 1rem;font-family:'Space Mono',monospace;font-size:.67rem;line-height:1.72;color:#b0d8c8;min-height:100%;background:transparent;}
+pre#code-snippet .kw{color:var(--accent);}
+pre#code-snippet .fn{color:#ffd080;}
+pre#code-snippet .st{color:var(--accent3);}
+pre#code-snippet .cm{color:var(--muted);}
+pre#code-snippet .nm{color:var(--accent2);}
+pre#code-snippet .dc{color:#c09fff;}
+</style>
+</head>
+<body>
+<header>
+  <canvas id="hero"></canvas>
+  <div class="inner">
+    <div class="tagline-chip">\u{1F412} Physics Brawler School \u00B7 Godot 4 + Jolt</div>
+    <h1>Godot Physics for <span>Lemurs</span></h1>
+    <p class="subtitle">// jolt \u2192 controllers \u2192 verlet ropes \u2192 slice everything \u2192 rollback brawler</p>
+    <p class="disclaimer">\u26A0 Godot 4.3+ \u00B7 Jolt Physics \u00B7 GDScript \u00B7 multiplayer-aware throughout \u00B7 end goal: a networked brawler</p>
+  </div>
+</header>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<nav id="lesson-nav"></nav>
+<main>
+  <div class="lesson-panel" id="lesson-text"></div>
+  <div class="viz-panel">
+    <div class="canvas-area">
+      <span class="canvas-label" id="viz-label">\u25B6 live simulation</span>
+      <canvas id="viz-out"></canvas>
+    </div>
+    <div class="mobile-tabs" id="mobile-tabs">
+      <button class="active" onclick="showMobileTab('viz')">SIMULATION</button>
+      <button onclick="showMobileTab('code')">GDSCRIPT</button>
+    </div>
+    <div class="code-toolbar">
+      <span>GDSCRIPT</span>
+      <button class="copy-btn" id="copy-btn" onclick="copySnippet()">\u238E COPY</button>
+    </div>
+    <div class="snippet-area"><pre id="code-snippet"></pre></div>
+  </div>
+</main>
+
+<script>
+/* ═══════════════════════════════════════════════════════ */
+/* LESSON DATA                                             */
+/* ═══════════════════════════════════════════════════════ */
+const NAV_SECTIONS = [
+  {before:0, label:"FOUNDATIONS"},
+  {before:3, label:"FORCES & QUERIES"},
+  {before:6, label:"ROPES & JIGGLE"},
+  {before:8, label:"DESTRUCTION & FX"},
+  {before:12, label:"THE BRAWLER"}
+];
+
+const LESSONS = [
+/* ──── L01 ──── */
+{
+title:"Jolt Physics & The Physics Frame",
+subtitle:"01 \u2014 The Engine Under The Engine",
+vizLabel:"\u25B6 jolt vs godotphysics \u2014 stacking test",
+viz:"jolt",
+snippet:"<span class=\"cm\"># Step 1: Enable Jolt in Project Settings</span>\n<span class=\"cm\"># Project \u2192 Project Settings \u2192 Physics \u2192 3D</span>\n<span class=\"cm\"># Physics Engine \u2192 JoltPhysics3D</span>\n\n<span class=\"cm\"># The physics frame is your network tick.</span>\n<span class=\"cm\"># ALL gameplay logic goes in _physics_process.</span>\n<span class=\"cm\"># _process is for visuals only.</span>\n\n<span class=\"kw\">func</span> <span class=\"fn\">_physics_process</span>(delta):\n    <span class=\"cm\"># delta is ALWAYS 1/60 (at default 60Hz)</span>\n    <span class=\"cm\"># deterministic. rollback-safe.</span>\n    velocity += gravity * delta\n    <span class=\"fn\">move_and_slide</span>()\n\n<span class=\"cm\"># Enable physics interpolation for free smoothness:</span>\n<span class=\"cm\"># Project Settings \u2192 Physics \u2192 Common \u2192</span>\n<span class=\"cm\">#   physics_interpolation = true</span>\n<span class=\"cm\"># Renders between physics ticks at monitor rate.</span>\n<span class=\"cm\"># 60Hz physics looks like 144Hz. Zero gameplay cost.</span>\n\n<span class=\"cm\"># Engine.physics_ticks_per_second = 60  # default</span>\n<span class=\"cm\"># Higher = more precision, more CPU.</span>\n<span class=\"cm\"># 60 is correct for almost everything.</span>",
+body:"<p>Before you write a single physics line, flip one switch that changes everything. <strong>Jolt Physics</strong> is an open-source engine by Jorrit Rouwe, integrated into Godot 4.3+ as a drop-in replacement for the built-in GodotPhysics. It is faster, more stable, handles stacking and constraints without jitter, and is the same engine used by Horizon: Forbidden West. <em>Enable it before you do anything else.</em></p>\n<div class=\"vocab\"><span class=\"vt\">\"Jolt Physics\"</span> \u2014 open-source physics engine now bundled with Godot 4.3+. Replaces the default GodotPhysics backend. More stable stacking, better constraint solving, fewer tunneling bugs. One checkbox: Project Settings \u2192 Physics \u2192 3D \u2192 Physics Engine \u2192 JoltPhysics3D.</div>\n<div class=\"vocab\"><span class=\"vt\">\"_physics_process(delta)\"</span> \u2014 Godot\u2019s fixed-timestep callback. Runs at a fixed rate (default 60Hz) regardless of frame rate. ALL physics code goes here \u2014 forces, raycasts, collision checks, movement. The delta is always 1/physics_ticks_per_second. Deterministic. Rollback-safe.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Physics Interpolation\"</span> \u2014 rendering between physics ticks. Physics at 60Hz, monitor at 144Hz \u2014 without interpolation, objects stutter at the physics rate. Enable it in project settings. Godot blends previous and current physics state for visuals. Free smoothness. Zero gameplay cost.</div>\n<div class=\"step-card\"><span class=\"step-num\">JOLT VS GODOTPHYSICS \u2014 THE DIFFERENCE</span>Stack 30 boxes with GodotPhysics: they jitter, clip through each other, occasionally explode. Stack 30 with Jolt: they settle cleanly, sleep properly, behave like real objects. The viz on the right shows this side-by-side. Jolt also handles joints (ragdolls, ropes) significantly better \u2014 fewer constraint explosions, more stable stacking on constrained bodies.</div>\n<div class=\"step-card\"><span class=\"step-num\">THE PHYSICS FRAME IS YOUR TICK</span>In multiplayer, the physics frame IS your network tick. Rollback rewinds to a past <code>_physics_process</code> call and resimulates forward. If your physics isn\u2019t deterministic (same inputs \u2192 same positions), rollback desyncs. Jolt is more deterministic than GodotPhysics across platforms, but floating-point differences between CPUs still exist. For critical gameplay: use integer math where possible.</div>\n<div class=\"tip\">Never put gameplay logic in <code>_process()</code>. That runs at monitor frame rate \u2014 variable, non-deterministic. <code>_physics_process()</code> runs at a fixed rate. Fixed rate = reproducible results = rollback works. This is the #1 architecture mistake in indie multiplayer games.</div>\n<div class=\"artists\">Horizon: Forbidden West (Jolt in AAA), Godot 4.3+ docs (Jolt integration page), Glenn Fiedler\u2019s \"Fix Your Timestep!\" (the canonical article on fixed timesteps)</div>\n<div class=\"spamton\">Godot shipped GodotPhysics as the default for YEARS and everyone accepted boxes jittering through floors as normal. <strong>Jolt fixed it. One checkbox. The entire physics experience changes. Turn it on before you write a single line of code.</strong></div>\n<div class=\"challenge\">Create a stress test: 50 RigidBody3D boxes dropping onto a concave StaticBody bowl. Run with GodotPhysics \u2014 count how many tunnel through. Switch to Jolt (Project Settings), same scene. Count again. Enable physics interpolation. Feel the smoothness at 144Hz. This is your baseline \u2014 every lesson assumes Jolt is active.</div>\n<div class=\"net-note\">The physics frame IS your network tick. Rollback saves state at tick N, rewinds to tick N-K, replays K ticks of <code>_physics_process</code>. If your physics runs in <code>_process</code> instead, rollback produces different results at different frame rates. Everything gameplay-critical: <code>_physics_process</code>. Everything cosmetic (particles, screen shake, UI animations): <code>_process</code>. This split is non-negotiable.</div>"
+},
+/* ──── L02 ──── */
+{
+title:"The Controller That Feels Amazing",
+subtitle:"02 \u2014 Coyote Time, Input Buffers & Acceleration Curves",
+vizLabel:"\u25B6 platformer controller \u2014 interactive",
+viz:"controller",
+snippet:"<span class=\"kw\">extends</span> CharacterBody3D\n\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> speed := <span class=\"nm\">6.0</span>\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> accel := <span class=\"nm\">40.0</span>\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> decel := <span class=\"nm\">60.0</span>\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> jump_vel := <span class=\"nm\">10.0</span>\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> gravity := <span class=\"nm\">30.0</span>\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> coyote_frames := <span class=\"nm\">6</span>\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> buffer_frames := <span class=\"nm\">8</span>\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> air_control := <span class=\"nm\">0.6</span>\n\n<span class=\"kw\">var</span> _coyote: <span class=\"kw\">int</span> = <span class=\"nm\">0</span>\n<span class=\"kw\">var</span> _jump_buf: <span class=\"kw\">int</span> = <span class=\"nm\">0</span>\n\n<span class=\"kw\">func</span> <span class=\"fn\">_physics_process</span>(delta):\n    <span class=\"kw\">if</span> <span class=\"fn\">is_on_floor</span>():\n        _coyote = coyote_frames\n    <span class=\"kw\">elif</span> _coyote > <span class=\"nm\">0</span>:\n        _coyote -= <span class=\"nm\">1</span>\n\n    <span class=\"kw\">if</span> Input.<span class=\"fn\">is_action_just_pressed</span>(<span class=\"st\">\"jump\"</span>):\n        _jump_buf = buffer_frames\n    <span class=\"kw\">elif</span> _jump_buf > <span class=\"nm\">0</span>:\n        _jump_buf -= <span class=\"nm\">1</span>\n\n    <span class=\"cm\"># Jump: buffer OR coyote must be active</span>\n    <span class=\"kw\">if</span> _jump_buf > <span class=\"nm\">0</span> <span class=\"kw\">and</span> _coyote > <span class=\"nm\">0</span>:\n        velocity.y = jump_vel\n        _coyote = <span class=\"nm\">0</span>; _jump_buf = <span class=\"nm\">0</span>\n\n    <span class=\"cm\"># Variable jump: release early = short hop</span>\n    <span class=\"kw\">if</span> Input.<span class=\"fn\">is_action_just_released</span>(<span class=\"st\">\"jump\"</span>):\n        <span class=\"kw\">if</span> velocity.y > <span class=\"nm\">0</span>:\n            velocity.y *= <span class=\"nm\">0.4</span>\n\n    velocity.y -= gravity * delta\n\n    <span class=\"kw\">var</span> dir = Input.<span class=\"fn\">get_axis</span>(<span class=\"st\">\"left\"</span>,<span class=\"st\">\"right\"</span>)\n    <span class=\"kw\">var</span> a = accel <span class=\"kw\">if</span> <span class=\"fn\">is_on_floor</span>() <span class=\"kw\">else</span> accel*air_control\n    <span class=\"kw\">if</span> dir:\n        velocity.x = <span class=\"fn\">move_toward</span>(velocity.x, dir*speed, a*delta)\n    <span class=\"kw\">else</span>:\n        velocity.x = <span class=\"fn\">move_toward</span>(velocity.x, <span class=\"nm\">0</span>, decel*delta)\n    <span class=\"fn\">move_and_slide</span>()",
+body:"<p>A character controller is the most-touched code in any action game. Players press a button 60 times a second and their fingers know <em>instantly</em> if something feels wrong. The difference between a controller that feels like ice-skating and one that feels like Celeste is about 30 lines of code and 5 well-chosen numbers.</p>\n<div class=\"vocab\"><span class=\"vt\">\"Coyote Time\"</span> \u2014 a grace period (5\u20136 frames, ~100ms) after walking off a ledge where the player can still jump. Named after Wile E. Coyote running off a cliff. Without it, players feel cheated. With it, the game reads their intent. Celeste, Hollow Knight, every good platformer has this.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Input Buffering\"</span> \u2014 remembering a button press for N frames and executing it when possible. Player presses jump 4 frames before landing \u2014 buffer stores it, jump fires on land. Without it, inputs must be frame-perfect. With it, the game feels telepathic. 6\u201310 frames is standard.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Acceleration Curve\"</span> \u2014 <code>move_toward(velocity, target, accel*delta)</code> instead of instant speed. Creates weight and momentum. High accel = twitchy (Mega Man). Low accel = heavy (Dark Souls). The accel + decel values define your game\u2019s entire movement feel.</div>\n<div class=\"step-card\"><span class=\"step-num\">THE FIVE INGREDIENTS</span><strong>1. Acceleration/deceleration</strong> \u2014 ramp to speed, don\u2019t snap. <strong>2. Coyote time</strong> \u2014 forgive late jumps. <strong>3. Input buffer</strong> \u2014 forgive early jumps. <strong>4. Variable jump height</strong> \u2014 hold=high, tap=short (cut y-velocity on release). <strong>5. Air control</strong> \u2014 reduce horizontal accel in air (0.6x ground). These five things separate ice-skating from art.</div>\n<div class=\"step-card\"><span class=\"step-num\">@EXPORT EVERYTHING</span>Every tuning parameter is an <code>@export</code> variable: speed, accel, decel, jump_vel, gravity, coyote_frames, buffer_frames, air_control. A designer can tune a completely different-feeling character in the Inspector without touching code. Fast ninja? High speed, high accel. Heavy tank? Low speed, low decel. Same script, different exports.</div>\n<div class=\"step-card\"><span class=\"step-num\">FRAME COUNTS, NOT FLOAT TIMERS</span>Coyote time and input buffer use integer frame counters, not float timers. <code>_coyote -= 1</code> per physics tick. Why? Integers are deterministic. Floats accumulate error. For rollback: you serialize <code>_coyote = 4</code> and restore it exactly. A float timer of <code>0.0667</code> might round differently on different CPUs. Frames are ints. Ints don\u2019t lie.</div>\n<div class=\"tip\">Start with raw <code>move_and_slide()</code> \u2014 feels like ice. Add acceleration curves \u2014 feels like mass. Add coyote time \u2014 jumps feel generous. Add input buffer \u2014 jumps feel psychic. Add variable height \u2014 jumps feel expressive. Five additions, each one line of logic, and your controller goes from prototype to professional.</div>\n<div class=\"artists\">Celeste (the gold standard \u2014 6f coyote, 8f buffer, variable height), Hollow Knight (heavy + responsive), Dead Cells (snappy + momentum), Rivals of Aether (rollback-compatible platformer controller)</div>\n<div class=\"spamton\">Celeste\u2019s entire speedrun community exists because Maddy Thorson got the coyote time, input buffer, and acceleration curve exactly right. <strong>Those three numbers created a speedrunning scene that outlived the game\u2019s release by six years. Your controller IS your game.</strong></div>\n<div class=\"challenge\">Build it. Start with raw <code>move_and_slide()</code>, then add each ingredient one at a time. Feel the difference after each addition. Then hand the scene to a friend with only the @export sliders visible. Watch them tune a completely different character in 30 seconds without touching code. That\u2019s the power of @export.</div>\n<div class=\"net-note\">The controller is the #1 thing that must be rollback-compatible. Every parameter \u2014 <code>_coyote</code>, <code>_jump_buf</code>, <code>velocity</code>, <code>position</code> \u2014 is gameplay state. During rollback: serialize all of it, restore all of it, resimulate with corrected inputs. Use frame counters (ints), not float timers. Floats drift between CPUs. Ints are exact. The networking course covers the full input-authority pattern \u2014 this controller slots directly into it.</div>"
+},
+/* ──── L03 ──── */
+{
+title:"Saves, Serialization & Snapshots",
+subtitle:"03 \u2014 to_dict() Is Your Entire Architecture",
+vizLabel:"\u25B6 save/load/rollback snapshot demo",
+viz:"saveload",
+snippet:"<span class=\"cm\"># Every game object gets two methods:</span>\n\n<span class=\"kw\">func</span> <span class=\"fn\">to_dict</span>() -> <span class=\"kw\">Dictionary</span>:\n    <span class=\"kw\">return</span> {\n        <span class=\"st\">\"pos\"</span>: [position.x, position.y, position.z],\n        <span class=\"st\">\"vel\"</span>: [velocity.x, velocity.y, velocity.z],\n        <span class=\"st\">\"hp\"</span>: health,\n        <span class=\"st\">\"state\"</span>: current_state,\n        <span class=\"st\">\"coyote\"</span>: _coyote,\n        <span class=\"st\">\"jump_buf\"</span>: _jump_buf,\n    }\n\n<span class=\"kw\">func</span> <span class=\"fn\">from_dict</span>(d: <span class=\"kw\">Dictionary</span>):\n    position = Vector3(d[<span class=\"st\">\"pos\"</span>][<span class=\"nm\">0</span>],d[<span class=\"st\">\"pos\"</span>][<span class=\"nm\">1</span>],d[<span class=\"st\">\"pos\"</span>][<span class=\"nm\">2</span>])\n    velocity = Vector3(d[<span class=\"st\">\"vel\"</span>][<span class=\"nm\">0</span>],d[<span class=\"st\">\"vel\"</span>][<span class=\"nm\">1</span>],d[<span class=\"st\">\"vel\"</span>][<span class=\"nm\">2</span>])\n    health = d[<span class=\"st\">\"hp\"</span>]\n    current_state = d[<span class=\"st\">\"state\"</span>]\n    _coyote = d[<span class=\"st\">\"coyote\"</span>]\n    _jump_buf = d[<span class=\"st\">\"jump_buf\"</span>]\n\n<span class=\"cm\"># SAVE TO DISK (human-readable)</span>\n<span class=\"kw\">func</span> <span class=\"fn\">save_game</span>():\n    <span class=\"kw\">var</span> data = []\n    <span class=\"kw\">for</span> n <span class=\"kw\">in</span> get_tree().<span class=\"fn\">get_nodes_in_group</span>(<span class=\"st\">\"Persist\"</span>):\n        data.<span class=\"fn\">append</span>({<span class=\"st\">\"scene\"</span>:n.scene_file_path, <span class=\"st\">\"d\"</span>:n.<span class=\"fn\">to_dict</span>()})\n    <span class=\"kw\">var</span> f = FileAccess.<span class=\"fn\">open</span>(<span class=\"st\">\"user://save.json\"</span>, FileAccess.WRITE)\n    f.<span class=\"fn\">store_string</span>(JSON.<span class=\"fn\">stringify</span>(data))\n\n<span class=\"cm\"># ROLLBACK SNAPSHOT (in-memory, fast)</span>\n<span class=\"kw\">func</span> <span class=\"fn\">snapshot</span>() -> <span class=\"kw\">Array</span>:\n    <span class=\"kw\">var</span> s = []\n    <span class=\"kw\">for</span> n <span class=\"kw\">in</span> get_tree().<span class=\"fn\">get_nodes_in_group</span>(<span class=\"st\">\"Persist\"</span>):\n        s.<span class=\"fn\">append</span>(n.<span class=\"fn\">to_dict</span>())\n    <span class=\"kw\">return</span> s",
+body:"<p>Here is the secret that ties saves, networking, and rollback into one system: <strong>if every object can serialize itself to a Dictionary and restore from one, you get three features from one architecture decision.</strong> Save files, network snapshots, and rollback state all call the same two methods: <code>to_dict()</code> and <code>from_dict()</code>.</p>\n<div class=\"vocab\"><span class=\"vt\">\"Serialization\"</span> \u2014 converting live game objects into storable data (and back). Your CharacterBody3D at position (400, 200) with 80 health becomes <code>{\"pos\":[400,200], \"hp\":80}</code>. That Dictionary can be saved to disk, sent over the network, or stored in a rollback snapshot buffer.</div>\n<div class=\"vocab\"><span class=\"vt\">\"user:// Path\"</span> \u2014 Godot\u2019s user-writable directory. <code>user://save.json</code> resolves to <code>%APPDATA%/godot/app_userdata/YourProject/</code> on Windows. Survives updates. Always use <code>user://</code> for saves \u2014 <code>res://</code> is read-only in exported builds.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Persist Group\"</span> \u2014 a Godot node group. Add nodes to the \"Persist\" group. At save time: <code>get_tree().get_nodes_in_group(\"Persist\")</code> \u2192 serialize each. At load: delete existing, recreate from data. Simple, scalable, no hardcoded node paths.</div>\n<div class=\"step-card\"><span class=\"step-num\">THE UNIVERSAL PATTERN</span><strong>Save file:</strong> iterate Persist group \u2192 <code>to_dict()</code> each \u2192 JSON.stringify \u2192 write to <code>user://save.json</code>.<br><strong>Network snapshot:</strong> iterate \u2192 <code>to_dict()</code> \u2192 send as RPC payload.<br><strong>Rollback snapshot:</strong> iterate \u2192 <code>to_dict()</code> \u2192 store in a ring buffer of 10 snapshots.<br>Three features. One code path. Same two methods on every object.</div>\n<div class=\"step-card\"><span class=\"step-num\">WHAT TO SERIALIZE \u2014 THE GAMEPLAY/COSMETIC SPLIT</span><strong>Serialize (gameplay state):</strong> positions, velocities, health, state machine state, cooldown frame counters, active hitboxes, burning flags, fracture events.<br><strong>Don\u2019t serialize (cosmetic):</strong> particle positions, debris trails, screen shake offset, jiggle displacement, sound playback position, UI state.<br>If it affects who wins: serialize it. If it just looks/sounds cool: skip it. This split is the #1 architecture decision for rollback games.</div>\n<div class=\"tip\">Keep your <code>to_dict()</code> lean. Pre-allocate the output Dictionary. Use typed arrays, not nested Dictionaries, for the hot path. Rollback may call <code>snapshot()</code> and <code>restore()</code> 8+ times per frame during correction. Disk saves can afford to be fancy (JSON, pretty-print). Rollback snapshots must be fast and allocation-free.</div>\n<div class=\"artists\">Celeste (serialized room state per save crystal), GGPO SDK (snapshot/restore architecture reference), Godot docs: FileAccess + JSON, Rivals of Aether (rollback snapshot design)</div>\n<div class=\"spamton\">A game without a save system is a tech demo. A multiplayer game without serialization is a prayer. <strong>to_dict() and from_dict(). Two methods. Every object. You get saves, network sync, rollback, AND replay recording from the same code path. Four features for the price of one decision.</strong></div>\n<div class=\"challenge\">Add <code>to_dict()</code> and <code>from_dict()</code> to your L02 controller and 5 RigidBody props. Implement <code>save_game()</code> \u2192 write JSON to disk. Implement <code>load_game()</code> \u2192 rebuild from file. Verify: save, move things, load \u2014 snaps back. Then build <code>snapshot()</code> and <code>restore(snap)</code> that work in-memory (no disk I/O). That\u2019s your rollback state store. Same methods, two speeds.</div>\n<div class=\"net-note\">Rollback needs <code>snapshot()</code> and <code>restore()</code> running potentially 8+ times per frame during correction. No disk I/O, no string formatting, no allocations in the hot path. Pre-allocate your snapshot ring buffer at game start. The networking course covers the full rollback loop \u2014 this lesson provides the state storage it depends on.</div>"
+},
+/* ──── L04 ──── */
+{
+title:"Physics Bodies, Layers & Materials",
+subtitle:"04 \u2014 The Four Horsemen of PhysicsBody",
+vizLabel:"\u25B6 four body types \u2014 interactive playground",
+viz:"bodies",
+snippet:"<span class=\"cm\"># THE FOUR BODY TYPES</span>\n\n<span class=\"cm\"># StaticBody3D \u2014 never moves. Floors, walls.</span>\n<span class=\"cm\"># Infinite mass. Zero CPU cost.</span>\n\n<span class=\"cm\"># RigidBody3D \u2014 physics-driven. Has mass.</span>\n<span class=\"cm\"># DON'T set position directly. Apply forces.</span>\n<span class=\"kw\">var</span> box = RigidBody3D.<span class=\"fn\">new</span>()\nbox.mass = <span class=\"nm\">2.0</span>\nbox.gravity_scale = <span class=\"nm\">1.0</span>\nbox.<span class=\"fn\">apply_central_impulse</span>(Vector3(<span class=\"nm\">0</span>,<span class=\"nm\">8</span>,<span class=\"nm\">0</span>))  <span class=\"cm\"># kick up</span>\n\n<span class=\"cm\"># CharacterBody3D \u2014 YOU control it via code.</span>\n<span class=\"kw\">func</span> <span class=\"fn\">_physics_process</span>(delta):\n    velocity += get_gravity() * delta\n    <span class=\"fn\">move_and_slide</span>()  <span class=\"cm\"># handles collision response</span>\n\n<span class=\"cm\"># Area3D \u2014 detects overlaps, no physics response.</span>\n<span class=\"cm\"># Signals: body_entered, body_exited</span>\n\n<span class=\"cm\"># COLLISION LAYERS (identity) vs MASKS (perception)</span>\n<span class=\"cm\"># Layer = \"I am on floor 3\"</span>\n<span class=\"cm\"># Mask  = \"I look at floors 1 and 2\"</span>\n<span class=\"kw\">func</span> <span class=\"fn\">setup_bullet</span>(b: RigidBody3D):\n    b.<span class=\"fn\">set_collision_layer_value</span>(<span class=\"nm\">3</span>, <span class=\"kw\">true</span>)  <span class=\"cm\"># on layer 3</span>\n    b.<span class=\"fn\">set_collision_mask_value</span>(<span class=\"nm\">2</span>, <span class=\"kw\">true</span>)   <span class=\"cm\"># sees layer 2 (enemies)</span>\n    b.<span class=\"fn\">set_collision_mask_value</span>(<span class=\"nm\">4</span>, <span class=\"kw\">true</span>)   <span class=\"cm\"># sees layer 4 (walls)</span>\n    <span class=\"cm\"># does NOT see layer 1 (player) \u2014 no friendly fire</span>\n\n<span class=\"cm\"># PhysicsMaterial \u2014 surface properties</span>\n<span class=\"kw\">var</span> rubber = PhysicsMaterial.<span class=\"fn\">new</span>()\nrubber.bounce = <span class=\"nm\">0.9</span>   <span class=\"cm\"># superball</span>\nrubber.friction = <span class=\"nm\">0.8</span>  <span class=\"cm\"># grippy</span>",
+body:"<p>Godot gives you four physics body types. Pick wrong and you fight the engine. Pick right and it does most of the work. Every object in your brawler is one of these four \u2014 no exceptions.</p>\n<div class=\"vocab\"><span class=\"vt\">\"StaticBody3D\"</span> \u2014 a body that never moves. Floors, walls, platforms. Infinite mass. Collisions bounce off it. Zero CPU cost for the physics engine. If it doesn\u2019t move, make it static.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Collision Layer vs Mask\"</span> \u2014 Layer = which floors this body EXISTS on. Mask = which floors it LOOKS at. A body only collides with things whose layer matches its mask. Bullet on Layer 3 with Mask [2,4] hits enemies (L2) and walls (L4) but ignores the player (L1). Layer is identity. Mask is perception.</div>\n<div class=\"vocab\"><span class=\"vt\">\"PhysicsMaterial\"</span> \u2014 bounce and friction for a surface. <code>bounce=0.9</code> = superball. <code>bounce=0.0</code> = sandbag. <code>friction=0.0</code> = ice. Attach to any CollisionShape3D. When two surfaces collide, their properties combine. One float changes everything about how a surface feels.</div>\n<div class=\"step-card\"><span class=\"step-num\">THE FOUR TYPES \u2014 ONE SENTENCE EACH</span><strong>StaticBody3D:</strong> never moves, infinite mass, floors and walls.<br><strong>RigidBody3D:</strong> physics-driven, has mass, apply forces and impulses, don\u2019t set position directly.<br><strong>CharacterBody3D:</strong> code-driven, you control it via <code>move_and_slide()</code>, your player character.<br><strong>Area3D:</strong> detects overlaps, no physics response, triggers and zones. Hitboxes and hurtboxes are Area3Ds.</div>\n<div class=\"step-card\"><span class=\"step-num\">THE 4-LAYER BRAWLER SETUP</span>Layer 1 = Players. Layer 2 = Enemies. Layer 3 = Projectiles. Layer 4 = Environment.<br>Player projectiles: Layer 3, Mask [2,4] \u2014 hit enemies + walls, not players.<br>Enemy attacks: Layer 3, Mask [1,4] \u2014 hit players + walls, not enemies.<br>Players: Layer 1, Mask [2,3,4] \u2014 collide with enemies, projectiles, walls.<br>This prevents friendly fire and enemy stacking in four lines of config.</div>\n<div class=\"tip\">The biggest multiplayer desync bug source that ISN\u2019T actually a network issue: someone copy-pastes a node and forgets to update the collision mask. Player A\u2019s bullet phases through Player B. No error, no warning, just a bullet passing through a person like a ghost. Check your masks.</div>\n<div class=\"artists\">Half-Life 2 (Havok physics showcase), Noita (every pixel is physics), Overwatch (faction-based projectile layering), Enter the Gungeon (bullet layer management)</div>\n<div class=\"spamton\">Someone copy-pasted a RigidBody node, forgot to update the collision mask, and their bullet passed through every enemy in the game. The playtesters said \"the gun doesn\u2019t work.\" The code was fine. <strong>The mask was wrong. One checkbox. Check. Your. Masks.</strong></div>\n<div class=\"challenge\">Build a 4-layer playground: Player (L1), Enemies (L2), Projectiles (L3), Environment (L4). Configure masks so projectiles hit enemies+environment but not the player. Add a PhysicsMaterial with bounce=0.8 to one platform \u2014 watch boxes trampoline. Change to friction=0.0 \u2014 watch them ice-skate. One float, completely different behavior.</div>\n<div class=\"net-note\">Collision layers are static config \u2014 set once, never sync. PhysicsMaterial changes at runtime (ice trap, bounce pad) ARE gameplay state if they affect combat. Server sends \"platform X now has bounce=0.9\" as reliable RPC. For rollback: material state goes in the snapshot. Miss a material change during rollback = desync.</div>"
+},
+/* ──── L05 ──── */
+{
+title:"Forces, Impulses & Joints",
+subtitle:"05 \u2014 Making Things Move (And Connecting Them)",
+vizLabel:"\u25B6 force/impulse/torque + joints demo",
+viz:"forces",
+snippet:"<span class=\"cm\"># FORCE \u2014 continuous, per-frame, accumulates</span>\n<span class=\"cm\"># Like a rocket engine: push every tick</span>\nrigid.<span class=\"fn\">apply_central_force</span>(Vector3(<span class=\"nm\">100</span>, <span class=\"nm\">0</span>, <span class=\"nm\">0</span>))\n\n<span class=\"cm\"># IMPULSE \u2014 instant, one-shot, immediate</span>\n<span class=\"cm\"># Like a punch: one frame, done</span>\nrigid.<span class=\"fn\">apply_central_impulse</span>(Vector3(<span class=\"nm\">0</span>, <span class=\"nm\">500</span>, <span class=\"nm\">0</span>))\n\n<span class=\"cm\"># TORQUE \u2014 rotational force</span>\nrigid.<span class=\"fn\">apply_torque</span>(Vector3(<span class=\"nm\">0</span>, <span class=\"nm\">0</span>, <span class=\"nm\">200</span>))  <span class=\"cm\"># spin!</span>\n\n<span class=\"cm\"># JOINTS \u2014 connecting bodies</span>\n\n<span class=\"cm\"># PinJoint3D: ball-and-socket, rotate freely</span>\n<span class=\"kw\">var</span> pin = PinJoint3D.<span class=\"fn\">new</span>()\npin.node_a = anchor.<span class=\"fn\">get_path</span>()\npin.node_b = ball.<span class=\"fn\">get_path</span>()\n<span class=\"fn\">add_child</span>(pin)\n\n<span class=\"cm\"># HingeJoint3D: one-axis rotation, with limits</span>\n<span class=\"kw\">var</span> hinge = HingeJoint3D.<span class=\"fn\">new</span>()\nhinge.node_a = wall.<span class=\"fn\">get_path</span>()\nhinge.node_b = door.<span class=\"fn\">get_path</span>()\nhinge.<span class=\"fn\">set_param</span>(HingeJoint3D.PARAM_LIMIT_LOWER, <span class=\"nm\">0</span>)\nhinge.<span class=\"fn\">set_param</span>(HingeJoint3D.PARAM_LIMIT_UPPER, <span class=\"nm\">90</span>)\n\n<span class=\"cm\"># Generic6DOFJoint3D: lock/free any axis</span>\n<span class=\"cm\"># Spring behavior via linear_spring_* params</span>\n<span class=\"cm\"># The universal joint. Ugly name, does everything.</span>",
+body:"<p>There are exactly three ways to make a RigidBody move: force (continuous push), impulse (instant kick), and torque (spin). Mix them up and your game feels broken. Use them correctly and physics does 90% of your animation work.</p>\n<div class=\"vocab\"><span class=\"vt\">\"Force vs Impulse\"</span> \u2014 Force is continuous: applied every _physics_process, accumulates. A rocket engine, gravity, wind. Impulse is instant: one frame, immediate velocity change. A punch, an explosion, a jump. Force is salary. Impulse is lottery.</div>\n<div class=\"vocab\"><span class=\"vt\">\"PinJoint3D\"</span> \u2014 connects two bodies at a single point. They rotate freely around that point but can\u2019t separate. Ball-and-socket. Wrecking balls, flails, chain links, pendulums. The simplest joint.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Generic6DOFJoint3D\"</span> \u2014 Six Degrees of Freedom: lock or free any combination of linear (XYZ position) and angular (XYZ rotation) axes. Spring behavior via <code>linear_spring_*</code> parameters. The universal joint. If nothing else fits, this does.</div>\n<div class=\"step-card\"><span class=\"step-num\">THE FORCE TRIO</span><strong>Force:</strong> <code>apply_central_force(vec)</code> \u2014 per-frame, accumulates. Movement acceleration, wind, gravity override.<br><strong>Impulse:</strong> <code>apply_central_impulse(vec)</code> \u2014 one-shot, instant. Jump, explosion knockback, hit reaction.<br><strong>Torque:</strong> <code>apply_torque(vec)</code> \u2014 rotational force. Debris tumble, ragdoll spin, drill attacks. Your brawler\u2019s knockback system is impulse + torque.</div>\n<div class=\"step-card\"><span class=\"step-num\">JOINTS \u2014 CONNECTING BODIES</span><strong>PinJoint3D:</strong> ball-and-socket. Pendulums, wrecking balls, chain links.<br><strong>HingeJoint3D:</strong> one-axis rotation with angular limits. Doors, ragdoll elbows/knees.<br><strong>SliderJoint3D:</strong> linear motion along one axis. Pistons, elevators.<br><strong>Generic6DOFJoint3D:</strong> the universal joint. Lock any axis. Add springs. If nothing else fits, use this. Ragdoll spines, bungee cords, vehicle suspension.</div>\n<div class=\"tip\">The biggest RigidBody mistake: setting <code>position</code> directly in code. That teleports the body and the physics engine loses track of velocity, contacts, everything. Apply forces or impulses to move RigidBodies. Set position directly only for initialization or teleportation. The contract: you ask, physics delivers.</div>\n<div class=\"artists\">Angry Birds (impulse as core gameplay), Katamari Damacy (continuous force accumulation), World of Goo (spring-mass joints), Bridge Constructor (joint stress visualization)</div>\n<div class=\"spamton\">Force is a salary. Impulse is a lottery win. One builds up slowly, the other changes your life in one frame. <strong>Hit reactions are impulses. Movement is force. Debris tumble is torque. Mix them up and your character either ice-skates or teleports.</strong></div>\n<div class=\"challenge\">Build a wrecking ball: 5 PinJoint-connected RigidBody chain links hanging from a StaticBody anchor, heavy sphere at the end. Swing it into stacked boxes. Then replace PinJoints with Generic6DOFJoint + spring parameters for a bungee cord. Feel the difference. Add torque to the sphere mid-swing \u2014 it imparts angular momentum to whatever it hits.</div>\n<div class=\"net-note\">In a rollback brawler: the server applies the authoritative knockback impulse. Clients predict it locally (apply immediately for responsiveness), correct if server disagrees. For joints: sync only anchor positions + initial config at spawn. The joint simulation is deterministic in Jolt \u2014 same constraints + same forces = same result. Don\u2019t sync every link position; sync the setup, let physics run identically everywhere.</div>"
+},
+/* ──── L06 ──── */
+{
+title:"Raycasts & ShapeCasts",
+subtitle:"06 \u2014 Asking Physics Questions",
+vizLabel:"\u25B6 raycasts + shapecasts \u2014 interactive",
+viz:"raycasts",
+snippet:"<span class=\"cm\"># RAYCAST \u2014 thin line, first hit only</span>\n<span class=\"kw\">var</span> space = get_world_3d().direct_space_state\n<span class=\"kw\">var</span> query = PhysicsRayQueryParameters3D.<span class=\"fn\">create</span>(\n    from_pos, to_pos\n)\nquery.collision_mask = <span class=\"nm\">0b0110</span>  <span class=\"cm\"># layers 2+3 only</span>\n<span class=\"kw\">var</span> result = space.<span class=\"fn\">intersect_ray</span>(query)\n<span class=\"kw\">if</span> result:\n    <span class=\"kw\">var</span> hit_pos = result[<span class=\"st\">\"position\"</span>]\n    <span class=\"kw\">var</span> hit_normal = result[<span class=\"st\">\"normal\"</span>]\n    <span class=\"kw\">var</span> collider = result[<span class=\"st\">\"collider\"</span>]\n    <span class=\"cm\"># Apply impulse at hit point:</span>\n    <span class=\"kw\">if</span> collider <span class=\"kw\">is</span> RigidBody3D:\n        collider.<span class=\"fn\">apply_impulse</span>(\n            ray_dir * <span class=\"nm\">50.0</span>,  <span class=\"cm\"># force</span>\n            hit_pos - collider.global_position  <span class=\"cm\"># offset</span>\n        )\n\n<span class=\"cm\"># SHAPECAST \u2014 sweep a shape along a path</span>\n<span class=\"cm\"># Melee attacks, thick beams, overlap checks</span>\n<span class=\"kw\">var</span> shape_q = PhysicsShapeQueryParameters3D.<span class=\"fn\">new</span>()\nshape_q.shape = SphereShape3D.<span class=\"fn\">new</span>()\nshape_q.shape.radius = <span class=\"nm\">1.5</span>  <span class=\"cm\"># melee sweep radius</span>\nshape_q.transform.origin = attack_pos\nshape_q.collision_mask = <span class=\"nm\">0b0010</span>  <span class=\"cm\"># enemies only</span>\n<span class=\"kw\">var</span> hits = space.<span class=\"fn\">intersect_shape</span>(shape_q, <span class=\"nm\">8</span>)\n<span class=\"kw\">for</span> hit <span class=\"kw\">in</span> hits:\n    hit[<span class=\"st\">\"collider\"</span>].<span class=\"fn\">take_damage</span>(<span class=\"nm\">25</span>)",
+body:"<p>Before you can hit something, you need to <em>ask</em> if you hit something. Raycasts and ShapeCasts are how you interrogate the physics world: \"what\u2019s in front of me?\" \"is there ground below?\" \"did my sword connect?\" They\u2019re the cheapest physics queries and the backbone of every combat system.</p>\n<div class=\"vocab\"><span class=\"vt\">\"Raycast\"</span> \u2014 an invisible line from A to B. Reports the first hit: position, normal, collider, shape. Cheapest physics query. Ground checks, line of sight, hitscan weapons, ledge detection. Use <code>RayCast3D</code> nodes for per-frame checks or <code>intersect_ray()</code> for one-off queries.</div>\n<div class=\"vocab\"><span class=\"vt\">\"ShapeCast\"</span> \u2014 sweep a shape (sphere, box, capsule) along a path. Catches things a thin ray misses. Perfect for melee hitboxes, wide beams, movement prediction. More expensive than a ray, much cheaper than an Area3D overlap.</div>\n<div class=\"vocab\"><span class=\"vt\">\"PhysicsDirectSpaceState3D\"</span> \u2014 Godot\u2019s API for code-only physics queries without placing nodes. <code>intersect_ray()</code>, <code>intersect_shape()</code>, <code>collide_shape()</code>. Runs during <code>_physics_process</code>. Essential for procedural checks like \"what\u2019s in this explosion radius?\"</div>\n<div class=\"step-card\"><span class=\"step-num\">HITSCAN VS MELEE</span><strong>Hitscan (raycast):</strong> instant, thin, long range. Point and shoot. The ray hits or it doesn\u2019t. Apply impulse at hit point for knockback. DOOM, Counter-Strike, any gun that \"just works.\"<br><strong>Melee (shapecast/overlap):</strong> sweep a volume in front of the player. Everything inside takes damage. Wider, shorter, more forgiving. Covers the natural imprecision of close combat.</div>\n<div class=\"step-card\"><span class=\"step-num\">THE GROUND CHECK PATTERN</span>A <code>RayCast3D</code> pointing downward from the player\u2019s feet, slightly longer than the player\u2019s collider. If it hits: grounded. If not: airborne. Used alongside <code>is_on_floor()</code> for edge cases like slopes, moving platforms, and coyote time checks. Every platformer has one.</div>\n<div class=\"tip\">Raycasts are cheap. So cheap that the dev who said \"raycasts are expensive\" and used Area3D for everything is the same person whose framerate dies when 50 overlapping Areas all fire body_entered simultaneously. Rays are surgical. Areas are grenades. Choose accordingly.</div>\n<div class=\"artists\">DOOM Eternal (hitscan BFG), Counter-Strike 2 (server-side lag-compensated raycasts), R6 Siege (destruction/penetration raycasts), Valve Source Engine lag compensation docs</div>\n<div class=\"spamton\">Someone replaced all their raycasts with Area3D overlap checks because a forum post said raycasts were expensive. Fifty overlapping Areas. Sixty signals per frame. <strong>Framerate: 12fps. Raycasts are nearly free. Areas are event grenades. Think before you throw.</strong></div>\n<div class=\"challenge\">Build a dual-weapon system: left-click = hitscan ray (instant, thin, long range \u2014 on hit, impulse at hit point + spark particle). Right-click = ShapeCast melee (sphere sweep 1.5m in front \u2014 everything hit gets knockback). Visualize: hitscan as a brief orange line, melee as a translucent arc. This is your brawler\u2019s ranged + melee attack foundation.</div>\n<div class=\"net-note\">Raycasts are the backbone of networked hit detection. Client fires locally for instant visual feedback (tracer, muzzle flash). Server fires the authoritative ray against its world state. For rollback: the server may rewind world state to the tick when the client fired (lag compensation). Store enough world snapshots that the server can raycast against the past. \"The server shoots where you WERE\" \u2014 every FPS netcode does this.</div>"
+},
+/* ──── L07 ──── */
+{
+title:"Verlet Ropes & Cloth",
+subtitle:"07 \u2014 TotK Called, They Want Their Ropes Back",
+vizLabel:"\u25B6 verlet rope + cloth \u2014 grab and drag",
+viz:"verlet",
+snippet:"<span class=\"cm\"># VERLET INTEGRATION \u2014 the entire algorithm</span>\n<span class=\"cm\"># No velocity variable. Velocity is implicit.</span>\n\n<span class=\"kw\">var</span> points: <span class=\"kw\">Array</span> = []  <span class=\"cm\"># [{pos, prev, locked}]</span>\n<span class=\"kw\">var</span> sticks: <span class=\"kw\">Array</span> = []  <span class=\"cm\"># [{a, b, len}]</span>\n\n<span class=\"kw\">func</span> <span class=\"fn\">update_verlet</span>(dt: <span class=\"kw\">float</span>):\n    <span class=\"kw\">var</span> grav = Vector2(<span class=\"nm\">0</span>, <span class=\"nm\">980</span>) * dt * dt\n    <span class=\"kw\">for</span> p <span class=\"kw\">in</span> points:\n        <span class=\"kw\">if</span> p.locked: <span class=\"kw\">continue</span>\n        <span class=\"kw\">var</span> temp = p.pos\n        p.pos += (p.pos - p.prev) * <span class=\"nm\">0.99</span> + grav\n        p.prev = temp\n\n<span class=\"kw\">func</span> <span class=\"fn\">solve_constraints</span>(iterations: <span class=\"kw\">int</span>):\n    <span class=\"kw\">for</span> i <span class=\"kw\">in</span> iterations:  <span class=\"cm\"># 4\u20135 is standard</span>\n        <span class=\"kw\">for</span> s <span class=\"kw\">in</span> sticks:\n            <span class=\"kw\">var</span> a = points[s.a]\n            <span class=\"kw\">var</span> b = points[s.b]\n            <span class=\"kw\">var</span> delta = b.pos - a.pos\n            <span class=\"kw\">var</span> dist = delta.<span class=\"fn\">length</span>()\n            <span class=\"kw\">var</span> diff = (s.len - dist) / dist * <span class=\"nm\">0.5</span>\n            <span class=\"kw\">var</span> offset = delta * diff\n            <span class=\"kw\">if</span> !a.locked: a.pos -= offset\n            <span class=\"kw\">if</span> !b.locked: b.pos += offset\n\n<span class=\"cm\"># That's it. 20 lines. Every rope and cloth in games.</span>\n<span class=\"cm\"># Cloth: points in a 2D grid + structural/shear/bend sticks</span>\n<span class=\"cm\"># Tear: if dist > len * 1.5, delete the stick</span>",
+body:"<p>Verlet integration is the most elegant algorithm in game physics. It simulates ropes, chains, cloth, hair, bridges, tentacles, and grappling hooks in about 20 lines of code. It has been used in every physics-based game since Hitman: Codename 47 (2000). TotK\u2019s Ultrahand is verlet with collision constraints. <em>Twenty lines.</em></p>\n<div class=\"vocab\"><span class=\"vt\">\"Verlet Integration\"</span> \u2014 position-based physics. Store current and previous position. Velocity is implicit: <code>vel = pos - prev_pos</code>. Move points, then enforce constraints by nudging toward correct distances. Repeat 3\u20135 times. Stable, simple, beautiful.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Constraint Satisfaction\"</span> \u2014 after moving points, some pairs are too far apart or too close. Loop through constraints: compute distance, compute error vs rest length, split correction 50/50. More iterations = stiffer. Fewer = stretchier. 3\u20135 iterations per frame is standard.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Structural / Shear / Bend Constraints\"</span> \u2014 three constraint types for cloth grids. Structural: horizontal+vertical neighbors (prevents stretching). Shear: diagonal neighbors (prevents collapse). Bend: skip-one neighbors (resists folding). High bend stiffness = cardboard. Low = silk.</div>\n<div class=\"step-card\"><span class=\"step-num\">ROPE \u2014 1D CHAIN</span>A line of points connected by distance constraints. Pin the first point (locked=true). Gravity pulls the rest into a natural catenary curve. Grab any point with the mouse \u2014 the chain follows. Add more constraint iterations for a stiff chain, fewer for a stretchy rope.</div>\n<div class=\"step-card\"><span class=\"step-num\">CLOTH \u2014 2D GRID</span>Points in an NxN grid with three constraint types: structural (adjacent), shear (diagonal), bend (skip-one). Pin the top edge. Wind is just a per-frame force with noise variation. Tear: if any constraint stretches beyond 1.5\u00d7 rest length, delete it. The cloth rips along the stress line.</div>\n<div class=\"step-card\"><span class=\"step-num\">GRAPPLING HOOK \u2014 APPLIED VERLET</span>Player fires a ray \u2192 on hit, spawn a rope from player to hit point. Player is pulled toward the anchor (apply force toward first rope point). Add collision: push points out of StaticBody shapes each frame. Now you have a swinging grapple. TotK\u2019s Ultrahand = this + object attachment at the endpoint.</div>\n<div class=\"tip\">The damping factor (0.99 multiplier on velocity) is your rope\u2019s \"material.\" 0.99 = elastic rope. 0.95 = heavy chain. 0.999 = nearly frictionless wire. One float changes the entire feel. Start at 0.99 and tune from there.</div>\n<div class=\"artists\">Tears of the Kingdom (Ultrahand), Uncharted 4 (rope swinging), Cut the Rope, Spider-Man PS4 (web physics), Shadow of the Colossus (cloak cloth)</div>\n<div class=\"spamton\">Verlet integration is 20 lines of code and it simulates every rope, chain, bridge, whip, grappling hook, cape, and tentacle in your game. <strong>TotK\u2019s Ultrahand is verlet with collision constraints. Twenty lines. The most impressive system in the game is twenty lines.</strong></div>\n<div class=\"challenge\">Build a grappling hook: fire a ray, spawn a verlet rope from player to hit point. Pull the player toward the anchor. Add collision (push points out of StaticBodies). Then build a destructible banner: cloth pinned at top corners, tear threshold at 1.5\u00d7, slash with raycast to sever constraints. Two mechanics from one 20-line system.</div>\n<div class=\"net-note\">Verlet is naturally deterministic \u2014 same initial conditions + same forces = same result. Sync ONLY anchor points and initial config at spawn. Each client runs verlet locally from those conditions. Rope: send <code>{anchor_a, anchor_b, num_points, rest_len}</code> once, then only anchor positions. Cloth tearing: \"constraint N torn at tick T\" \u2192 reliable RPC \u2192 all clients delete the same constraint. Do NOT sync individual point positions. That\u2019s O(n) bandwidth per frame for cosmetic data.</div>"
+},
+/* ──── L08 ──── */
+{
+title:"Jiggle Physics & Weight Maps",
+subtitle:"08 \u2014 Pin the Skeleton, Free the Flesh",
+vizLabel:"\u25B6 weight-painted jiggle demo",
+viz:"jiggle",
+snippet:"<span class=\"cm\"># SOFT BODY with weight-painted displacement</span>\n\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> jiggle_intensity := <span class=\"nm\">1.0</span>\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> stiffness := <span class=\"nm\">80.0</span>\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> damping := <span class=\"nm\">0.85</span>\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> max_displacement := <span class=\"nm\">0.15</span>\n\n<span class=\"kw\">var</span> weight_map: Image  <span class=\"cm\"># grayscale: white=free, black=locked</span>\n<span class=\"kw\">var</span> rest_positions: PackedVector3Array\n<span class=\"kw\">var</span> velocities: PackedVector3Array\n\n<span class=\"kw\">func</span> <span class=\"fn\">_ready</span>():\n    weight_map = <span class=\"fn\">load</span>(<span class=\"st\">\"res://jiggle_weights.png\"</span>).<span class=\"fn\">get_image</span>()\n    rest_positions = mesh.get_vertex_array()  <span class=\"cm\"># store at rest</span>\n    velocities = PackedVector3Array()\n    velocities.<span class=\"fn\">resize</span>(rest_positions.<span class=\"fn\">size</span>())\n\n<span class=\"kw\">func</span> <span class=\"fn\">_physics_process</span>(delta):\n    <span class=\"kw\">for</span> i <span class=\"kw\">in</span> rest_positions.<span class=\"fn\">size</span>():\n        <span class=\"kw\">var</span> weight = <span class=\"fn\">sample_weight</span>(i)  <span class=\"cm\"># 0..1</span>\n        <span class=\"kw\">var</span> max_d = max_displacement * weight * jiggle_intensity\n        <span class=\"kw\">var</span> offset = current_pos[i] - rest_positions[i]\n        <span class=\"cm\"># Spring force toward rest</span>\n        <span class=\"kw\">var</span> spring = -stiffness * offset\n        velocities[i] = (velocities[i] + spring * delta) * damping\n        current_pos[i] += velocities[i] * delta\n        <span class=\"cm\"># Clamp to max displacement</span>\n        offset = current_pos[i] - rest_positions[i]\n        <span class=\"kw\">if</span> offset.<span class=\"fn\">length</span>() > max_d:\n            current_pos[i] = rest_positions[i] + offset.<span class=\"fn\">normalized</span>() * max_d",
+body:"<p>Jiggle physics is a verlet system with a twist: a <strong>weight map</strong> controls how much each vertex can move. Shoulders stay rigid. Belly jiggles. The gradient between them creates organic motion that looks alive instead of like a bag of jello.</p>\n<div class=\"vocab\"><span class=\"vt\">\"Weight Map\"</span> \u2014 a per-vertex scalar (0.0\u20131.0) painted in Blender\u2019s Vertex Weight Paint mode, exported as a texture. White = full freedom, black = pinned. Sample per-vertex: <code>weight = weight_texture.get_pixel(uv.x, uv.y).r</code>. Same technique used for blend shapes, cloth pinning, and foliage wind.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Displacement Limit\"</span> \u2014 max distance a vertex can move from rest, scaled by weight: <code>max_offset = base_limit * weight</code>. Without this, jiggle escalates to infinity under sustained force. With it, deformation is organic and bounded. The base_limit is your tasteful-vs-absurd dial.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Spring Damping\"</span> \u2014 how fast oscillation dies. <code>velocity *= damping</code> each frame. High damping (0.9) = one bounce, stops (pudding). Low damping (0.1) = sustained wobble (jello). Combined with stiffness, these two values define the material: stiff+damped = muscle, soft+undamped = water balloon.</div>\n<div class=\"step-card\"><span class=\"step-num\">UNIFORM VS WEIGHT-MAPPED</span>Toggle the viz to see the difference. Uniform: every vertex has the same displacement limit. The whole mesh deforms equally \u2014 looks like jello, not anatomy. Weight-mapped: shoulders locked, chest gradual, belly free. Deformation follows body structure. Night and day.</div>\n<div class=\"step-card\"><span class=\"step-num\">THE @EXPORT WORKFLOW</span>Export <code>jiggle_intensity</code>, <code>stiffness</code>, <code>damping</code>, <code>max_displacement</code>. Designers adjust in the Inspector per character without touching code. Muscular fighter? High stiffness, high damping. Soft character? Low stiffness, low damping. Same system, different exports.</div>\n<div class=\"tip\">Paint your weight map in any image editor: 64\u00d764 grayscale. White on belly/chest, black at shoulders/hips, gradient between. Load it per-vertex. The difference between \"this looks like broken physics\" and \"this looks alive\" is a grayscale PNG you painted in five minutes.</div>\n<div class=\"artists\">Dead or Alive (jiggle physics pioneers), Blade and Sorcery VR (weight-painted soft body), VRChat (avatar jiggle bones), Blender Vertex Weight Paint mode</div>\n<div class=\"spamton\">Someone shipped a VR game with uniform jiggle on the entire character mesh. Within three hours the internet cranked displacement to 500%. <strong>Weight maps exist. Pin the skeleton. Free the flesh. Export the intensity to a settings menu so players can choose their own chaos level.</strong></div>\n<div class=\"challenge\">Paint a 64\u00d764 grayscale weight map. Load it per-vertex. Compare uniform vs weight-mapped jiggle. Export stiffness/damping/@intensity. Hand the scene to someone else \u2014 watch them tune a different character feel in 30 seconds without code. Same workflow as Blade and Sorcery.</div>\n<div class=\"net-note\">Jiggle is cosmetic \u2014 do NOT sync it, do NOT include in rollback snapshots. Each client runs local jiggle from the authoritative bone positions received via snapshot sync. Weight map is static data (identical everywhere). Jiggle diverges between clients due to frame timing \u2014 and that\u2019s fine. Nobody compares jiggle frame-by-frame. Cosmetic divergence is free.</div>"
+},
+/* ──── L09 ──── */
+{
+title:"Breakable Objects & Voronoi Fracture",
+subtitle:"09 \u2014 Everything You Build, They Will Destroy",
+vizLabel:"\u25B6 click to shatter \u2014 voronoi fracture",
+viz:"fracture",
+snippet:"<span class=\"cm\"># PRE-FRACTURE at load time, not at impact</span>\n\n<span class=\"kw\">var</span> fragments: <span class=\"kw\">Array</span>[RigidBody3D] = []\n<span class=\"kw\">var</span> intact := <span class=\"kw\">true</span>\n\n<span class=\"kw\">func</span> <span class=\"fn\">_ready</span>():\n    <span class=\"cm\"># Generate Voronoi cells from random seeds</span>\n    <span class=\"kw\">var</span> rng = RandomNumberGenerator.<span class=\"fn\">new</span>()\n    rng.seed = fracture_seed  <span class=\"cm\"># deterministic!</span>\n    <span class=\"kw\">var</span> seeds = []\n    <span class=\"kw\">for</span> i <span class=\"kw\">in</span> <span class=\"nm\">8</span>:  <span class=\"cm\"># 8 fragments per object</span>\n        seeds.<span class=\"fn\">append</span>(Vector2(\n            rng.<span class=\"fn\">randf_range</span>(-size.x, size.x),\n            rng.<span class=\"fn\">randf_range</span>(-size.y, size.y)\n        ))\n    <span class=\"cm\"># Clip mesh into Voronoi cells</span>\n    <span class=\"kw\">for</span> cell <span class=\"kw\">in</span> <span class=\"fn\">compute_voronoi</span>(seeds, bounds):\n        <span class=\"kw\">var</span> frag = <span class=\"fn\">create_fragment</span>(cell)\n        frag.visible = <span class=\"kw\">false</span>; frag.freeze = <span class=\"kw\">true</span>\n        fragments.<span class=\"fn\">append</span>(frag)\n        <span class=\"fn\">add_child</span>(frag)\n\n<span class=\"kw\">func</span> <span class=\"fn\">fracture</span>(hit_pos: Vector3, force: <span class=\"kw\">float</span>):\n    <span class=\"kw\">if</span> !intact: <span class=\"kw\">return</span>\n    intact = <span class=\"kw\">false</span>\n    mesh_instance.visible = <span class=\"kw\">false</span>\n    <span class=\"kw\">for</span> f <span class=\"kw\">in</span> fragments:\n        f.visible = <span class=\"kw\">true</span>; f.freeze = <span class=\"kw\">false</span>\n        <span class=\"kw\">var</span> dir = (f.global_position - hit_pos).<span class=\"fn\">normalized</span>()\n        <span class=\"kw\">var</span> dist = f.global_position.<span class=\"fn\">distance_to</span>(hit_pos)\n        f.<span class=\"fn\">apply_central_impulse</span>(dir * force / <span class=\"fn\">max</span>(dist, <span class=\"nm\">0.5</span>))\n        f.<span class=\"fn\">apply_torque_impulse</span>(Vector3(\n            rng.<span class=\"fn\">randf</span>(), rng.<span class=\"fn\">randf</span>(), rng.<span class=\"fn\">randf</span>()\n        ) * <span class=\"nm\">20</span>)\n    <span class=\"cm\"># Cleanup: 3 second timer then queue_free</span>\n    get_tree().<span class=\"fn\">create_timer</span>(<span class=\"nm\">3.0</span>).timeout.<span class=\"fn\">connect</span>(func():\n        <span class=\"kw\">for</span> f <span class=\"kw\">in</span> fragments: f.<span class=\"fn\">queue_free</span>())",
+body:"<p>Destruction is the physics feature players remember. A box shattering into fragments that fly apart with angular velocity, tumbling and bouncing off walls \u2014 that\u2019s a <em>moment</em>. And the trick is embarrassingly simple: the fragments already exist. They\u2019re hiding inside the intact mesh. On impact, you swap.</p>\n<div class=\"vocab\"><span class=\"vt\">\"Voronoi Fracture\"</span> \u2014 scatter N random seed points inside a mesh. Each seed defines a cell \u2014 the region closer to that seed than any other. Cell boundaries = fracture lines. 8\u201312 seeds per object is the real-time sweet spot. Computed once at load, stored as dormant sub-meshes.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Pre-Fracture\"</span> \u2014 computing fragment meshes at load time, not at impact. The player sees instant destruction because fragments already exist. Hide them inside the intact mesh. On impact: hide parent, show fragments, apply impulse. Every shipped game does this.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Fragment Pooling\"</span> \u2014 pre-allocate a fixed number of fragment objects, recycle instead of create/destroy. <code>queue_free()</code> + <code>instantiate()</code> every frame kills performance. Pool 200 fragments. Oldest recycle first.</div>\n<div class=\"step-card\"><span class=\"step-num\">THE FRACTURE PIPELINE</span><strong>1. Load:</strong> generate Voronoi cells from seeded RNG \u2192 clip mesh into N fragments \u2192 store as hidden RigidBody children, frozen.<br><strong>2. Impact:</strong> hide parent mesh \u2192 show + unfreeze fragments \u2192 apply impulse from hit point (force \u221d 1/distance) \u2192 add random torque for tumble.<br><strong>3. Cleanup:</strong> 3-second timer \u2192 queue_free fragments. Or pool and recycle. Cap at 200 active.</div>\n<div class=\"step-card\"><span class=\"step-num\">SEEDED RNG \u2014 DETERMINISTIC DESTRUCTION</span>The Voronoi seed points come from a seeded RNG: <code>rng.seed = fracture_seed</code>. Same seed \u2192 same cells \u2192 same fragments. This is critical for multiplayer: send the seed, not the geometry. All clients compute identical fragments from the same seed.</div>\n<div class=\"perf\">Pre-fracture adds memory per breakable object (N hidden fragments). A wall of 12 boxes at 8 fragments each = 96 dormant RigidBodies. Manageable. A city of 500 breakable windows at 8 each = 4000 dormant bodies. Not manageable. Fracture on demand (with pre-computed cell data but lazy mesh creation) is the production answer for large-scale destruction.</div>\n<div class=\"tip\">Runtime Voronoi fracture works in your test scene with one box. It dies in production with 30 boxes and a particle system. Pre-fracture everything. The illusion IS the product. No player has ever inspected a fragment mesh mid-explosion and said \"these Voronoi cells are procedurally generated.\" They just see things break. Ship the illusion.</div>\n<div class=\"artists\">Red Faction: Guerrilla (GeoMod 2.0), Control (world destruction), Teardown (voxel destruction), Unreal Chaos Destruction system</div>\n<div class=\"spamton\">Runtime Voronoi fracture is a trap. Works beautifully in your test scene with one box. Dies screaming with 30 boxes and a particle system. <strong>Pre-fracture everything. Hide the shards. Swap on impact. The illusion IS the product.</strong></div>\n<div class=\"challenge\">Pre-fracture a wall of 12 boxes (8 cells each = 96 fragments). Punch (raycast) the struck box. Apply shockwave impulse to fragments within 2m \u2014 chain reaction: fragments from box A hit box B, triggering B\u2019s fracture. Cap at 200 active, oldest despawn first. This is Control-style destruction.</div>\n<div class=\"net-note\">Destruction events are synced, fragment positions are NOT. Server: \"object X fractured with seed S at tick T\" \u2192 reliable RPC. All clients run identical Voronoi from same seed \u2192 identical fragments. Apply identical impulse formula \u2192 identical initial velocities. Fragments diverge slightly over time (floating-point) \u2014 nobody notices because debris is cosmetic. For rollback: the fracture event (collision body removed) IS gameplay state in the snapshot. Fragment positions are cosmetic, excluded entirely.</div>"
+},
+/* ──── L10 ──── */
+{
+title:"Slicing & Dismemberment",
+subtitle:"10 \u2014 Raiden Would Be Proud",
+vizLabel:"\u25B6 draw to slice + click to dismember",
+viz:"slice",
+snippet:"<span class=\"cm\"># SUTHERLAND-HODGMAN POLYGON CLIPPING (1974)</span>\n<span class=\"cm\"># Slice any convex polygon along a plane</span>\n\n<span class=\"kw\">func</span> <span class=\"fn\">clip_polygon</span>(verts: Array, plane_pt: Vector2,\n        plane_n: Vector2) -> <span class=\"kw\">Array</span>:\n    <span class=\"kw\">var</span> front = []; <span class=\"kw\">var</span> back = []\n    <span class=\"kw\">for</span> i <span class=\"kw\">in</span> verts.<span class=\"fn\">size</span>():\n        <span class=\"kw\">var</span> a = verts[i]\n        <span class=\"kw\">var</span> b = verts[(i+<span class=\"nm\">1</span>) % verts.<span class=\"fn\">size</span>()]\n        <span class=\"kw\">var</span> da = (a - plane_pt).<span class=\"fn\">dot</span>(plane_n)\n        <span class=\"kw\">var</span> db = (b - plane_pt).<span class=\"fn\">dot</span>(plane_n)\n        <span class=\"kw\">if</span> da >= <span class=\"nm\">0</span>: front.<span class=\"fn\">append</span>(a)\n        <span class=\"kw\">else</span>: back.<span class=\"fn\">append</span>(a)\n        <span class=\"kw\">if</span> (da > <span class=\"nm\">0</span>) != (db > <span class=\"nm\">0</span>):  <span class=\"cm\"># edge crosses plane</span>\n            <span class=\"kw\">var</span> t = da / (da - db)\n            <span class=\"kw\">var</span> hit = a.<span class=\"fn\">lerp</span>(b, t)\n            front.<span class=\"fn\">append</span>(hit)\n            back.<span class=\"fn\">append</span>(hit)\n    <span class=\"kw\">return</span> [front, back]\n\n<span class=\"cm\"># DISMEMBERMENT \u2014 limb graph</span>\n<span class=\"kw\">var</span> limbs = [\n    {<span class=\"st\">\"name\"</span>:<span class=\"st\">\"head\"</span>,  <span class=\"st\">\"parent\"</span>:<span class=\"st\">\"torso\"</span>, <span class=\"st\">\"hp\"</span>:<span class=\"nm\">30</span>},\n    {<span class=\"st\">\"name\"</span>:<span class=\"st\">\"arm_l\"</span>, <span class=\"st\">\"parent\"</span>:<span class=\"st\">\"torso\"</span>, <span class=\"st\">\"hp\"</span>:<span class=\"nm\">40</span>},\n    {<span class=\"st\">\"name\"</span>:<span class=\"st\">\"arm_r\"</span>, <span class=\"st\">\"parent\"</span>:<span class=\"st\">\"torso\"</span>, <span class=\"st\">\"hp\"</span>:<span class=\"nm\">40</span>},\n    {<span class=\"st\">\"name\"</span>:<span class=\"st\">\"leg_l\"</span>, <span class=\"st\">\"parent\"</span>:<span class=\"st\">\"torso\"</span>, <span class=\"st\">\"hp\"</span>:<span class=\"nm\">50</span>},\n    {<span class=\"st\">\"name\"</span>:<span class=\"st\">\"leg_r\"</span>, <span class=\"st\">\"parent\"</span>:<span class=\"st\">\"torso\"</span>, <span class=\"st\">\"hp\"</span>:<span class=\"nm\">50</span>},\n]\n<span class=\"cm\"># On hit: reduce limb hp. At 0: sever.</span>\n<span class=\"cm\"># Child subtree becomes independent RigidBody.</span>\n<span class=\"cm\"># Spawn gibs + particles at separation point.</span>",
+body:"<p>Metal Gear Rising lets you slice anything along any angle. The halves fall apart with physics and the cut face glows like hot metal. The algorithm is from 1974. It runs in microseconds. Sometimes the most impressive tech in your game is just old math applied with confidence.</p>\n<div class=\"vocab\"><span class=\"vt\">\"Sutherland-Hodgman Clipping\"</span> \u2014 walk a polygon\u2019s edges, classify vertices as front/back of a plane, clip at intersections. Output: two new vertex lists. O(n) per cut. Fast enough for real-time. Metal Gear Rising uses this on convex-decomposed meshes. The algorithm is 52 years old.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Limb Graph\"</span> \u2014 a data structure mapping a skeleton as a graph of severable connections. Each segment has parent joint, child joint, health. Damage reduces health. At zero: sever. Child subtree becomes independent RigidBody. L4D2\u2019s damage model is exactly this.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Cut Face Capping\"</span> \u2014 after slicing, the interior is exposed. Generate a new polygon along the cut line to seal each half. Color it differently (orange glow = hot metal). Without capping, you see inside the mesh \u2014 hollow, broken. MGR\u2019s glowing cut faces are capped + emissive shader.</div>\n<div class=\"step-card\"><span class=\"step-num\">BLADE MODE \u2014 THE MGR PATTERN</span>Hold a button \u2192 <code>Engine.time_scale = 0.2</code>. Draw precise cuts at any angle. Release \u2192 normal speed. Each cut: define a plane from mouse gesture (start point, end point, cross with camera forward = normal). Clip all intersecting meshes. Spawn two RigidBody halves. Cap cut faces with accent-colored material. Done.</div>\n<div class=\"step-card\"><span class=\"step-num\">DISMEMBERMENT \u2014 THE L4D PATTERN</span>Each limb has health. Hit a limb \u2192 reduce HP. At zero: sever the limb node from the skeleton. The detached subtree becomes an independent RigidBody with ragdoll. Spawn 3 gibs (small debris meshes) + GPU particle burst at the separation point. Raycast downward from particle positions \u2192 place blood decals. The horror comes from readability: pieces make anatomical sense.</div>\n<div class=\"perf\">Each slice creates two new meshes + RigidBodies. 10 rapid slices on one object = 1024 fragments (2^10). Cap max slices per object at 3\u20134. After that, fragments are too small to matter visually and the RigidBody count explodes. L\u2019s diminishing returns: 2 slices look dramatic, 10 look like confetti.</div>\n<div class=\"tip\">Don\u2019t slice in real-time for everything. Pre-slice destructible objects at load (same as Voronoi pre-fracture). Reserve real-time Sutherland-Hodgman for the player\u2019s blade-mode weapon only \u2014 one sword, one mesh at a time, player-initiated. That\u2019s how MGR keeps it fast.</div>\n<div class=\"artists\">Metal Gear Rising: Revengeance (blade mode), Left 4 Dead 2 (limb damage model), DOOM Eternal (glory kills), Dead Space (strategic dismemberment), Blade and Sorcery</div>\n<div class=\"spamton\">Metal Gear Rising lets you slice ANYTHING along ANY angle. The algorithm is Sutherland-Hodgman. From 1974. <strong>Fifty-two years old. Runs in microseconds. Sometimes the most impressive tech in your game is just old tech applied with confidence.</strong></div>\n<div class=\"challenge\">Build both systems. Left: 5 convex shapes tossed by impulses. Draw slash lines to slice them. Halves become new sliceable RigidBodies. Cap cuts with orange glow. Add Blade Mode (right-click \u2192 time_scale=0.2). Right: dismemberment dummy. 6 limb segments, hitscan damage. At zero HP: sever + gibs + particles. Headshot = instant sever + 0.5s slow-mo.</div>\n<div class=\"net-note\">Server determines slice/sever events: \"mesh X sliced along plane P at tick T\" or \"limb Y severed at tick T\" \u2192 reliable RPC. Clients apply identical clipping \u2192 identical halves. Gibs, particles, and decals are cosmetic \u2014 local only, not synced. For rollback: sever events are gameplay state (collision bodies changed). Gib positions are cosmetic, excluded.</div>"
+},
+/* ──── L11 ──── */
+{
+title:"Explosions, Fire & Area Damage",
+subtitle:"11 \u2014 The Screen Shake Lesson",
+vizLabel:"\u25B6 click to detonate \u2014 chain fire",
+viz:"explosions",
+snippet:"<span class=\"cm\"># EXPLOSION \u2014 sphere query + inverse-square impulse</span>\n\n<span class=\"kw\">func</span> <span class=\"fn\">explode</span>(pos: Vector3, radius: <span class=\"kw\">float</span>, force: <span class=\"kw\">float</span>):\n    <span class=\"kw\">var</span> space = get_world_3d().direct_space_state\n    <span class=\"kw\">var</span> shape = SphereShape3D.<span class=\"fn\">new</span>()\n    shape.radius = radius\n    <span class=\"kw\">var</span> params = PhysicsShapeQueryParameters3D.<span class=\"fn\">new</span>()\n    params.shape = shape\n    params.transform.origin = pos\n    <span class=\"kw\">var</span> hits = space.<span class=\"fn\">intersect_shape</span>(params, <span class=\"nm\">32</span>)\n    <span class=\"kw\">for</span> hit <span class=\"kw\">in</span> hits:\n        <span class=\"kw\">var</span> body = hit[<span class=\"st\">\"collider\"</span>]\n        <span class=\"cm\"># LOS check: can we see it from epicenter?</span>\n        <span class=\"kw\">var</span> los = space.<span class=\"fn\">intersect_ray</span>(\n            PhysicsRayQueryParameters3D.<span class=\"fn\">create</span>(pos, body.global_position))\n        <span class=\"kw\">if</span> los <span class=\"kw\">and</span> los[<span class=\"st\">\"collider\"</span>] != body:\n            <span class=\"kw\">continue</span>  <span class=\"cm\"># blocked by cover!</span>\n        <span class=\"kw\">var</span> dist = pos.<span class=\"fn\">distance_to</span>(body.global_position)\n        <span class=\"kw\">var</span> f = force / <span class=\"fn\">max</span>(dist * dist, <span class=\"nm\">0.5</span>)\n        <span class=\"kw\">var</span> dir = (body.global_position - pos).<span class=\"fn\">normalized</span>()\n        <span class=\"kw\">if</span> body <span class=\"kw\">is</span> RigidBody3D:\n            body.<span class=\"fn\">apply_central_impulse</span>(dir * f)\n\n<span class=\"cm\"># FIRE \u2014 Area3D with DPS + spread timer</span>\n<span class=\"cm\"># Flammable objects in fire area for 2s \u2192 ignite</span>\n<span class=\"cm\"># Chain reaction. Cap at 20 simultaneous fires.</span>\n\n<span class=\"cm\"># SCREEN SHAKE \u2014 the secret ingredient</span>\n<span class=\"kw\">var</span> shake_intensity := <span class=\"nm\">0.0</span>\n<span class=\"kw\">func</span> <span class=\"fn\">shake</span>(amount: <span class=\"kw\">float</span>): shake_intensity = amount\n<span class=\"kw\">func</span> <span class=\"fn\">_process</span>(delta):  <span class=\"cm\"># cosmetic, NOT _physics_process</span>\n    shake_intensity *= <span class=\"nm\">0.85</span>  <span class=\"cm\"># exponential decay</span>\n    camera.offset = Vector2(\n        randf_range(-<span class=\"nm\">1</span>,<span class=\"nm\">1</span>), randf_range(-<span class=\"nm\">1</span>,<span class=\"nm\">1</span>)\n    ) * shake_intensity",
+body:"<p>Every explosion in games is the same code: sphere query, distance check, apply impulse. The part that makes YOUR explosion feel different from everyone else\u2019s is the <strong>screen shake</strong>. Two frames of intense shake, exponential decay to zero. That\u2019s the whole secret. Your playtesters will say \"combat feels amazing\" and not know why.</p>\n<div class=\"vocab\"><span class=\"vt\">\"Inverse-Square Falloff\"</span> \u2014 force decreases with the square of distance: <code>force / (dist * dist)</code>. Close to blast = obliterated. Edge of radius = barely nudged. Physically correct \u2014 real blast waves work this way. Clamp min distance to 0.5 to prevent division-by-near-zero.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Line-of-Sight Damage\"</span> \u2014 raycast from epicenter to target before applying damage. If blocked by a wall: no damage. The target has cover. One check transforms a dumb AOE sphere into a tactical system. R6 Siege\u2019s entire breach meta depends on this.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Fire Spread\"</span> \u2014 chain reaction. Each burning object has a fire Area3D. When another flammable object stays inside for N seconds, it ignites and spawns its own fire. Propagates through connected objects. Cap at 20 fires for performance. BotW\u2019s entire fire system is this.</div>\n<div class=\"step-card\"><span class=\"step-num\">THE EXPLOSION RECIPE</span><strong>1.</strong> Sphere overlap query at epicenter \u2192 list all bodies in radius.<br><strong>2.</strong> For each body: LOS raycast. If blocked, skip (cover system).<br><strong>3.</strong> Compute force: <code>base_force / max(dist\u00b2, 0.5)</code>. Apply as impulse away from epicenter.<br><strong>4.</strong> Damage: same falloff curve, subtract from health.<br><strong>5.</strong> Screen shake: <code>shake_intensity = 15.0</code> \u2192 decay 0.85 per frame in _process.<br><strong>6.</strong> Optional: spawn fire area at epicenter for 5 seconds.</div>\n<div class=\"step-card\"><span class=\"step-num\">SCREEN SHAKE \u2014 THE FEEL MULTIPLIER</span>Camera offset = random vector * shake_intensity. Shake_intensity decays exponentially: <code>*= 0.85</code> per render frame. Initial intensity: 5.0 (subtle), 15.0 (impactful), 30.0 (earthquake). Screen shake runs in <code>_process()</code> (cosmetic), not <code>_physics_process()</code>. It never affects gameplay. It just makes everything feel real.</div>\n<div class=\"perf\">The sphere overlap query is the expensive part. <code>intersect_shape()</code> with a large radius can return dozens of bodies. LOS raycasts for each of those compounds the cost. Budget: one explosion per frame is fine. Chain-detonation of 10 barrels simultaneously? Spread across 2\u20133 frames. Players can\u2019t tell the difference at 60fps.</div>\n<div class=\"tip\">Fire spread is emergent gameplay for free. Place barrels near each other. Player detonates one. Fire spreads to the next. Chain reaction. No scripting \u2014 just the fire area + flammable tag + timer. Breath of the Wild\u2019s fire system is this simple. Players think it\u2019s genius AI. It\u2019s a timer and an Area3D.</div>\n<div class=\"artists\">R6 Siege (explosion LOS + breach destruction), Breath of the Wild (fire spread), Call of Duty: Modern Warfare (screen shake mastery), Vlambeer\u2019s GDC talk \"The Art of Screenshake\"</div>\n<div class=\"spamton\">Every explosion in games is sphere query + impulse. The part that sells it is the SCREEN SHAKE. <strong>2 frames intense, exponential decay, done. Add it to your explosion function. Playtesters say \"combat feels amazing\" and they have no idea why. They never do.</strong></div>\n<div class=\"challenge\">Build the full system: click to detonate, sphere overlap, inverse-square impulse, LOS check (cover blocks damage). Add fire: explosion leaves fire for 5s, flammable objects ignite after 2s, spawn their own fire. Chain: 10 barrels in a line, detonate first, watch chain reaction. Add screen shake. This is your brawler\u2019s AOE hazard system.</div>\n<div class=\"net-note\">Explosions are events, not continuous state. Server: \"explosion at P with force F at tick T\" \u2192 reliable RPC. Each client runs the sphere query locally and applies impulses. Fire state (which objects are burning, burn timers) IS gameplay state \u2014 goes in rollback snapshot. Fire particles and screen shake are cosmetic \u2014 local only, diverge freely between clients.</div>"
+},
+/* ──── L12 ──── */
+{
+title:"Ballistics & Penetration",
+subtitle:"12 \u2014 Bullets Aren\u2019t Raycasts (Usually)",
+vizLabel:"\u25B6 ballistic arcs + penetration test",
+viz:"ballistics",
+snippet:"<span class=\"cm\"># BALLISTIC PROJECTILE \u2014 gravity-affected arc</span>\n\n<span class=\"kw\">extends</span> RigidBody3D\n\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> speed := <span class=\"nm\">40.0</span>\n<span class=\"dc\">@export</span> <span class=\"kw\">var</span> damage := <span class=\"nm\">25</span>\n\n<span class=\"cm\"># Or manually in _physics_process:</span>\n<span class=\"cm\"># velocity += Vector3(0, -gravity, 0) * delta</span>\n<span class=\"cm\"># position += velocity * delta</span>\n\n<span class=\"cm\"># PENETRATION \u2014 per-material depth table</span>\n<span class=\"kw\">var</span> pen_table = {\n    <span class=\"st\">\"wood\"</span>:     <span class=\"nm\">0.10</span>,  <span class=\"cm\"># meters — thin, passes through</span>\n    <span class=\"st\">\"drywall\"</span>:  <span class=\"nm\">0.30</span>,  <span class=\"cm\"># passes through interior walls</span>\n    <span class=\"st\">\"concrete\"</span>: <span class=\"nm\">0.02</span>,  <span class=\"cm\"># barely penetrates — embeds</span>\n    <span class=\"st\">\"steel\"</span>:    <span class=\"nm\">0.005</span>, <span class=\"cm\"># no penetration — ricochets</span>\n}\n\n<span class=\"kw\">func</span> <span class=\"fn\">on_hit</span>(hit_pos, hit_normal, material):\n    <span class=\"kw\">var</span> pen = pen_table.<span class=\"fn\">get</span>(material, <span class=\"nm\">0.01</span>)\n    <span class=\"kw\">var</span> thickness = <span class=\"fn\">get_wall_thickness</span>(hit_pos, velocity.<span class=\"fn\">normalized</span>())\n    <span class=\"kw\">if</span> thickness < pen:\n        <span class=\"cm\"># PASS THROUGH \u2014 exit other side</span>\n        velocity *= <span class=\"nm\">0.4</span>  <span class=\"cm\"># energy loss</span>\n        <span class=\"fn\">spawn_exit_fx</span>(exit_pos)\n    <span class=\"kw\">elif</span> hit_normal.<span class=\"fn\">dot</span>(-velocity.<span class=\"fn\">normalized</span>()) < <span class=\"nm\">0.3</span>:\n        <span class=\"cm\"># RICOCHET \u2014 shallow angle</span>\n        velocity = velocity.<span class=\"fn\">bounce</span>(hit_normal) * <span class=\"nm\">0.5</span>\n    <span class=\"kw\">else</span>:\n        <span class=\"cm\"># EMBED \u2014 steep angle, thick wall</span>\n        <span class=\"fn\">queue_free</span>()",
+body:"<p>A hitscan ray is instant and straight. A ballistic projectile takes time and drops. The arc, the travel time, the wind-up \u2014 these create anticipation. And when that projectile hits a wall and passes through to kill someone on the other side? That\u2019s a <em>moment</em>.</p>\n<div class=\"vocab\"><span class=\"vt\">\"Ballistic Trajectory\"</span> \u2014 a projectile affected by gravity traces a parabolic arc. <code>velocity.y -= gravity * delta</code> each physics frame. Snipers, grenades, arrows, thrown objects. The longer the flight, the more it drops.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Penetration Depth\"</span> \u2014 how far a projectile travels through a material before stopping. Defined per-material: wood=0.1m, concrete=0.02m, steel=0.005m. If the wall is thinner than the penetration depth: bullet exits with reduced velocity. One float per material. R6 Siege\u2019s entire wallbang meta.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Ricochet\"</span> \u2014 when a projectile hits at a shallow angle, it bounces. <code>velocity.bounce(normal) * 0.5</code>. Below a threshold angle: ricochet. Above: embed. Adds realism and emergent gameplay. Real bullets ricochet off hard surfaces at shallow angles.</div>\n<div class=\"step-card\"><span class=\"step-num\">THE MATERIAL TABLE</span>A Dictionary mapping material names to penetration depths. Wood: 0.10m (thin, pass-through). Drywall: 0.30m (interior walls). Concrete: 0.02m (barely penetrates). Steel: 0.005m (ricochet territory). Adding a new material = adding one line to the table. Data-driven design: the game\u2019s meta lives in a Dictionary, not in code.</div>\n<div class=\"step-card\"><span class=\"step-num\">THREE OUTCOMES PER HIT</span><strong>Pass-through:</strong> wall thickness < penetration depth. Bullet exits other side with reduced velocity (40%). Spawn exit particles.<br><strong>Ricochet:</strong> impact angle vs normal < 0.3 (shallow). Bounce off with energy loss (50%). Continues on reflected path.<br><strong>Embed:</strong> steep angle into thick/hard material. Bullet stops. Spawn impact crater decal.</div>\n<div class=\"perf\">Each ballistic projectile is either a RigidBody3D (physics-driven, expensive) or a manual raycast-per-frame (cheap, you handle gravity). For slow projectiles (grenades): use RigidBody3D. For fast projectiles (bullets): manual raycast per tick is cheaper and avoids tunneling through thin walls. The viz shows the manual approach.</div>\n<div class=\"tip\">Wall thickness measurement: raycast from hit point in bullet direction. If the ray exits the collider within penetration_depth distance: the wall is thinner than the bullet can handle. Exit point = new projectile spawn. This is a second raycast per hit \u2014 cheap and only fires on contact.</div>\n<div class=\"artists\">Sniper Elite 5 (bullet cam), R6 Siege (penetration system), Escape from Tarkov (ballistic simulation), Receiver 2 (per-component gun physics)</div>\n<div class=\"spamton\">Rainbow Six Siege\u2019s entire competitive meta is built on penetration values per material. One float per surface. <strong>The difference between a wallbang kill and a blocked shot is a number called penetration_depth. Your game\u2019s meta lives in a data table, not in code.</strong></div>\n<div class=\"challenge\">Build a shooting range: three wall types (wood, concrete, steel). Fire ballistic projectiles (arc, gravity). Wood: pass-through. Concrete: embed. Steel: ricochet at shallow, embed at steep. Add trail renderers. Add bullet-cam (follow projectile at time_scale=0.3). The material table is a Dictionary \u2014 add a material in one line.</div>\n<div class=\"net-note\">Ballistic projectiles are the hardest sync problem. Two approaches: (1) server-authoritative \u2014 server simulates projectile, sends position updates, clients show interpolated ghost. (2) predicted \u2014 client spawns local prediction, server spawns authoritative version, correct on divergence. For rollback: projectile state (position, velocity, alive/dead) is gameplay state. Trail renderers are cosmetic. Penetration/ricochet events must be deterministic \u2014 use the shared material table.</div>"
+},
+/* ──── L13 ──── */
+{
+title:"Ragdoll, Hitboxes & Combat Feel",
+subtitle:"13 \u2014 The Invisible Geometry That Makes Fights Sing",
+vizLabel:"\u25B6 two fighters \u2014 hitbox/hurtbox + ragdoll",
+viz:"combat",
+snippet:"<span class=\"cm\"># HITBOX/HURTBOX \u2014 Area3D toggled by AnimationPlayer</span>\n\n<span class=\"cm\"># In AnimationPlayer method track:</span>\n<span class=\"cm\"># Frame 5: call enable_hitbox()</span>\n<span class=\"cm\"># Frame 8: call disable_hitbox()</span>\n\n<span class=\"kw\">func</span> <span class=\"fn\">enable_hitbox</span>():\n    $Hitbox.monitoring = <span class=\"kw\">true</span>\n\n<span class=\"kw\">func</span> <span class=\"fn\">disable_hitbox</span>():\n    $Hitbox.monitoring = <span class=\"kw\">false</span>\n\n<span class=\"kw\">func</span> <span class=\"fn\">_on_hitbox_area_entered</span>(hurtbox: Area3D):\n    <span class=\"kw\">var</span> target = hurtbox.<span class=\"fn\">get_parent</span>()\n    target.<span class=\"fn\">take_hit</span>(damage, knockback_dir)\n\n<span class=\"cm\"># HITSTUN + HITSTOP</span>\n<span class=\"kw\">func</span> <span class=\"fn\">take_hit</span>(dmg: <span class=\"kw\">int</span>, kb: Vector2):\n    health -= dmg\n    state = State.HITSTUN\n    hitstun_frames = <span class=\"nm\">12</span>  <span class=\"cm\"># locked out of input</span>\n    <span class=\"fn\">apply_impulse</span>(kb)\n    Engine.time_scale = <span class=\"nm\">0.0</span>  <span class=\"cm\"># HITSTOP: freeze 4 frames</span>\n    <span class=\"fn\">get_tree</span>().<span class=\"fn\">create_timer</span>(<span class=\"nm\">0.067</span>, <span class=\"kw\">true</span>).\\\n        timeout.<span class=\"fn\">connect</span>(<span class=\"kw\">func</span>(): Engine.time_scale = <span class=\"nm\">1.0</span>)\n\n<span class=\"cm\"># I-FRAMES during dodge</span>\n<span class=\"kw\">func</span> <span class=\"fn\">dodge</span>():\n    state = State.DODGE\n    $Hurtbox.monitorable = <span class=\"kw\">false</span>  <span class=\"cm\"># invincible</span>\n    iframes_remaining = <span class=\"nm\">8</span>\n\n<span class=\"cm\"># RAGDOLL on death</span>\n<span class=\"kw\">func</span> <span class=\"fn\">die</span>():\n    state = State.DEAD\n    $Skeleton.<span class=\"fn\">physical_bones_start_simulation</span>()\n\n<span class=\"cm\"># ACTIVE RAGDOLL \u2014 PD controller per joint</span>\n<span class=\"cm\"># torque = Kp * (target - current) - Kd * ang_vel</span>\n<span class=\"cm\"># Kp=200 Kd=20 = combat-ready. Kp=50 Kd=5 = comedy.</span>",
+body:"<p>The entire fighting game genre is two rectangles overlapping per frame and checking \"did your red box touch my blue box?\" Street Fighter 6 has the most complex hitbox system in gaming and it is STILL just Area3D.area_entered with extra steps. Let\u2019s build the extra steps.</p>\n<div class=\"vocab\"><span class=\"vt\">\"Hitbox / Hurtbox\"</span> \u2014 Hitbox = the attack\u2019s damaging region (Area3D, active only during attack frames). Hurtbox = the character\u2019s vulnerable region (Area3D, always active except i-frames). When hitbox overlaps hurtbox: hit registered. The shape, size, and active frames define how the attack FEELS.</div>\n<div class=\"vocab\"><span class=\"vt\">\"I-Frames\"</span> \u2014 invincibility frames. Window where hurtbox is disabled: dodge rolls, knockdown recovery, respawn. Dark Souls dodge = 13 i-frames at 30fps. Generous by design. The i-frame count is the difference between a fair dodge and a useless one. One integer.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Active Ragdoll (PD Controller)\"</span> \u2014 a ragdoll where each joint has a motor targeting an animation pose. <code>torque = Kp * error - Kd * velocity</code>. Kp = stiffness (how hard it tries). Kd = damping (how much it resists overshoot). Kp=200 Kd=20 = combat character that stumbles on hit. Gang Beasts, Human Fall Flat, Rain World.</div>\n<div class=\"step-card\"><span class=\"step-num\">ATTACK PHASES \u2014 THE FRAME DATA</span><strong>Startup:</strong> wind-up frames. Can be interrupted by a hit (punish slow attacks). No hitbox.<br><strong>Active:</strong> hitbox ON. The damaging window. 4 frames (light) to 8 frames (heavy).<br><strong>Recovery:</strong> cool-down frames. Hitbox OFF. Can\u2019t act. Vulnerable to punish.<br>Total: startup + active + recovery = total commitment. Longer recovery = riskier attack. This is frame data. Every fighting game runs on this.</div>\n<div class=\"step-card\"><span class=\"step-num\">HITSTOP \u2014 THREE PURPOSES IN ONE FREEZE</span><strong>1. Impact feel:</strong> both fighters freeze for 4 frames. The hit LANDS. Weight. Crunch.<br><strong>2. Readability:</strong> the player has time to process what happened before the knockback animation plays.<br><strong>3. Latency hiding:</strong> 4 frames = 67ms. During hitstop, nothing moves. The server has time to confirm the hit before anyone needs to see the result. Game feel AND netcode, aligned.</div>\n<div class=\"step-card\"><span class=\"step-num\">RAGDOLL TRANSITION</span>Character plays idle animation \u2192 hit \u2192 health reaches 0 \u2192 copy bone transforms to PhysicalBone positions \u2192 <code>physical_bones_start_simulation()</code> \u2192 body ragdolls. For active ragdoll recovery: after 2 seconds, enable PD controllers targeting the \"stand up\" pose. The character fights to its feet. Kp determines how convincingly.</div>\n<div class=\"tip\">Hitstop is in every fighting game and every player thinks it\u2019s \"game feel.\" It IS game feel. It\u2019s also free latency hiding. 67ms of freeze where the server confirms the hit while both players experience IMPACT. The best netcode is the netcode the player thinks is game design.</div>\n<div class=\"artists\">Street Fighter 6 (frame data viewer), Guilty Gear Strive (rollback + hitstop), Dark Souls (i-frame design), Gang Beasts (active ragdoll), Rivals of Aether (rollback brawler)</div>\n<div class=\"spamton\">Hitstop exists in every fighting game and every player thinks it\u2019s just \"game feel.\" It is. <strong>It\u2019s also free latency hiding. 4 frames of freeze = 67ms where the server confirms the hit while both players think they\u2019re experiencing IMPACT. The best netcode is the netcode you mistake for game design.</strong></div>\n<div class=\"challenge\">Build 2-player local combat: two CharacterBody fighters. Light attack: 5f startup, 4f active, 8f recovery. Heavy: 12f startup, 8f active, 15f recovery. On hit: knockback + hitstun (12f light, 20f heavy) + 4f hitstop. Dodge: 8 i-frames. Add ragdoll on death. Add active ragdoll recovery after 2s. This is the brawler\u2019s complete combat core.</div>\n<div class=\"net-note\">This entire system must be rollback-compatible. State per fighter: position, velocity, state enum, hitstun_frames, current_attack, hitbox_active, iframes, health. During rollback: rewind all fighters, replay inputs, check hitbox/hurtbox at each tick. Hitstop absorbs correction visually. Ragdoll is special: once a fighter enters ragdoll (KO), the outcome is determined \u2014 ragdoll positions can diverge between clients. Active ragdoll recovery re-enters deterministic state.</div>"
+},
+/* ──── L14 ──── */
+{
+title:"The Networked Brawler: Ship the Thing",
+subtitle:"14 \u2014 Every Lesson Becomes One Game",
+vizLabel:"\u25B6 rollback brawler \u2014 network sim",
+viz:"brawler",
+snippet:"<span class=\"cm\"># THE BRAWLER ARCHITECTURE</span>\n<span class=\"cm\"># ========================</span>\n\n<span class=\"cm\"># 1. GAMEPLAY STATE (rollback-tracked)</span>\n<span class=\"kw\">class_name</span> BrawlerSnapshot\n<span class=\"kw\">var</span> fighters: <span class=\"kw\">Array</span>  <span class=\"cm\"># [{pos,vel,state,hp,hitstun,iframes}]</span>\n<span class=\"kw\">var</span> objects: <span class=\"kw\">Array</span>   <span class=\"cm\"># [{id,intact,burning,burn_timer}]</span>\n<span class=\"kw\">var</span> tick: <span class=\"kw\">int</span>\n\n<span class=\"cm\"># 2. COSMETIC STATE (local only, never rolled back)</span>\n<span class=\"cm\"># particles, gibs, debris, screen shake,</span>\n<span class=\"cm\"># jiggle, sound, trails, decals</span>\n\n<span class=\"cm\"># 3. INPUT AUTHORITY (from networking course)</span>\n<span class=\"cm\"># Each peer owns their input bitmask</span>\n<span class=\"cm\"># Server validates hits</span>\n<span class=\"dc\">@rpc</span>(<span class=\"st\">\"any_peer\"</span>,<span class=\"st\">\"call_remote\"</span>,<span class=\"st\">\"unreliable\"</span>)\n<span class=\"kw\">func</span> <span class=\"fn\">send_input</span>(tick: <span class=\"kw\">int</span>, input: <span class=\"kw\">int</span>):\n    input_buffer[tick] = input\n\n<span class=\"cm\"># 4. ROLLBACK LOOP (per _physics_process)</span>\n<span class=\"cm\">#   save_state(tick)</span>\n<span class=\"cm\">#   predict remote inputs (repeat last known)</span>\n<span class=\"cm\">#   simulate one tick</span>\n<span class=\"cm\">#   on remote input for past tick:</span>\n<span class=\"cm\">#     if prediction wrong \u2192 restore(tick) \u2192</span>\n<span class=\"cm\">#     insert real input \u2192 resimulate to now</span>\n\n<span class=\"cm\"># 5. DESTRUCTION SYNC</span>\n<span class=\"cm\">#   \"object X fractured, seed S, tick T\"</span>\n<span class=\"cm\">#   All clients: same seed \u2192 same fragments</span>\n\n<span class=\"cm\"># 6. HITSTOP = FREE LATENCY HIDING</span>\n<span class=\"cm\">#   4 frames freeze = 67ms for server to confirm</span>\n\n<span class=\"cm\"># 7. SAVE/LOAD = same to_dict()/from_dict()</span>\n<span class=\"cm\">#   Saves, snapshots, replays: one code path</span>",
+body:"<p>This is where every lesson converges. The controller from L02. The serialization from L03. The destruction from L09. The combat from L13. The rollback architecture from the networking course. One game. Two fighters. One arena full of physics objects. <em>Ship it.</em></p>\n<div class=\"vocab\"><span class=\"vt\">\"Input Authority\"</span> \u2014 each client owns their input (movement, attacks). The server owns hit resolution and world state. Clients predict their own movement instantly. Hits are confirmed ~1 RTT later. Hitstop hides this delay. The player feels instant impact; the server ensures legitimacy.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Cosmetic vs Gameplay State\"</span> \u2014 the #1 architecture decision for rollback. Gameplay state: positions, health, hitboxes, fire timers \u2014 must be deterministic, serializable, in rollback snapshots. Cosmetic state: particles, gibs, shake, jiggle, sound \u2014 local only, diverges freely between clients. Getting this split wrong is the #1 cause of rollback bugs.</div>\n<div class=\"vocab\"><span class=\"vt\">\"Deterministic Simulation\"</span> \u2014 same inputs at the same tick produce exactly the same outputs on every machine. Enemies of determinism: <code>randf()</code> (use seeded RNG), <code>_process</code> (use <code>_physics_process</code>), float variance across CPUs (use int math for critical values), frame-rate-dependent logic (use tick counts).</div>\n<div class=\"step-card\"><span class=\"step-num\">THE FULL ARCHITECTURE</span><strong>BrawlerSnapshot:</strong> array of fighter states + array of object states + tick number. <code>snapshot()</code> captures everything. <code>restore(snap)</code> overwrites everything.<br><strong>Input flow:</strong> client \u2192 <code>send_input.rpc(tick, bitmask)</code> \u2192 server validates \u2192 <code>confirm.rpc(tick, state)</code>.<br><strong>Rollback:</strong> on late input arrival \u2192 check prediction \u2192 if wrong, restore(tick), apply real input, resimulate to present.<br><strong>Cosmetics:</strong> particles, gibs, debris, jiggle, shake = local, never rolled back.</div>\n<div class=\"step-card\"><span class=\"step-num\">WHAT EACH LESSON CONTRIBUTES</span><strong>L01 (Jolt):</strong> stable physics, deterministic fixed timestep.<br><strong>L02 (Controller):</strong> responsive movement with frame-count state (rollback-safe).<br><strong>L03 (Saves):</strong> to_dict()/from_dict() = snapshot/restore for rollback AND save files.<br><strong>L04\u2013L06:</strong> physics bodies, forces, raycasts = the interaction vocabulary.<br><strong>L07\u2013L08:</strong> ropes + jiggle = cosmetic flair (local only, no sync needed).<br><strong>L09\u2013L12:</strong> destruction, fire, ballistics = arena hazards (events synced, visuals local).<br><strong>L13:</strong> hitboxes, hitstop, ragdoll = the combat system (rollback-tracked).</div>\n<div class=\"step-card\"><span class=\"step-num\">HITSTOP AS ARCHITECTURE</span>4 frames of hitstop = 67ms of freeze. During freeze: nothing moves. The server has time to confirm the hit. When hitstop ends: both clients animate the result. If the server disagreed, the correction happened during the freeze \u2014 invisible. Hitstop isn\u2019t just game feel. It\u2019s a synchronization window disguised as impact.</div>\n<div class=\"perf\">Rollback resimulation budget: at 60Hz with 8-frame max rollback depth, worst case = 8 full physics ticks replayed in one frame. Your game must run 8x faster than real-time during correction. Keep gameplay state lean, keep the Persist group small, and the snapshot/restore cycle under 2ms. Profile with Godot\u2019s built-in profiler.</div>\n<div class=\"tip\">Start with delay-based netcode (simpler, from the networking course). Get the game working. THEN add rollback. Rollback is an optimization of feel, not a prerequisite for multiplayer. Ship the delay-based version for your jam. Add rollback when you know the game is fun.</div>\n<div class=\"artists\">Guilty Gear Strive (GGPO rollback), Brawlhalla (rollback platform fighter), Rivals of Aether (indie rollback reference), GGPO SDK documentation</div>\n<div class=\"spamton\">Your save system, your network sync, your rollback snapshots, and your replay recording all call the same <code>to_dict()</code> function. <strong>Four features. One serialization path. If you can\u2019t serialize it, you can\u2019t save it, sync it, rollback it, or replay it. Serialization isn\u2019t a feature. It\u2019s THE architecture.</strong></div>\n<div class=\"challenge\">Build the brawler. Two CharacterBody3D fighters with L02 controllers. Light + heavy attacks with L13 hitboxes. Dodge with i-frames. Arena with 8 pre-fractured crates (L09), 2 fire barrels (L11), a verlet rope bridge (L07). Wire multiplayer using the networking course patterns: ENet, RPC input authority, server hit validation. Implement snapshot() + restore() for all gameplay state. Test with Run Multiple Instances. When you punch someone into a stack of crates and they shatter while fire spreads \u2014 and the other player sees the same thing \u2014 you\u2019ve shipped a networked physics brawler. That\u2019s the whole course.</div>\n<div class=\"net-note\">This IS the networking lesson. The rollback loop: save_state(tick) \u2192 predict remote inputs \u2192 simulate \u2192 on late input: restore, replace, resimulate. Gameplay state (fighter positions, health, object integrity, fire timers) = in snapshot. Cosmetic state (particles, gibs, jiggle, shake) = local only. Destruction events = seeded RNG \u2192 deterministic fragments. Same seed, same shapes, same initial impulse = identical results. Hitstop = synchronization window. The best netcode is the netcode the player thinks is game design.</div>"
+}
+];
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════ */
+/* ENGINE CODE                                             */
+/* ═══════════════════════════════════════════════════════ */
+(function(){
+"use strict";
+var vizCanvas, ctx, W, H, raf, currentViz, heroCanvas, heroCtx;
+var mouseX=0.5, mouseY=0.5, mouseDown=false;
+
+function init(){
+  vizCanvas = document.getElementById('viz-out');
+  ctx = vizCanvas.getContext('2d');
+  heroCanvas = document.getElementById('hero');
+  heroCtx = heroCanvas.getContext('2d');
+  buildNav();
+  loadLesson(0);
+  startHero();
+  window.addEventListener('resize', onResize);
+  vizCanvas.addEventListener('mousemove', function(e){
+    var r=vizCanvas.getBoundingClientRect();
+    mouseX=(e.clientX-r.left)/r.width;
+    mouseY=(e.clientY-r.top)/r.height;
+  });
+  vizCanvas.addEventListener('mousedown', function(){ mouseDown=true; });
+  vizCanvas.addEventListener('mouseup', function(){ mouseDown=false; });
+  // Touch events for mobile
+  vizCanvas.addEventListener('touchstart', function(e){
+    e.preventDefault(); mouseDown=true;
+    var t=e.touches[0], r=vizCanvas.getBoundingClientRect();
+    mouseX=(t.clientX-r.left)/r.width;
+    mouseY=(t.clientY-r.top)/r.height;
+  }, {passive:false});
+  vizCanvas.addEventListener('touchmove', function(e){
+    e.preventDefault();
+    var t=e.touches[0], r=vizCanvas.getBoundingClientRect();
+    mouseX=(t.clientX-r.left)/r.width;
+    mouseY=(t.clientY-r.top)/r.height;
+  }, {passive:false});
+  vizCanvas.addEventListener('touchend', function(e){
+    mouseDown=false;
+    // Simulate click for vizzes that use onclick
+    if(e.changedTouches.length && vizCanvas.onclick){
+      var t=e.changedTouches[0];
+      var r=vizCanvas.getBoundingClientRect();
+      var fakeEvent={clientX:t.clientX,clientY:t.clientY,
+        preventDefault:function(){},target:vizCanvas};
+      vizCanvas.onclick(fakeEvent);
+    }
+  });
+}
+
+/* ── Mobile tab switching ── */
+window.showMobileTab=function(tab){
+  var btns=document.querySelectorAll('.mobile-tabs button');
+  var canvas=document.querySelector('.canvas-area');
+  var toolbar=document.querySelector('.code-toolbar');
+  var snippet=document.querySelector('.snippet-area');
+  if(tab==='viz'){
+    canvas.style.display=''; toolbar.style.display='none'; snippet.style.display='none';
+    btns[0].classList.add('active'); btns[1].classList.remove('active');
+    setTimeout(onResize,50);
+  } else {
+    canvas.style.display='none'; toolbar.style.display='flex'; snippet.style.display='block';
+    btns[1].classList.add('active'); btns[0].classList.remove('active');
+  }
+};
+
+function onResize(){
+  sizeCanvas(vizCanvas);
+  sizeCanvas(heroCanvas);
+  W=vizCanvas.width; H=vizCanvas.height;
+}
+
+function sizeCanvas(c){
+  var r=c.parentElement.getBoundingClientRect();
+  if(r.width===0||r.height===0) return;
+  c.width=r.width*devicePixelRatio;
+  c.height=r.height*devicePixelRatio;
+  c.style.width=r.width+'px';
+  c.style.height=r.height+'px';
+  c.getContext('2d').scale(devicePixelRatio,devicePixelRatio);
+}
+
+function cancelRaf(){ if(raf) cancelAnimationFrame(raf); raf=null; }
+function stop(){ cancelRaf(); currentViz=null; }
+
+/* ── Canvas helpers ── */
+function CW(){ return vizCanvas.width/devicePixelRatio; }
+function CH(){ return vizCanvas.height/devicePixelRatio; }
+
+function atmosBg(c,r,g,b,a){
+  var grd=c.createRadialGradient(CW()/2,CH()/2,0,CW()/2,CH()/2,CW()*0.7);
+  grd.addColorStop(0,'rgba('+r+','+g+','+b+','+(a||.12)+')');
+  grd.addColorStop(1,'rgba(0,0,0,0)');
+  c.fillStyle=grd; c.fillRect(0,0,CW(),CH());
+}
+
+function glow(c,col,blur){ c.shadowColor=col; c.shadowBlur=blur; }
+function noGlow(c){ c.shadowColor='transparent'; c.shadowBlur=0; }
+
+function scanline(c,col,a){
+  c.strokeStyle=col||'rgba(255,255,255,'+(a||.03)+')';
+  c.lineWidth=1;
+  for(var y=0;y<CH();y+=3){ c.beginPath(); c.moveTo(0,y); c.lineTo(CW(),y); c.stroke(); }
+}
+
+function neonLine(c,x1,y1,x2,y2,col,w){
+  glow(c,col,12);
+  c.strokeStyle=col; c.lineWidth=w||2;
+  c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.stroke();
+  noGlow(c);
+}
+
+function neonNode(c,x,y,r,col,label){
+  glow(c,col,14);
+  c.fillStyle=col; c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fill();
+  noGlow(c);
+  if(label){
+    c.fillStyle='#fff'; c.font='bold '+(r*0.8)+'px Space Mono';
+    c.textAlign='center'; c.textBaseline='middle'; c.fillText(label,x,y);
+  }
+}
+
+function neonBar(c,x,y,w,h,col){
+  glow(c,col,10);
+  c.fillStyle=col; c.fillRect(x,y,w,h);
+  noGlow(c);
+}
+
+function clear(c){ c.clearRect(0,0,CW(),CH()); c.fillStyle='#040608'; c.fillRect(0,0,CW(),CH()); }
+
+/* ── Nav ── */
+function buildNav(){
+  var nav=document.getElementById('lesson-nav');
+  nav.innerHTML='';
+  var secIdx=0;
+  for(var i=0;i<LESSONS.length;i++){
+    if(secIdx<NAV_SECTIONS.length && NAV_SECTIONS[secIdx].before===i){
+      var sp=document.createElement('span');
+      sp.className='nav-section'; sp.textContent=NAV_SECTIONS[secIdx].label;
+      nav.appendChild(sp);
+      secIdx++;
+    }
+    var btn=document.createElement('button');
+    btn.className='nav-btn'; btn.textContent=String(i+1).padStart(2,'0');
+    btn.onclick=(function(idx){return function(){loadLesson(idx);};})(i);
+    nav.appendChild(btn);
+  }
+}
+
+/* ── Load lesson ── */
+function loadLesson(idx){
+  var L=LESSONS[idx];
+  document.getElementById('lesson-text').innerHTML=
+    '<div class="lesson-number">'+L.subtitle+'</div>'+
+    '<div class="lesson-title">'+L.title+'</div>'+
+    '<div class="lesson-body">'+L.body+'</div>';
+  document.getElementById('code-snippet').innerHTML=L.snippet;
+  document.getElementById('viz-label').textContent=L.vizLabel;
+  document.getElementById('progress').style.width=((idx+1)/LESSONS.length*100)+'%';
+  var btns=document.querySelectorAll('.nav-btn');
+  for(var b=0;b<btns.length;b++){
+    btns[b].classList.toggle('active',b===idx);
+    if(b===idx) btns[b].scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+  }
+  document.querySelector('.lesson-panel').scrollTop=0;
+  // Mobile: scroll to top and reset viz tab
+  if(window.innerWidth<=860){
+    window.scrollTo(0,0);
+    var tabBtns=document.querySelectorAll('.mobile-tabs button');
+    if(tabBtns.length){
+      document.querySelector('.canvas-area').style.display='';
+      document.querySelector('.code-toolbar').style.display='none';
+      document.querySelector('.snippet-area').style.display='none';
+      tabBtns[0].classList.add('active'); tabBtns[1].classList.remove('active');
+    }
+  }
+  onResize();
+  buildViz(L.viz);
+}
+
+/* ── Copy ── */
+window.copySnippet=function(){
+  var txt=document.getElementById('code-snippet').textContent;
+  navigator.clipboard.writeText(txt).then(function(){
+    var btn=document.getElementById('copy-btn');
+    btn.textContent='COPIED'; btn.classList.add('done');
+    setTimeout(function(){ btn.textContent='\u238E COPY'; btn.classList.remove('done'); },1500);
+  });
+};
+
+/* ── Hero ── */
+function startHero(){
+  sizeCanvas(heroCanvas);
+  var hW=function(){return heroCanvas.width/devicePixelRatio;};
+  var hH=function(){return heroCanvas.height/devicePixelRatio;};
+  var particles=[];
+  for(var i=0;i<25;i++){
+    particles.push({
+      x:Math.random()*600, y:Math.random()*120,
+      vx:(Math.random()-0.5)*0.4, vy:(Math.random()-0.5)*0.3,
+      r:Math.random()*3+1.5, phase:Math.random()*Math.PI*2
+    });
+  }
+  function drawHero(){
+    heroCtx.clearRect(0,0,hW(),hH());
+    var t=performance.now()*0.001;
+    for(var i=0;i<particles.length;i++){
+      var p=particles[i];
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>hW()) p.vx*=-1;
+      if(p.y<0||p.y>hH()) p.vy*=-1;
+      var alpha=0.3+Math.sin(t+p.phase)*0.15;
+      heroCtx.fillStyle='rgba(255,123,58,'+alpha+')';
+      heroCtx.beginPath(); heroCtx.arc(p.x,p.y,p.r,0,Math.PI*2); heroCtx.fill();
+    }
+    // Draw springs between nearby particles
+    heroCtx.strokeStyle='rgba(255,123,58,0.08)';
+    heroCtx.lineWidth=1;
+    for(var i=0;i<particles.length;i++){
+      for(var j=i+1;j<particles.length;j++){
+        var dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+        if(dx*dx+dy*dy<8000){
+          heroCtx.beginPath();
+          heroCtx.moveTo(particles[i].x,particles[i].y);
+          heroCtx.lineTo(particles[j].x,particles[j].y);
+          heroCtx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(drawHero);
+  }
+  drawHero();
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* VIZ FUNCTIONS                                           */
+/* ═══════════════════════════════════════════════════════ */
+function buildViz(key){
+  stop();
+  onResize();
+  W=CW(); H=CH();
+  currentViz=key;
+  switch(key){
+    case 'jolt': vizJolt(); break;
+    case 'controller': vizController(); break;
+    case 'saveload': vizSaveLoad(); break;
+    case 'bodies': vizBodies(); break;
+    case 'forces': vizForces(); break;
+    case 'raycasts': vizRaycasts(); break;
+    case 'verlet': vizVerlet(); break;
+    case 'jiggle': vizJiggle(); break;
+    case 'fracture': vizFracture(); break;
+    case 'slice': vizSlice(); break;
+    case 'explosions': vizExplosions(); break;
+    case 'ballistics': vizBallistics(); break;
+    case 'combat': vizCombat(); break;
+    case 'brawler': vizBrawler(); break;
+    default: idleDefault(); break;
+  }
+}
+
+/* ── Shared physics helpers ── */
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function dist(x1,y1,x2,y2){ var dx=x1-x2,dy=y1-y2; return Math.sqrt(dx*dx+dy*dy); }
+function rnd(lo,hi){ return lo+Math.random()*(hi-lo); }
+
+/* ── L01 Jolt ── */
+function vizJolt(){
+  var boxes=[], G=300;
+  var midX=W/2, floorY=H-30;
+  function Box(x,y,w,h,jolt){
+    return {x:x,y:y,w:w,h:h,vx:0,vy:0,jolt:jolt,ang:0,vang:0,settled:0};
+  }
+  for(var i=0;i<10;i++){
+    boxes.push(Box(W*0.25+rnd(-20,20), 30+i*25, rnd(16,28), rnd(14,22), false));
+    boxes.push(Box(W*0.75+rnd(-20,20), 30+i*25, rnd(16,28), rnd(14,22), true));
+  }
+  function animate(){
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.06);
+    // divider
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke();
+    ctx.fillStyle='rgba(102,99,138,0.5)'; ctx.font='10px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('GODOT PHYSICS',W*0.25,16);
+    ctx.fillText('JOLT',W*0.75,16);
+    // simple platformer physics
+    var dt=1/60;
+    for(var i=0;i<boxes.length;i++){
+      var b=boxes[i];
+      b.vy+=G*dt;
+      b.y+=b.vy*dt; b.x+=b.vx*dt;
+      b.ang+=b.vang*dt;
+      // floor
+      if(b.y+b.h/2>floorY){
+        b.y=floorY-b.h/2;
+        b.vy*=-0.3;
+        if(Math.abs(b.vy)<1) b.vy=0;
+        b.vx*=0.9; b.vang*=0.9;
+        if(!b.jolt) b.y+=Math.sin(performance.now()*0.01+i)*0.3; // jitter for godotphysics
+      }
+      // box-box simple push
+      for(var j=i+1;j<boxes.length;j++){
+        var o=boxes[j];
+        if(b.jolt!==o.jolt) continue;
+        var dx=o.x-b.x, dy=o.y-b.y;
+        var overX=(b.w/2+o.w/2)-Math.abs(dx);
+        var overY=(b.h/2+o.h/2)-Math.abs(dy);
+        if(overX>0&&overY>0){
+          if(overX<overY){
+            var push=overX*0.5*(dx>0?1:-1);
+            b.x-=push; o.x+=push;
+          } else {
+            var push=overY*0.5*(dy>0?1:-1);
+            b.y-=push; o.y+=push;
+            if(dy>0){ b.vy=Math.min(b.vy,0); o.vy=Math.max(o.vy,0); }
+          }
+        }
+      }
+      // walls
+      var wallL=b.jolt?W/2+10:10, wallR=b.jolt?W-10:W/2-10;
+      if(b.x-b.w/2<wallL){b.x=wallL+b.w/2; b.vx*=-0.3;}
+      if(b.x+b.w/2>wallR){b.x=wallR-b.w/2; b.vx*=-0.3;}
+      // draw
+      ctx.save();
+      ctx.translate(b.x,b.y);
+      ctx.rotate(b.ang);
+      var col=b.jolt?'#ff7b3a':'#666';
+      glow(ctx,col,6);
+      ctx.fillStyle=col;
+      ctx.fillRect(-b.w/2,-b.h/2,b.w,b.h);
+      noGlow(ctx);
+      ctx.restore();
+    }
+    // floor
+    neonLine(ctx,0,floorY,W,floorY,'#3dd68c',1);
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  // click to spawn
+  var clickHandler=function(e){
+    if(currentViz!=='jolt') return;
+    var r=vizCanvas.getBoundingClientRect();
+    var cx=(e.clientX-r.left), cy=(e.clientY-r.top);
+    var isJolt=cx>W/2;
+    boxes.push(Box(cx,cy,rnd(16,28),rnd(14,22),isJolt));
+    if(boxes.length>60) boxes.splice(0,2);
+  };
+  vizCanvas.addEventListener('click',clickHandler);
+  animate();
+}
+
+/* ── L02 Controller ── */
+function vizController(){
+  var px=W*0.3, py=H-60, pvx=0, pvy=0;
+  var platY=H-40, grounded=false, coyote=0, jumpBuf=0;
+  var speed=200, accel=800, decel=1200, jumpV=-280, grav=900, airMul=0.6;
+  var platforms=[{x:0,y:platY,w:W,h:10},{x:W*0.5,y:H-120,w:120,h:8},{x:W*0.15,y:H-160,w:100,h:8}];
+  var keys={left:false,right:false,jump:false,jumpPress:false};
+  var velHistory=[];
+  function kd(e){
+    if(e.key==='ArrowLeft'||e.key==='a') keys.left=true;
+    if(e.key==='ArrowRight'||e.key==='d') keys.right=true;
+    if((e.key===' '||e.key==='ArrowUp'||e.key==='w')&&!keys.jump){ keys.jump=true; keys.jumpPress=true; }
+  }
+  function ku(e){
+    if(e.key==='ArrowLeft'||e.key==='a') keys.left=false;
+    if(e.key==='ArrowRight'||e.key==='d') keys.right=false;
+    if(e.key===' '||e.key==='ArrowUp'||e.key==='w'){ keys.jump=false; if(pvy<0) pvy*=0.4; }
+  }
+  document.addEventListener('keydown',kd);
+  document.addEventListener('keyup',ku);
+  var coyoteShow=0, bufferShow=0;
+
+  function animate(){
+    var dt=1/60;
+    // input
+    var dir=0;
+    if(keys.left) dir=-1;
+    if(keys.right) dir=1;
+    if(keys.jumpPress){ jumpBuf=8; keys.jumpPress=false; }
+    if(jumpBuf>0) jumpBuf--;
+    // coyote
+    if(grounded) coyote=6; else if(coyote>0) coyote--;
+    // jump
+    if(jumpBuf>0&&coyote>0){ pvy=jumpV; coyote=0; jumpBuf=0; coyoteShow=30; bufferShow=30; }
+    // gravity
+    pvy+=grav*dt;
+    // horizontal
+    var a=grounded?accel:accel*airMul;
+    if(dir) pvx=lerp(pvx,dir*speed,a*dt/speed);
+    else pvx=lerp(pvx,0,decel*dt/speed);
+    px+=pvx*dt; py+=pvy*dt;
+    // platform collision
+    grounded=false;
+    for(var i=0;i<platforms.length;i++){
+      var p=platforms[i];
+      if(px>p.x&&px<p.x+p.w&&py>p.y-8&&py<p.y+p.h&&pvy>=0){
+        py=p.y-8; pvy=0; grounded=true;
+      }
+    }
+    if(px<8) px=8; if(px>W-8) px=W-8;
+    // track vel
+    velHistory.push(pvx);
+    if(velHistory.length>120) velHistory.shift();
+    if(coyoteShow>0) coyoteShow--;
+    if(bufferShow>0) bufferShow--;
+
+    // draw
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.05);
+    // platforms
+    for(var i=0;i<platforms.length;i++){
+      var p=platforms[i];
+      neonBar(ctx,p.x,p.y,p.w,p.h,'#3dd68c');
+    }
+    // player
+    glow(ctx,'#ff7b3a',12);
+    ctx.fillStyle='#ff7b3a';
+    ctx.fillRect(px-8,py-16,16,16);
+    noGlow(ctx);
+    // velocity graph
+    ctx.strokeStyle='rgba(255,123,58,0.4)'; ctx.lineWidth=1;
+    ctx.beginPath();
+    for(var i=0;i<velHistory.length;i++){
+      var gx=10+i*(W-20)/120;
+      var gy=40-velHistory[i]*0.1;
+      if(i===0) ctx.moveTo(gx,gy); else ctx.lineTo(gx,gy);
+    }
+    ctx.stroke();
+    ctx.fillStyle='rgba(102,99,138,0.5)'; ctx.font='9px Space Mono';
+    ctx.textAlign='left'; ctx.fillText('VELOCITY',12,22);
+    // indicators
+    if(coyoteShow>0){
+      ctx.fillStyle='rgba(61,214,140,'+(coyoteShow/30)+')';
+      ctx.font='bold 10px Space Mono'; ctx.textAlign='center';
+      ctx.fillText('COYOTE',px,py-24);
+    }
+    if(bufferShow>0){
+      ctx.fillStyle='rgba(255,77,107,'+(bufferShow/30)+')';
+      ctx.font='bold 10px Space Mono'; ctx.textAlign='center';
+      ctx.fillText('BUFFER',px,py-34);
+    }
+    // instructions
+    ctx.fillStyle='rgba(102,99,138,0.4)'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('ARROW KEYS / WASD TO MOVE \u00B7 SPACE TO JUMP',W/2,H-10);
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ── L03 SaveLoad ── */
+function vizSaveLoad(){
+  var nodes=[];
+  for(var i=0;i<8;i++){
+    nodes.push({
+      x:W*0.2+Math.random()*W*0.6,
+      y:30+Math.random()*(H-60),
+      r:8+Math.random()*6,
+      parent:i>0?Math.floor(Math.random()*i):-1,
+      col:'#ff7b3a',
+      phase:Math.random()*Math.PI*2,
+      saved:false
+    });
+  }
+  var snapshot=null, saveAnim=0, loadAnim=0;
+
+  vizCanvas.onclick=function(){
+    if(currentViz!=='saveload') return;
+    if(!snapshot){
+      snapshot=nodes.map(function(n){return{x:n.x,y:n.y};});
+      saveAnim=60;
+    } else {
+      for(var i=0;i<nodes.length;i++){
+        nodes[i].x=snapshot[i].x; nodes[i].y=snapshot[i].y;
+      }
+      loadAnim=60;
+      snapshot=null;
+    }
+  };
+
+  function animate(){
+    var t=performance.now()*0.001;
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.05);
+    if(saveAnim>0) saveAnim--;
+    if(loadAnim>0) loadAnim--;
+    // drift
+    for(var i=0;i<nodes.length;i++){
+      var n=nodes[i];
+      if(!snapshot) {
+        n.x+=Math.sin(t*0.5+n.phase)*0.3;
+        n.y+=Math.cos(t*0.3+n.phase)*0.2;
+      }
+    }
+    // edges
+    for(var i=1;i<nodes.length;i++){
+      var p=nodes[nodes[i].parent];
+      neonLine(ctx,nodes[i].x,nodes[i].y,p.x,p.y,'rgba(255,123,58,0.3)',1);
+    }
+    // nodes
+    for(var i=0;i<nodes.length;i++){
+      var n=nodes[i];
+      var pulse=saveAnim>0?1+Math.sin(saveAnim*0.3)*0.3:1;
+      var col=loadAnim>0?'#3dd68c':n.col;
+      neonNode(ctx,n.x,n.y,n.r*pulse,col);
+    }
+    // status
+    ctx.fillStyle='rgba(102,99,138,0.5)'; ctx.font='10px Space Mono'; ctx.textAlign='center';
+    ctx.fillText(snapshot?'CLICK TO RESTORE':'CLICK TO SNAPSHOT',W/2,H-12);
+    if(saveAnim>0){
+      ctx.fillStyle='rgba(61,214,140,'+(saveAnim/60)+')';
+      ctx.font='bold 14px Syne'; ctx.fillText('STATE SAVED',W/2,H/2);
+    }
+    if(loadAnim>0){
+      ctx.fillStyle='rgba(61,214,140,'+(loadAnim/60)+')';
+      ctx.font='bold 14px Syne'; ctx.fillText('STATE RESTORED',W/2,H/2);
+    }
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ── L04 Bodies ── */
+function vizBodies(){
+  var rigids=[], platY=H-35;
+  for(var i=0;i<6;i++){
+    rigids.push({x:W*0.3+i*25+rnd(-5,5),y:rnd(20,100),w:rnd(14,22),h:rnd(14,22),vx:rnd(-20,20),vy:0});
+  }
+  var charX=W*0.6,charVx=0.6;
+  var areaX=W*0.8,areaFlash=0;
+  function animate(){
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.04);
+    var dt=1/60;
+    // static platform
+    neonBar(ctx,0,platY,W,6,'#666');
+    ctx.fillStyle='rgba(102,99,138,0.4)'; ctx.font='8px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('STATICBODY',W*0.15,platY+16);
+    // rigid bodies
+    for(var i=0;i<rigids.length;i++){
+      var b=rigids[i];
+      b.vy+=400*dt; b.y+=b.vy*dt; b.x+=b.vx*dt;
+      if(b.y+b.h/2>platY){b.y=platY-b.h/2;b.vy*=-0.4;b.vx*=0.95;}
+      if(b.x<10){b.x=10;b.vx*=-0.5;} if(b.x>W-10){b.x=W-10;b.vx*=-0.5;}
+      glow(ctx,'#ff7b3a',8);
+      ctx.fillStyle='#ff7b3a'; ctx.fillRect(b.x-b.w/2,b.y-b.h/2,b.w,b.h);
+      noGlow(ctx);
+    }
+    ctx.fillStyle='rgba(102,99,138,0.4)'; ctx.font='8px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('RIGIDBODY',W*0.3,20);
+    // character body
+    charX+=charVx;
+    if(charX>W*0.72||charX<W*0.48) charVx*=-1;
+    glow(ctx,'#3dd68c',10);
+    ctx.fillStyle='#3dd68c'; ctx.fillRect(charX-7,platY-18,14,18);
+    noGlow(ctx);
+    ctx.fillStyle='rgba(102,99,138,0.4)'; ctx.fillText('CHARACTERBODY',W*0.6,20);
+    // area
+    if(areaFlash>0) areaFlash--;
+    var acol=areaFlash>0?'rgba(61,214,140,0.3)':'rgba(62,207,255,0.1)';
+    ctx.fillStyle=acol;
+    ctx.fillRect(areaX-25,platY-50,50,50);
+    ctx.strokeStyle='#3ecfff'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+    ctx.strokeRect(areaX-25,platY-50,50,50);
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(102,99,138,0.4)'; ctx.fillText('AREA3D',areaX,20);
+    // area detection
+    if(Math.abs(charX-areaX)<30) areaFlash=10;
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ── L05 Forces ── */
+function vizForces(){
+  var bx=W/2,by=H*0.4,bvx=0,bvy=0,bw=30,bh=30,bang=0,bvang=0;
+  var platY=H-30;
+  var pendA={x:W*0.2,y:40}, pendB={x:W*0.2,y:120,vx:30,vy:0};
+  var pendLen=80;
+  function animate(){
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.04);
+    var dt=1/60;
+    // mouse force
+    if(mouseDown){
+      var tx=mouseX*W, ty=mouseY*H;
+      var dx=tx-bx, dy=ty-by;
+      var d=Math.sqrt(dx*dx+dy*dy)+1;
+      bvx+=dx/d*600*dt; bvy+=dy/d*600*dt;
+      // draw force arrow
+      ctx.strokeStyle='rgba(255,123,58,0.5)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(tx,ty); ctx.stroke();
+    }
+    // gravity on box
+    bvy+=500*dt;
+    bx+=bvx*dt; by+=bvy*dt;
+    bang+=bvang*dt; bvang*=0.98;
+    if(by+bh/2>platY){by=platY-bh/2;bvy*=-0.3;bvx*=0.9;bvang*=0.9;}
+    if(bx<bw/2){bx=bw/2;bvx*=-0.5;} if(bx>W-bw/2){bx=W-bw/2;bvx*=-0.5;}
+    // draw box
+    ctx.save(); ctx.translate(bx,by); ctx.rotate(bang);
+    glow(ctx,'#ff7b3a',10);
+    ctx.fillStyle='#ff7b3a'; ctx.fillRect(-bw/2,-bh/2,bw,bh);
+    noGlow(ctx); ctx.restore();
+    // pendulum
+    pendB.vy+=500*dt;
+    pendB.x+=pendB.vx*dt; pendB.y+=pendB.vy*dt;
+    var dx=pendB.x-pendA.x, dy=pendB.y-pendA.y;
+    var d=Math.sqrt(dx*dx+dy*dy);
+    if(d>pendLen){
+      var diff=(d-pendLen)/d;
+      pendB.x-=dx*diff; pendB.y-=dy*diff;
+      // project velocity onto constraint
+      var nx=dx/d, ny=dy/d;
+      var dot=pendB.vx*nx+pendB.vy*ny;
+      pendB.vx-=dot*nx*0.02; pendB.vy-=dot*ny*0.02;
+    }
+    pendB.vx*=0.999; pendB.vy*=0.999;
+    neonLine(ctx,pendA.x,pendA.y,pendB.x,pendB.y,'rgba(255,208,128,0.5)',1);
+    neonNode(ctx,pendA.x,pendA.y,5,'#666');
+    neonNode(ctx,pendB.x,pendB.y,10,'#ffd080');
+    // floor
+    neonLine(ctx,0,platY,W,platY,'#3dd68c',1);
+    // labels
+    ctx.fillStyle='rgba(102,99,138,0.4)'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('DRAG TO APPLY FORCE \u00B7 CLICK TO IMPULSE',W/2,H-10);
+    ctx.fillText('PINJOINT',W*0.2,30);
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  vizCanvas.onclick=function(){
+    if(currentViz!=='forces') return;
+    bvy=-350; bvang+=(Math.random()-0.5)*10;
+  };
+  animate();
+}
+
+/* ── L06 Raycasts ── */
+function vizRaycasts(){
+  var cx=W/2,cy=H/2;
+  var obstacles=[];
+  for(var i=0;i<5;i++){
+    obstacles.push({x:rnd(40,W-40),y:rnd(40,H-40),w:rnd(30,60),h:rnd(20,40)});
+  }
+  function rayVsRect(ox,oy,dx,dy,r){
+    var tmin=0,tmax=500;
+    // simplified AABB ray test
+    if(dx!==0){
+      var t1=(r.x-ox)/dx, t2=(r.x+r.w-ox)/dx;
+      if(t1>t2){var tmp=t1;t1=t2;t2=tmp;}
+      tmin=Math.max(tmin,t1); tmax=Math.min(tmax,t2);
+    } else if(ox<r.x||ox>r.x+r.w) return null;
+    if(dy!==0){
+      var t1=(r.y-oy)/dy, t2=(r.y+r.h-oy)/dy;
+      if(t1>t2){var tmp=t1;t1=t2;t2=tmp;}
+      tmin=Math.max(tmin,t1); tmax=Math.min(tmax,t2);
+    } else if(oy<r.y||oy>r.y+r.h) return null;
+    if(tmin>tmax||tmax<0) return null;
+    var t=tmin>0?tmin:tmax;
+    return {t:t,x:ox+dx*t,y:oy+dy*t};
+  }
+  function animate(){
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.04);
+    var mx=mouseX*W, my=mouseY*H;
+    // obstacles
+    for(var i=0;i<obstacles.length;i++){
+      var r=obstacles[i];
+      ctx.fillStyle='rgba(102,99,138,0.2)';
+      ctx.fillRect(r.x,r.y,r.w,r.h);
+      ctx.strokeStyle='rgba(102,99,138,0.3)'; ctx.lineWidth=1;
+      ctx.strokeRect(r.x,r.y,r.w,r.h);
+    }
+    // cast rays from center toward mouse + spread
+    var numRays=8;
+    for(var i=0;i<numRays;i++){
+      var angle=Math.atan2(my-cy,mx-cx)+(i-numRays/2)*0.15;
+      var dx=Math.cos(angle), dy=Math.sin(angle);
+      var bestHit=null, bestT=9999;
+      for(var j=0;j<obstacles.length;j++){
+        var hit=rayVsRect(cx,cy,dx,dy,obstacles[j]);
+        if(hit&&hit.t<bestT){bestT=hit.t;bestHit=hit;}
+      }
+      if(bestHit){
+        neonLine(ctx,cx,cy,bestHit.x,bestHit.y,'#ff7b3a',1);
+        neonNode(ctx,bestHit.x,bestHit.y,4,'#ff4d6b');
+      } else {
+        var ex=cx+dx*400, ey=cy+dy*400;
+        ctx.strokeStyle='rgba(255,123,58,0.15)'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(ex,ey); ctx.stroke();
+      }
+    }
+    // player
+    neonNode(ctx,cx,cy,8,'#3dd68c');
+    // ground ray
+    var groundHit=null, gBest=9999;
+    for(var j=0;j<obstacles.length;j++){
+      var hit=rayVsRect(cx,cy,0,1,obstacles[j]);
+      if(hit&&hit.t<gBest){gBest=hit.t;groundHit=hit;}
+    }
+    if(groundHit){
+      ctx.strokeStyle='rgba(61,214,140,0.3)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(groundHit.x,groundHit.y); ctx.stroke();
+      ctx.setLineDash([]);
+      neonNode(ctx,groundHit.x,groundHit.y,3,'#3dd68c');
+    }
+    ctx.fillStyle='rgba(102,99,138,0.4)'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('MOVE MOUSE TO AIM RAYS',W/2,H-10);
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ── L07 Verlet ── */
+function vizVerlet(){
+  var pts=[], sticks=[];
+  var numPts=16, ropeLen=H*0.6, segLen=ropeLen/numPts;
+  var anchorX=W*0.35, anchorY=30;
+  for(var i=0;i<numPts;i++){
+    pts.push({x:anchorX,y:anchorY+i*segLen,px:anchorX,py:anchorY+i*segLen,locked:i===0});
+  }
+  for(var i=0;i<numPts-1;i++) sticks.push({a:i,b:i+1,len:segLen});
+  // cloth
+  var cRows=8,cCols=8,cSize=15;
+  var cOx=W*0.65,cOy=20;
+  var cPts=[], cSticks=[];
+  for(var r=0;r<cRows;r++){
+    for(var c=0;c<cCols;c++){
+      var idx=r*cCols+c;
+      cPts.push({x:cOx+c*cSize,y:cOy+r*cSize,px:cOx+c*cSize,py:cOy+r*cSize,locked:r===0&&(c===0||c===cCols-1)});
+      if(c<cCols-1) cSticks.push({a:idx,b:idx+1,len:cSize});
+      if(r<cRows-1) cSticks.push({a:idx,b:idx+cCols,len:cSize});
+    }
+  }
+  var grabbed=-1;
+
+  vizCanvas.onmousedown=function(e){
+    if(currentViz!=='verlet') return;
+    var r=vizCanvas.getBoundingClientRect();
+    var mx=e.clientX-r.left,my=e.clientY-r.top;
+    for(var i=0;i<pts.length;i++){
+      if(dist(mx,my,pts[i].x,pts[i].y)<15){grabbed=i;return;}
+    }
+  };
+  vizCanvas.onmouseup=function(){grabbed=-1;};
+
+  function animate(){
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.04);
+    var dt=1/60, grav=900*dt*dt;
+    var t=performance.now()*0.001;
+    var wind=Math.sin(t*1.5)*30*dt*dt;
+    // rope verlet
+    for(var i=0;i<pts.length;i++){
+      if(pts[i].locked) continue;
+      if(i===grabbed){pts[i].x=mouseX*W;pts[i].y=mouseY*H;pts[i].px=pts[i].x;pts[i].py=pts[i].y;continue;}
+      var vx=(pts[i].x-pts[i].px)*0.99;
+      var vy=(pts[i].y-pts[i].py)*0.99+grav;
+      pts[i].px=pts[i].x; pts[i].py=pts[i].y;
+      pts[i].x+=vx; pts[i].y+=vy;
+    }
+    for(var iter=0;iter<5;iter++){
+      for(var i=0;i<sticks.length;i++){
+        var s=sticks[i],a=pts[s.a],b=pts[s.b];
+        var dx=b.x-a.x,dy=b.y-a.y;
+        var d=Math.sqrt(dx*dx+dy*dy)||0.001;
+        var diff=(s.len-d)/d*0.5;
+        if(!a.locked){a.x-=dx*diff;a.y-=dy*diff;}
+        if(!b.locked){b.x+=dx*diff;b.y+=dy*diff;}
+      }
+    }
+    // draw rope
+    ctx.strokeStyle='#ff7b3a'; ctx.lineWidth=2;
+    glow(ctx,'#ff7b3a',6);
+    ctx.beginPath();
+    for(var i=0;i<pts.length;i++){
+      if(i===0) ctx.moveTo(pts[i].x,pts[i].y); else ctx.lineTo(pts[i].x,pts[i].y);
+    }
+    ctx.stroke(); noGlow(ctx);
+    neonNode(ctx,pts[0].x,pts[0].y,5,'#3dd68c');
+
+    // cloth verlet
+    for(var i=0;i<cPts.length;i++){
+      if(cPts[i].locked) continue;
+      var vx=(cPts[i].x-cPts[i].px)*0.98+wind;
+      var vy=(cPts[i].y-cPts[i].py)*0.98+grav;
+      cPts[i].px=cPts[i].x; cPts[i].py=cPts[i].y;
+      cPts[i].x+=vx; cPts[i].y+=vy;
+      // mouse push
+      var md=dist(mouseX*W,mouseY*H,cPts[i].x,cPts[i].y);
+      if(md<40&&mouseDown){
+        cPts[i].x+=(cPts[i].x-mouseX*W)/md*3;
+        cPts[i].y+=(cPts[i].y-mouseY*H)/md*3;
+      }
+    }
+    for(var iter=0;iter<4;iter++){
+      for(var i=cSticks.length-1;i>=0;i--){
+        var s=cSticks[i],a=cPts[s.a],b=cPts[s.b];
+        var dx=b.x-a.x,dy=b.y-a.y;
+        var d=Math.sqrt(dx*dx+dy*dy)||0.001;
+        var diff=(s.len-d)/d*0.5;
+        if(!a.locked){a.x-=dx*diff;a.y-=dy*diff;}
+        if(!b.locked){b.x+=dx*diff;b.y+=dy*diff;}
+      }
+    }
+    // draw cloth
+    ctx.strokeStyle='rgba(62,207,255,0.4)'; ctx.lineWidth=1;
+    for(var i=0;i<cSticks.length;i++){
+      var s=cSticks[i];
+      ctx.beginPath();
+      ctx.moveTo(cPts[s.a].x,cPts[s.a].y);
+      ctx.lineTo(cPts[s.b].x,cPts[s.b].y);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle='rgba(102,99,138,0.4)'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('DRAG ROPE \u00B7 PUSH CLOTH',W/2,H-10);
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ── L08 Jiggle ── */
+function vizJiggle(){
+  var numPts=24, radius=60, cx=W/2, cy=H/2;
+  var pts=[], restPts=[], springs=[];
+  for(var i=0;i<numPts;i++){
+    var a=i/numPts*Math.PI*2;
+    var x=cx+Math.cos(a)*radius, y=cy+Math.sin(a)*radius;
+    var weight=0.5+0.5*Math.sin(a-Math.PI/2); // top=0, bottom=1
+    pts.push({x:x,y:y,vx:0,vy:0,weight:weight});
+    restPts.push({x:x,y:y});
+  }
+  function animate(){
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.04);
+    var t=performance.now()*0.001;
+    var dt=1/60;
+    // ambient perturbation
+    for(var i=0;i<numPts;i++){
+      var p=pts[i], r=restPts[i];
+      var noise=(Math.sin(t*3+i*0.7)*0.5+Math.sin(t*5+i*1.3)*0.3)*p.weight*40;
+      // spring to rest
+      var dx=r.x-p.x, dy=r.y-p.y;
+      p.vx+=(dx*80+noise)*dt;
+      p.vy+=(dy*80)*dt;
+      p.vx*=0.88; p.vy*=0.88;
+      p.x+=p.vx*dt; p.y+=p.vy*dt;
+      // mouse poke
+      if(mouseDown){
+        var mx=mouseX*W,my=mouseY*H;
+        var md=dist(mx,my,p.x,p.y);
+        if(md<50){
+          var push=p.weight*(50-md)*0.3;
+          p.vx+=(p.x-mx)/md*push;
+          p.vy+=(p.y-my)/md*push;
+        }
+      }
+      // clamp displacement
+      var ox=p.x-r.x, oy=p.y-r.y;
+      var maxD=20*p.weight;
+      var d=Math.sqrt(ox*ox+oy*oy);
+      if(d>maxD&&d>0){
+        p.x=r.x+ox/d*maxD;
+        p.y=r.y+oy/d*maxD;
+      }
+    }
+    // draw weight map background
+    for(var i=0;i<numPts;i++){
+      var p=pts[i];
+      var r=Math.floor(255*p.weight), b=Math.floor(255*(1-p.weight));
+      ctx.fillStyle='rgba('+r+',30,'+b+',0.15)';
+      ctx.beginPath(); ctx.arc(restPts[i].x,restPts[i].y,14,0,Math.PI*2); ctx.fill();
+    }
+    // draw blob
+    glow(ctx,'#ff7b3a',8);
+    ctx.strokeStyle='#ff7b3a'; ctx.lineWidth=2;
+    ctx.beginPath();
+    for(var i=0;i<=numPts;i++){
+      var p=pts[i%numPts];
+      if(i===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y);
+    }
+    ctx.closePath(); ctx.stroke();
+    ctx.fillStyle='rgba(255,123,58,0.08)'; ctx.fill();
+    noGlow(ctx);
+    // legend
+    ctx.fillStyle='rgba(102,99,138,0.4)'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('RED=FREE  BLUE=LOCKED \u00B7 CLICK TO POKE',W/2,H-10);
+    ctx.fillText('WEIGHT MAP',W/2,20);
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ── L09 Fracture ── */
+function vizFracture(){
+  var fragments=null, intact=true;
+  var boxX=W/2, boxY=H/2, boxW=100, boxH=80;
+  var frags=[];
+  // pre-generate voronoi-ish fragments
+  function preFracture(){
+    frags=[];
+    var seeds=[];
+    for(var i=0;i<8;i++) seeds.push({x:boxX+rnd(-boxW/2,boxW/2),y:boxY+rnd(-boxH/2,boxH/2)});
+    for(var i=0;i<seeds.length;i++){
+      frags.push({
+        x:seeds[i].x,y:seeds[i].y,
+        vx:0,vy:0,vang:0,ang:0,
+        w:rnd(15,35),h:rnd(12,28),
+        alpha:1,active:false
+      });
+    }
+    intact=true;
+  }
+  preFracture();
+  vizCanvas.onclick=function(){
+    if(currentViz!=='fracture') return;
+    if(intact){
+      intact=false;
+      var mx=mouseX*W, my=mouseY*H;
+      for(var i=0;i<frags.length;i++){
+        var f=frags[i];
+        f.active=true;
+        var dx=f.x-mx, dy=f.y-my;
+        var d=Math.sqrt(dx*dx+dy*dy)+1;
+        f.vx=dx/d*rnd(100,300);
+        f.vy=dy/d*rnd(100,300)-150;
+        f.vang=(Math.random()-0.5)*15;
+      }
+    } else {
+      preFracture();
+    }
+  };
+  function animate(){
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.04);
+    var dt=1/60;
+    if(intact){
+      // draw intact box with pulsing fracture lines
+      var t=performance.now()*0.001;
+      glow(ctx,'#ff7b3a',10);
+      ctx.fillStyle='#ff7b3a';
+      ctx.fillRect(boxX-boxW/2,boxY-boxH/2,boxW,boxH);
+      noGlow(ctx);
+      ctx.strokeStyle='rgba(255,77,107,'+(0.15+Math.sin(t*3)*0.1)+')';
+      ctx.lineWidth=1;
+      for(var i=0;i<frags.length;i++){
+        ctx.beginPath(); ctx.moveTo(boxX,boxY); ctx.lineTo(frags[i].x,frags[i].y); ctx.stroke();
+      }
+      ctx.fillStyle='rgba(102,99,138,0.5)'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+      ctx.fillText('CLICK TO FRACTURE',W/2,H-10);
+    } else {
+      // simulate fragments
+      var allGone=true;
+      for(var i=0;i<frags.length;i++){
+        var f=frags[i];
+        if(!f.active) continue;
+        f.vy+=500*dt;
+        f.x+=f.vx*dt; f.y+=f.vy*dt;
+        f.ang+=f.vang*dt;
+        f.alpha-=0.008;
+        if(f.alpha<=0){f.active=false;continue;}
+        allGone=false;
+        ctx.save(); ctx.translate(f.x,f.y); ctx.rotate(f.ang);
+        ctx.globalAlpha=f.alpha;
+        glow(ctx,'#ff7b3a',6);
+        ctx.fillStyle='#ff7b3a'; ctx.fillRect(-f.w/2,-f.h/2,f.w,f.h);
+        noGlow(ctx);
+        ctx.globalAlpha=1;
+        ctx.restore();
+      }
+      if(allGone){
+        ctx.fillStyle='rgba(102,99,138,0.5)'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+        ctx.fillText('CLICK TO RESET',W/2,H-10);
+      }
+    }
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ── L10 Slice ── */
+function vizSlice(){
+  var shapes=[];
+  function makeShape(x,y,r,sides){
+    var verts=[];
+    for(var i=0;i<sides;i++){
+      var a=i/sides*Math.PI*2-Math.PI/2;
+      verts.push({x:x+Math.cos(a)*r,y:y+Math.sin(a)*r});
+    }
+    return {verts:verts,vx:0,vy:0,ang:0,vang:(Math.random()-0.5)*2,active:true};
+  }
+  shapes.push(makeShape(W*0.3,H*0.4,50,6));
+  shapes.push(makeShape(W*0.6,H*0.3,40,5));
+  shapes.push(makeShape(W*0.5,H*0.6,35,7));
+
+  var sliceStart=null, sliceEnd=null, slicing=false;
+  vizCanvas.onmousedown=function(e){
+    if(currentViz!=='slice') return;
+    var r=vizCanvas.getBoundingClientRect();
+    sliceStart={x:e.clientX-r.left,y:e.clientY-r.top};
+    slicing=true;
+  };
+  vizCanvas.onmouseup=function(e){
+    if(!slicing||currentViz!=='slice') return;
+    var r=vizCanvas.getBoundingClientRect();
+    sliceEnd={x:e.clientX-r.left,y:e.clientY-r.top};
+    slicing=false;
+    // perform slice on all active shapes near the line
+    // simplified: just split shapes that the line passes through
+  };
+
+  function animate(){
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.04);
+    var t=performance.now()*0.001;
+    for(var i=0;i<shapes.length;i++){
+      var s=shapes[i];
+      if(!s.active) continue;
+      s.ang+=s.vang*0.016;
+      // draw
+      ctx.save();
+      var cx=0,cy=0;
+      for(var j=0;j<s.verts.length;j++){cx+=s.verts[j].x;cy+=s.verts[j].y;}
+      cx/=s.verts.length; cy/=s.verts.length;
+      ctx.translate(cx,cy); ctx.rotate(s.ang);
+      glow(ctx,'#ff7b3a',8);
+      ctx.fillStyle='rgba(255,123,58,0.3)';
+      ctx.strokeStyle='#ff7b3a'; ctx.lineWidth=2;
+      ctx.beginPath();
+      for(var j=0;j<s.verts.length;j++){
+        var v=s.verts[j];
+        if(j===0) ctx.moveTo(v.x-cx,v.y-cy); else ctx.lineTo(v.x-cx,v.y-cy);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      noGlow(ctx);
+      ctx.restore();
+    }
+    // draw slice line if dragging
+    if(slicing&&sliceStart){
+      var mx=mouseX*W, my=mouseY*H;
+      ctx.strokeStyle='#ff4d6b'; ctx.lineWidth=2; ctx.setLineDash([6,4]);
+      ctx.beginPath(); ctx.moveTo(sliceStart.x,sliceStart.y); ctx.lineTo(mx,my); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.fillStyle='rgba(102,99,138,0.4)'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('DRAW A LINE TO SLICE',W/2,H-10);
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ── L11 Explosions ── */
+function vizExplosions(){
+  var boxes=[], platY=H-30, blasts=[], fires=[];
+  for(var i=0;i<12;i++){
+    boxes.push({x:rnd(40,W-40),y:rnd(H*0.3,platY-20),w:rnd(14,24),h:rnd(14,24),vx:0,vy:0,hp:1,burn:0});
+  }
+  vizCanvas.onclick=function(e){
+    if(currentViz!=='explosions') return;
+    var r=vizCanvas.getBoundingClientRect();
+    var ex=e.clientX-r.left, ey=e.clientY-r.top;
+    blasts.push({x:ex,y:ey,radius:0,maxR:100,alpha:1});
+    // apply impulse
+    for(var i=0;i<boxes.length;i++){
+      var b=boxes[i];
+      var d=dist(ex,ey,b.x,b.y);
+      if(d<100){
+        var f=3000/Math.max(d*d,20);
+        b.vx+=(b.x-ex)/d*f;
+        b.vy+=(b.y-ey)/d*f;
+      }
+    }
+    fires.push({x:ex,y:ey,life:180,alpha:1});
+  };
+  function animate(){
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.04);
+    var dt=1/60;
+    // boxes
+    for(var i=0;i<boxes.length;i++){
+      var b=boxes[i];
+      b.vy+=400*dt; b.x+=b.vx*dt; b.y+=b.vy*dt;
+      b.vx*=0.98; b.vy*=0.98;
+      if(b.y+b.h/2>platY){b.y=platY-b.h/2;b.vy*=-0.3;b.vx*=0.9;}
+      if(b.x<10){b.x=10;b.vx*=-0.5;} if(b.x>W-10){b.x=W-10;b.vx*=-0.5;}
+      // fire damage
+      for(var f=0;f<fires.length;f++){
+        if(fires[f].life>0&&dist(fires[f].x,fires[f].y,b.x,b.y)<40) b.burn=Math.min(b.burn+dt,1);
+      }
+      var col=b.burn>0?'rgb(255,'+Math.floor(123*(1-b.burn))+','+Math.floor(58*(1-b.burn))+')':'#ff7b3a';
+      glow(ctx,col,6);
+      ctx.fillStyle=col; ctx.fillRect(b.x-b.w/2,b.y-b.h/2,b.w,b.h);
+      noGlow(ctx);
+    }
+    // blasts
+    for(var i=blasts.length-1;i>=0;i--){
+      var bl=blasts[i];
+      bl.radius+=8; bl.alpha-=0.04;
+      if(bl.alpha<=0){blasts.splice(i,1);continue;}
+      ctx.strokeStyle='rgba(255,123,58,'+bl.alpha+')';
+      ctx.lineWidth=3;
+      glow(ctx,'#ff7b3a',12);
+      ctx.beginPath(); ctx.arc(bl.x,bl.y,bl.radius,0,Math.PI*2); ctx.stroke();
+      noGlow(ctx);
+    }
+    // fires
+    for(var i=fires.length-1;i>=0;i--){
+      var f=fires[i];
+      f.life--;
+      if(f.life<=0){fires.splice(i,1);continue;}
+      var a=f.life/180;
+      for(var j=0;j<3;j++){
+        var fx=f.x+rnd(-8,8), fy=f.y-rnd(0,20);
+        ctx.fillStyle='rgba(255,'+Math.floor(100+Math.random()*80)+',20,'+a*0.6+')';
+        ctx.beginPath(); ctx.arc(fx,fy,rnd(2,5),0,Math.PI*2); ctx.fill();
+      }
+    }
+    // floor
+    neonLine(ctx,0,platY,W,platY,'#3dd68c',1);
+    ctx.fillStyle='rgba(102,99,138,0.4)'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('CLICK TO DETONATE',W/2,H-10);
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ── L12 Ballistics ── */
+function vizBallistics(){
+  var bullets=[], platY=H-30;
+  var walls=[
+    {x:W*0.35,y:platY-80,w:12,h:80,mat:'wood',col:'#8B6914'},
+    {x:W*0.55,y:platY-80,w:30,h:80,mat:'concrete',col:'#666'},
+    {x:W*0.75,y:platY-80,w:8,h:80,mat:'steel',col:'#aab'}
+  ];
+  var launchX=40, launchY=platY-20;
+  vizCanvas.onclick=function(){
+    if(currentViz!=='ballistics') return;
+    var mx=mouseX*W, my=mouseY*H;
+    var dx=mx-launchX, dy=my-launchY;
+    var d=Math.sqrt(dx*dx+dy*dy)+1;
+    bullets.push({x:launchX,y:launchY,vx:dx/d*350,vy:dy/d*350,trail:[],alive:true,bounced:false});
+  };
+  function animate(){
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.04);
+    var dt=1/60;
+    // walls
+    for(var i=0;i<walls.length;i++){
+      var w=walls[i];
+      ctx.fillStyle=w.col; ctx.fillRect(w.x,w.y,w.w,w.h);
+      ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font='8px Space Mono'; ctx.textAlign='center';
+      ctx.fillText(w.mat.toUpperCase(),w.x+w.w/2,w.y-5);
+    }
+    // bullets
+    for(var i=bullets.length-1;i>=0;i--){
+      var b=bullets[i];
+      if(!b.alive) continue;
+      b.vy+=400*dt;
+      b.x+=b.vx*dt; b.y+=b.vy*dt;
+      b.trail.push({x:b.x,y:b.y});
+      if(b.trail.length>80) b.trail.shift();
+      // wall collision
+      for(var j=0;j<walls.length;j++){
+        var w=walls[j];
+        if(b.x>w.x&&b.x<w.x+w.w&&b.y>w.y&&b.y<w.y+w.h){
+          if(w.mat==='wood'){
+            b.vx*=0.4; b.vy*=0.4; b.x=w.x+w.w+2; // pass through
+          } else if(w.mat==='steel'&&!b.bounced){
+            b.vx*=-0.5; b.vy*=0.5; b.bounced=true; // ricochet
+          } else {
+            b.alive=false; // embed
+          }
+        }
+      }
+      if(b.y>platY||b.x<0||b.x>W||b.y<0) b.alive=false;
+      // draw trail
+      ctx.strokeStyle='rgba(255,123,58,0.3)'; ctx.lineWidth=1;
+      ctx.beginPath();
+      for(var t=0;t<b.trail.length;t++){
+        if(t===0) ctx.moveTo(b.trail[t].x,b.trail[t].y);
+        else ctx.lineTo(b.trail[t].x,b.trail[t].y);
+      }
+      ctx.stroke();
+      if(b.alive) neonNode(ctx,b.x,b.y,3,'#ff7b3a');
+    }
+    // launcher
+    neonNode(ctx,launchX,launchY,6,'#3dd68c');
+    // aim line
+    ctx.strokeStyle='rgba(255,123,58,0.2)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(launchX,launchY); ctx.lineTo(mouseX*W,mouseY*H); ctx.stroke();
+    ctx.setLineDash([]);
+    // floor
+    neonLine(ctx,0,platY,W,platY,'#3dd68c',1);
+    ctx.fillStyle='rgba(102,99,138,0.4)'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('CLICK TO FIRE \u00B7 AIM WITH MOUSE',W/2,H-10);
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ── L13 Combat ── */
+function vizCombat(){
+  var f1={x:W*0.3,y:H*0.55,state:'idle',hp:100,hitActive:false,hurtActive:true,hitstun:0,
+    attackFrame:0,attackType:null,iframes:0,facing:1};
+  var f2={x:W*0.7,y:H*0.55,state:'idle',hp:100,hitActive:false,hurtActive:true,hitstun:0,
+    attackFrame:0,attackType:null,iframes:0,facing:-1};
+  var hitstopTimer=0;
+  var hitSparks=[];
+
+  function drawFighter(c,f,col){
+    var bw=16,bh=40;
+    // hurtbox
+    if(f.hurtActive){
+      c.strokeStyle='rgba(62,207,255,0.3)'; c.lineWidth=1; c.setLineDash([3,3]);
+      c.strokeRect(f.x-bw/2-4,f.y-bh-4,bw+8,bh+8);
+      c.setLineDash([]);
+    }
+    // body
+    var bodyCol=f.hitstun>0?'#ff4d6b':col;
+    if(f.iframes>0&&Math.floor(performance.now()/60)%2===0) bodyCol='rgba(255,255,255,0.3)';
+    glow(c,bodyCol,8);
+    c.fillStyle=bodyCol;
+    c.fillRect(f.x-bw/2,f.y-bh,bw,bh);
+    noGlow(c);
+    // head
+    neonNode(c,f.x,f.y-bh-8,7,bodyCol);
+    // hitbox
+    if(f.hitActive){
+      var hx=f.x+f.facing*30;
+      glow(c,'#ff4d6b',10);
+      c.fillStyle='rgba(255,77,107,0.4)';
+      c.fillRect(hx-15,f.y-35,30,30);
+      c.strokeStyle='#ff4d6b'; c.lineWidth=1;
+      c.strokeRect(hx-15,f.y-35,30,30);
+      noGlow(c);
+    }
+    // hp bar
+    c.fillStyle='#1d1d2a'; c.fillRect(f.x-20,f.y+10,40,4);
+    c.fillStyle=f.hp>30?'#3dd68c':'#ff4d6b';
+    c.fillRect(f.x-20,f.y+10,40*(f.hp/100),4);
+  }
+
+  function animate(){
+    if(hitstopTimer>0){hitstopTimer--;raf=requestAnimationFrame(animate);
+      // still draw but don't update
+      clear(ctx);atmosBg(ctx,255,123,58,.04);
+      drawFighter(ctx,f1,'#ff7b3a'); drawFighter(ctx,f2,'#3ecfff');
+      ctx.fillStyle='rgba(255,255,0,0.3)'; ctx.font='bold 18px Syne'; ctx.textAlign='center';
+      ctx.fillText('HITSTOP',W/2,H*0.3);
+      drawSparks();
+      scanline(ctx);
+      return;
+    }
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.04);
+    // auto-fight AI for demo
+    var t=performance.now()*0.001;
+    // f1 attacks periodically
+    if(f1.state==='idle'&&f1.hitstun<=0&&Math.sin(t*2)>0.95){
+      f1.state='attack'; f1.attackFrame=0; f1.attackType='light';
+    }
+    if(f2.state==='idle'&&f2.hitstun<=0&&Math.sin(t*2.3+1)>0.95){
+      f2.state='attack'; f2.attackFrame=0; f2.attackType='light';
+    }
+    // process attacks
+    [f1,f2].forEach(function(f){
+      if(f.hitstun>0){f.hitstun--;if(f.hitstun<=0)f.state='idle';return;}
+      if(f.iframes>0) f.iframes--;
+      if(f.state==='attack'){
+        f.attackFrame++;
+        var startup=5,active=4,recovery=8;
+        if(f.attackFrame<=startup){f.hitActive=false;}
+        else if(f.attackFrame<=startup+active){f.hitActive=true;}
+        else{f.hitActive=false;}
+        if(f.attackFrame>=startup+active+recovery){f.state='idle';f.attackFrame=0;}
+      }
+    });
+    // hit detection
+    function checkHit(attacker,defender){
+      if(!attacker.hitActive||!defender.hurtActive||defender.iframes>0||defender.hitstun>0) return;
+      var hx=attacker.x+attacker.facing*30;
+      if(Math.abs(hx-defender.x)<30&&Math.abs((attacker.y-30)-defender.y+20)<30){
+        defender.hp=Math.max(0,defender.hp-15);
+        defender.hitstun=12; defender.state='hitstun';
+        attacker.hitActive=false;
+        hitstopTimer=4;
+        hitSparks.push({x:(attacker.x+defender.x)/2,y:attacker.y-25,life:20});
+      }
+    }
+    checkHit(f1,f2); checkHit(f2,f1);
+    // draw
+    drawFighter(ctx,f1,'#ff7b3a');
+    drawFighter(ctx,f2,'#3ecfff');
+    drawSparks();
+    // timeline
+    var ty=H-30;
+    ctx.fillStyle='rgba(102,99,138,0.3)'; ctx.font='8px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('AUTO-FIGHTING DEMO',W/2,ty+15);
+    ctx.fillText('PLAYER 1',W*0.3,ty+15);
+    ctx.fillText('PLAYER 2',W*0.7,ty+15);
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  function drawSparks(){
+    for(var i=hitSparks.length-1;i>=0;i--){
+      var s=hitSparks[i]; s.life--;
+      if(s.life<=0){hitSparks.splice(i,1);continue;}
+      var a=s.life/20;
+      for(var j=0;j<5;j++){
+        ctx.fillStyle='rgba(255,255,0,'+a+')';
+        ctx.beginPath();
+        ctx.arc(s.x+rnd(-15,15),s.y+rnd(-15,15),rnd(1,3),0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+  animate();
+}
+
+/* ── L14 Brawler ── */
+function vizBrawler(){
+  var localX=W*0.3,localY=H*0.55,localVx=0;
+  var remoteX=W*0.7,remoteY=H*0.55,remoteVx=0;
+  var remotePredX=W*0.7; // prediction ghost
+  var tick=0,remoteTick=0;
+  var latency=80; // ms simulated
+  var predAccuracy=92;
+  function animate(){
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.04);
+    var t=performance.now()*0.001;
+    tick++;
+    // local player oscillates
+    localX=W*0.3+Math.sin(t*1.5)*60;
+    // remote player oscillates with delay
+    remoteX=W*0.7+Math.sin((t-latency/1000)*1.5)*60;
+    // prediction ghost
+    remotePredX=W*0.7+Math.sin(t*1.5)*60;
+    var predError=Math.abs(remotePredX-remoteX);
+    predAccuracy=Math.max(80,100-predError*2);
+
+    // draw arena
+    neonLine(ctx,30,H*0.75,W-30,H*0.75,'rgba(61,214,140,0.3)',1);
+    // crates
+    for(var i=0;i<3;i++){
+      var cx=W*0.45+i*40,cy=H*0.75-15;
+      ctx.fillStyle='rgba(255,123,58,0.15)'; ctx.fillRect(cx-12,cy-12,24,24);
+      ctx.strokeStyle='rgba(255,123,58,0.3)'; ctx.lineWidth=1; ctx.strokeRect(cx-12,cy-12,24,24);
+    }
+    // prediction ghost
+    ctx.globalAlpha=0.2;
+    ctx.fillStyle='#3ecfff';
+    ctx.fillRect(remotePredX-8,remoteY-30,16,30);
+    ctx.globalAlpha=1;
+    // correction line
+    if(predError>2){
+      ctx.strokeStyle='rgba(255,77,107,0.4)'; ctx.lineWidth=1; ctx.setLineDash([2,2]);
+      ctx.beginPath(); ctx.moveTo(remotePredX,remoteY-15); ctx.lineTo(remoteX,remoteY-15); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // local player
+    glow(ctx,'#3dd68c',10);
+    ctx.fillStyle='#3dd68c'; ctx.fillRect(localX-8,localY-30,16,30);
+    noGlow(ctx);
+    ctx.fillStyle='#3dd68c'; ctx.font='8px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('LOCAL',localX,localY+15);
+    // remote player
+    glow(ctx,'#3ecfff',10);
+    ctx.fillStyle='#3ecfff'; ctx.fillRect(remoteX-8,remoteY-30,16,30);
+    noGlow(ctx);
+    ctx.fillStyle='#3ecfff'; ctx.font='8px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('REMOTE',remoteX,remoteY+15);
+
+    // stats panel
+    var sx=10,sy=15;
+    ctx.fillStyle='rgba(102,99,138,0.6)'; ctx.font='9px Space Mono'; ctx.textAlign='left';
+    ctx.fillText('TICK: '+tick,sx,sy);
+    ctx.fillText('LATENCY: '+latency+'ms',sx,sy+14);
+    ctx.fillText('ROLLBACK: '+Math.ceil(latency/16.67)+'f',sx,sy+28);
+    ctx.fillText('PREDICT: '+Math.floor(predAccuracy)+'%',sx,sy+42);
+
+    // legend
+    ctx.fillStyle='rgba(102,99,138,0.4)'; ctx.font='9px Space Mono'; ctx.textAlign='center';
+    ctx.fillText('ROLLBACK NETWORK SIMULATION',W/2,H-10);
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ── Default idle ── */
+function idleDefault(){
+  function animate(){
+    clear(ctx);
+    atmosBg(ctx,255,123,58,.06);
+    scanline(ctx);
+    raf=requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ── Boot ── */
+document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
