@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algorithms for Lemurs</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap');
+:root{--bg:#060a06;--panel:#0d120d;--border:#1c2a1c;--accent:#a8ff47;--accent2:#ff6060;--accent3:#38d9f5;--text:#e4f0e4;--muted:#4a6a4a;--code-bg:#060a06;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+header{padding:3rem 2rem 2rem;text-align:center;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+header canvas#hero{position:absolute;inset:0;width:100%;height:100%;opacity:.22;pointer-events:none;}
+header .inner{position:relative;z-index:1;}
+.tagline-chip{display:inline-block;background:var(--accent);color:#000;font-family:'Space Mono',monospace;font-size:.65rem;padding:.25rem .75rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem;}
+h1{font-size:clamp(2.5rem,6vw,5rem);font-weight:800;line-height:1;letter-spacing:-.02em;}
+h1 span{color:var(--accent);}
+.subtitle{font-family:'Space Mono',monospace;font-size:.85rem;color:var(--muted);margin-top:.75rem;}
+.progress-bar{height:2px;background:var(--border);}
+.progress-fill{height:100%;background:var(--accent);transition:width .4s ease;}
+nav{display:flex;gap:.4rem;padding:1rem 1.5rem;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:100;scrollbar-width:none;}
+nav::-webkit-scrollbar{display:none;}
+.nav-btn{flex-shrink:0;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:.7rem;padding:.4rem .8rem;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nav-btn.active{background:var(--accent);color:#000;border-color:var(--accent);}
+.nav-section{flex-shrink:0;font-family:'Space Mono',monospace;font-size:.55rem;color:var(--muted);padding:.38rem .4rem;opacity:.45;pointer-events:none;align-self:center;white-space:nowrap;border-left:1px solid var(--border);margin-left:.2rem;padding-left:.6rem;}
+main{display:grid;grid-template-columns:1fr 1fr;gap:0;height:calc(100vh - 185px);min-height:560px;}
+.lesson-panel{padding:2rem;overflow-y:auto;border-right:1px solid var(--border);scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+
+/* ── MOBILE LAYOUT ─────────────────────────────────────────── */
+@media(max-width:900px){
+  header{padding:.9rem 1rem .7rem;}
+  h1{font-size:1.9rem;}
+  .subtitle{font-size:.7rem;margin-top:.35rem;}
+  .tagline-chip{font-size:.55rem;margin-bottom:.4rem;}
+  nav{padding:.45rem .75rem;}
+  main{grid-template-columns:1fr;height:auto;}
+  .lesson-panel{border-right:none;padding:1.25rem 1rem;}
+  .viz-panel{height:75dvh;}
+  .viz-area{flex:1;min-height:0;}
+  .code-area{flex:0 0 32%;min-height:0;}
+  .lesson-title{font-size:1.25rem;}
+  .lesson-body{font-size:.74rem;}
+}
+@media(max-width:900px) and (max-height:680px){
+  header{padding:.45rem 1rem .35rem;}
+  h1{font-size:1.5rem;}
+  .subtitle,.tagline-chip{display:none;}
+  .viz-panel{height:65dvh;}
+}
+.lesson-number{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.5rem;}
+.lesson-title{font-size:1.8rem;font-weight:800;line-height:1.1;margin-bottom:1rem;}
+.lesson-body{font-family:'Space Mono',monospace;font-size:.78rem;line-height:1.9;color:#aacaaa;}
+.lesson-body p{margin-bottom:1rem;}
+.lesson-body strong{color:var(--accent);font-weight:700;}
+.lesson-body em{color:var(--accent3);font-style:normal;}
+.lesson-body code{background:#1a1a14;color:var(--accent3);padding:.1em .4em;font-size:.85em;}
+.lesson-body a{color:var(--accent3);}
+.lesson-body .tip{background:#1a1a0e;border-left:3px solid var(--accent2);padding:.75rem 1rem;margin:1rem 0;color:#e8e0d0;}
+.lesson-body .tip::before{content:'>> TIP: ';color:var(--accent2);font-weight:700;}
+.lesson-body .step-card{background:#0f0f0c;border:1px solid var(--border);border-left:3px solid var(--accent3);padding:.75rem 1rem;margin:.6rem 0;}
+.lesson-body .step-card .step-num{color:var(--accent3);font-weight:700;font-size:.65rem;letter-spacing:.15em;display:block;margin-bottom:.25rem;}
+.lesson-body .vocab{background:#0a0a08;border:1px solid #2a2a1a;border-left:3px solid var(--accent3);padding:.65rem 1rem;margin:.6rem 0;}
+.lesson-body .vocab::before{content:'>> LABEL: ';color:var(--accent3);font-weight:700;font-size:.7em;letter-spacing:.08em;}
+.lesson-body .vocab .vt{color:var(--accent);font-weight:700;}
+.lesson-body .spamton{background:#060e03;border:2px solid var(--accent);padding:.75rem 1rem;margin:1rem 0;color:#ffe0a0;position:relative;overflow:hidden;}
+.lesson-body .spamton::before{content:'!! WILD FACT: ';color:var(--accent);font-weight:700;letter-spacing:.05em;}
+.lesson-body .spamton strong{color:#fff0c0;}
+.lesson-body .artists{background:#0f0f0c;border:1px solid var(--border);border-left:3px solid var(--accent2);padding:.75rem 1rem;margin:.6rem 0;}
+.lesson-body .artists::before{content:'>> SEE IN THE WILD: ';color:var(--accent2);font-weight:700;display:block;margin-bottom:.3rem;font-size:.65rem;letter-spacing:.1em;}
+.lesson-body .challenge{background:#120f08;border:1px solid var(--accent2);padding:.75rem 1rem;margin:.6rem 0;}
+.lesson-body .challenge::before{content:'>> CHALLENGE: ';color:var(--accent2);font-weight:700;}
+.viz-panel{display:flex;flex-direction:column;background:var(--code-bg);overflow:hidden;position:relative;}
+.viz-area{flex:1;background:#060604;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.viz-area canvas{width:100%;height:100%;display:block;touch-action:none;-webkit-user-select:none;user-select:none;}
+.viz-label{position:absolute;top:.35rem;left:.6rem;font-family:'Space Mono',monospace;font-size:.55rem;color:var(--accent3);letter-spacing:.1em;pointer-events:none;z-index:1;opacity:.75;}
+.viz-controls{flex-shrink:0;display:flex;align-items:center;gap:.4rem;padding:.35rem .6rem;background:var(--panel);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.viz-btn{background:var(--accent);color:#000;border:none;font-family:'Space Mono',monospace;font-size:.7rem;font-weight:700;padding:.28rem .85rem;cursor:pointer;transition:opacity .15s;flex-shrink:0;}
+.viz-btn:hover{opacity:.85;}
+.viz-btn.secondary{background:none;border:1px solid var(--border);color:var(--muted);flex-shrink:0;}
+.viz-btn.secondary:hover{border-color:var(--accent);color:var(--accent);background:none;}
+.viz-btn.secondary.active{border-color:var(--accent);color:var(--accent);background:#1a1500;}
+.viz-speed{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--accent3);display:flex;align-items:center;gap:.3rem;}
+.viz-speed input[type=range]{accent-color:var(--accent);cursor:pointer;width:60px;}
+.viz-status{font-family:'Space Mono',monospace;font-size:.6rem;color:#6a9a7a;flex:1;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.code-area{flex:0 0 38%;border-top:1px solid var(--border);display:flex;flex-direction:column;min-height:0;}
+.code-toolbar{display:flex;justify-content:space-between;align-items:center;padding:.38rem .75rem;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;}
+.code-toolbar span{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted);}
+.copy-btn{background:var(--accent);color:#000;border:none;font-family:'Space Mono',monospace;font-size:.62rem;font-weight:700;padding:.22rem .7rem;cursor:pointer;}
+.copy-btn.done{background:var(--accent3);color:#000;}
+pre#code-display{flex:1;overflow:auto;padding:.7rem 1rem;font-family:'Space Mono',monospace;font-size:.65rem;line-height:1.72;color:#c8c8a0;scrollbar-width:thin;scrollbar-color:var(--border) transparent;white-space:pre-wrap;}
+pre#code-display .kw{color:var(--accent3);}
+pre#code-display .fn{color:var(--accent);}
+pre#code-display .cm{color:var(--muted);font-style:italic;}
+pre#code-display .nm{color:var(--accent2);}
+pre#code-display .st{color:#88cc88;}
+</style>
+</head>
+<body>
+<header>
+  <canvas id="hero"></canvas>
+  <div class="inner">
+    <div class="tagline-chip">LEMUR Computer Science School</div>
+    <h1>Algorithms for <span>Lemurs</span></h1>
+    <p class="subtitle">// complexity &rarr; search &rarr; sort &rarr; graphs &rarr; pathfinding &rarr; dynamic programming &rarr; you understand how computers think</p>
+  </div>
+</header>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<nav id="lesson-nav"></nav>
+<main>
+  <div class="lesson-panel" id="lesson-text"></div>
+  <div class="viz-panel" id="viz-panel">
+    <div class="viz-area" id="viz-area">
+      <canvas id="viz-canvas"></canvas>
+      <div class="viz-label" id="viz-label"></div>
+    </div>
+    <div class="viz-controls">
+      <button class="viz-btn" id="btn-run">&#9654; RUN</button>
+      <button class="viz-btn secondary" id="btn-reset">RESET</button>
+      <div class="viz-speed"><span>speed</span><input type="range" id="speed-slider" min="1" max="10" value="5"></div>
+      <span class="viz-status" id="viz-status">click RUN to watch the algorithm</span>
+    </div>
+    <div class="code-area">
+      <div class="code-toolbar">
+        <span>javascript</span>
+        <button class="copy-btn" id="copy-btn">COPY</button>
+      </div>
+      <pre id="code-display"></pre>
+    </div>
+  </div>
+</main>
+<script>
+const LESSONS=[
+{
+subtitle:"01 \u2014 Complexity",
+title:"How Bad Can It Get?",
+viz:"bigO",
+code:"<span class=\"cm\">// Big-O: how runtime grows with input size n.</span>\n<span class=\"cm\">// Drop constants \u2014 only the curve shape matters.</span>\n\n<span class=\"cm\">// O(1)</span>     <span class=\"kw\">const</span> v = arr[<span class=\"nm\">0</span>];\n<span class=\"cm\">// O(log n)</span>  binary search \u2014 halves each step\n<span class=\"cm\">// O(n)</span>      arr.<span class=\"fn\">reduce</span>((a,b)=>a+b, <span class=\"nm\">0</span>)\n<span class=\"cm\">// O(n log n)</span> arr.<span class=\"fn\">sort</span>((a,b)=>a-b)\n<span class=\"cm\">// O(n\u00b2)</span>\n<span class=\"kw\">for</span>(<span class=\"kw\">let</span> i=<span class=\"nm\">0</span>;i&lt;arr.length;i++)\n  <span class=\"kw\">for</span>(<span class=\"kw\">let</span> j=<span class=\"nm\">0</span>;j&lt;arr.length;j++)\n    <span class=\"cm\">/* every pair */</span>\n\n<span class=\"cm\">// O(2\u207f) \u2014 recursive without memoization</span>\n<span class=\"kw\">function</span> <span class=\"fn\">badFib</span>(n) {\n  <span class=\"kw\">return</span> n&lt;=<span class=\"nm\">1</span> ? n : <span class=\"fn\">badFib</span>(n-<span class=\"nm\">1</span>) + <span class=\"fn\">badFib</span>(n-<span class=\"nm\">2</span>);\n}\n<span class=\"cm\">// badFib(40) makes 331 million calls.</span>\n\n<span class=\"cm\">// Amortized O(1): dynamic array push</span>\n<span class=\"cm\">// Occasionally O(n) resize, but averaged over</span>\n<span class=\"cm\">// n pushes: total O(n), so O(1) per push.</span>",
+body:"<p>Your code works on 100 items. Then someone loads 100,000 and it locks up for 40 seconds. You didn't write a bug \u2014 you wrote a <strong>complexity cliff</strong>. Big-O is the vocabulary for describing that cliff before you fall off it. It tells you the <em>shape</em> of how your code behaves as input grows \u2014 not how fast it is today, but how it scales.</p>\n\n<div class=\"vocab\"><span class=\"vt\">\"Big-O Notation\"</span> \u2014 a way of describing how runtime (or memory) grows relative to input size <em>n</em>. We drop constants and small terms: O(3n + 50) is just O(n). We don't care about exact numbers \u2014 only the curve. O(n\u00b2) means: if n doubles, runtime roughly quadruples. The shape of the function is everything.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Time vs Space Complexity\"</span> \u2014 time complexity is how runtime scales with n. Space complexity is how much memory you use. They trade off constantly: hash tables use extra space to make lookups O(1). Sorting algorithms use O(n) extra space to avoid O(n\u00b2) comparisons. When someone says an algorithm is \"fast,\" always ask: what did it cost in memory?</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Amortized Complexity\"</span> \u2014 the average cost per operation across a sequence, even if individual operations vary wildly. JavaScript's <code>array.push()</code> is O(1) amortized: most pushes are instant, but occasionally it has to copy everything to a larger buffer \u2014 that copy is O(n), but spread across n pushes, the average cost per push is still O(1). Amortized analysis gives you the honest number.</div>\n\n<div class=\"step-card\"><span class=\"step-num\">THE COMPLEXITY LADDER</span>\n<strong>O(1)</strong> \u2014 array index, hash lookup. Input size doesn't matter.<br>\n<strong>O(log n)</strong> \u2014 binary search, balanced tree ops. Double n, add one step.<br>\n<strong>O(n)</strong> \u2014 single loop over all items. Minimum to touch every element.<br>\n<strong>O(n log n)</strong> \u2014 efficient sorting. The sweet spot for comparison-based work.<br>\n<strong>O(n\u00b2)</strong> \u2014 loop inside a loop over the same data. Fine at 1k, painful at 100k, catastrophic at 1M.<br>\n<strong>O(2\u207f)</strong> \u2014 exponential recursion without caching. Works for n \u2264 20, laughable beyond.<br>\n<strong>O(n!)</strong> \u2014 trying every permutation. n=12 is already 479 million. Don't.<br><br>\nThe viz shows all five practical curves. Notice how O(n log n) stays close to O(n) for a long time \u2014 that's why efficient sort <em>feels</em> fast even though it's technically worse than linear.\n</div>\n\n<div class=\"step-card\"><span class=\"step-num\">WHEN CONSTANTS ACTUALLY WIN</span>\nO(n) with a constant of 10,000 is slower than O(n\u00b2) with a constant of 0.001 \u2014 up until n \u2248 10 million. For small n, the \"worse\" algorithm wins. Database query planners choose algorithmically \"worse\" methods for small tables because the constants dominate. Big-O is about <em>asymptotic</em> behavior \u2014 it only becomes the full story at scale. The lesson isn't \"always pick the best Big-O.\" It's: understand which regime you're in.\n</div>\n\n<div class=\"artists\">Every Spotify recommendation, TikTok For You feed, and e-commerce search result is a sort + filter pipeline running against millions of items. The reason results appear in milliseconds is that everything is pre-sorted and pre-indexed \u2014 lookups are O(log n) against a B-tree, not O(n) against a raw list. When a game has \"one frame where everything lags,\" that's almost always a hidden O(n\u00b2) loop that someone's data finally pushed past the threshold. Complexity is invisible until it isn't.</div>\n\n<div class=\"spamton\">A developer found a <strong>single nested loop</strong> in a social notification system causing multi-minute delays for users with large friend graphs. The outer loop: friends. The inner loop: scanning for duplicates. A hash set would have made it O(n). It had been in production for <strong>four years</strong>. Invisible at 50 friends. 90 seconds at 2,000. <strong>Big-O debt compounds silently at scale.</strong></div>\n\n<div class=\"challenge\">Open any project you've worked on and find one place where you're using <code>array.includes()</code> or <code>array.find()</code> inside a loop. That's O(n\u00b2). Refactor it to use a <code>Set</code> or <code>Map</code> to make it O(n). Run both versions on 10,000 items and time them. The difference is the complexity cliff in person.</div>\n\n<p class=\"tip\">The most common O(n\u00b2) in the wild: <code>for each item, loop through another array to check membership</code>. The fix is always the same \u2014 build a Set or Map from the second array first, then do O(1) lookups. One extra line of code, potentially orders-of-magnitude faster.</p>"
+},
+{
+subtitle:"02 \u2014 Search",
+title:"Finding Things Without Looking at Everything",
+viz:"binarySearch",
+code:"<span class=\"cm\">// Binary search: O(log n) on a sorted array.</span>\n<span class=\"kw\">function</span> <span class=\"fn\">binarySearch</span>(arr, target) {\n  <span class=\"kw\">let</span> lo=<span class=\"nm\">0</span>, hi=arr.length-<span class=\"nm\">1</span>;\n  <span class=\"kw\">while</span>(lo &lt;= hi) {\n    <span class=\"cm\">// Avoids overflow vs (lo+hi)/2</span>\n    <span class=\"kw\">const</span> mid = lo + ((hi-lo)>><span class=\"nm\">1</span>);\n    <span class=\"kw\">if</span>     (arr[mid]===target) <span class=\"kw\">return</span> mid;\n    <span class=\"kw\">else if</span>(arr[mid] &lt; target) lo=mid+<span class=\"nm\">1</span>;\n    <span class=\"kw\">else</span>                        hi=mid-<span class=\"nm\">1</span>;\n  }\n  <span class=\"kw\">return</span> -<span class=\"nm\">1</span>;\n}\n\n<span class=\"cm\">// Binary search on the answer space.</span>\n<span class=\"cm\">// Works on any monotone predicate.</span>\n<span class=\"cm\">// \"What is the minimum X where feasible(X) = true?\"</span>\n<span class=\"kw\">function</span> <span class=\"fn\">findMin</span>(lo, hi, <span class=\"fn\">feasible</span>) {\n  <span class=\"kw\">while</span>(lo &lt; hi) {\n    <span class=\"kw\">const</span> mid = lo + ((hi-lo)>><span class=\"nm\">1</span>);\n    <span class=\"fn\">feasible</span>(mid) ? hi=mid : lo=mid+<span class=\"nm\">1</span>;\n  }\n  <span class=\"kw\">return</span> lo;\n}\n\n<span class=\"cm\">// git bisect is literally findMin on commit history.</span>",
+body:"<p>A million items. You could check each one \u2014 that's a million comparisons. Or you could ask: is the target in the left half or the right half? Discard the loser. Repeat. Twenty questions later you've narrowed a million items to one. That's binary search. It works because the array is <em>sorted</em> \u2014 and sorted data is the gift that keeps giving. Every sorted structure in computing runs on this idea.</p>\n\n<div class=\"vocab\"><span class=\"vt\">\"Binary Search\"</span> \u2014 on a sorted array, compare the target to the middle element. If smaller, search the left half. If larger, search the right. Each comparison halves the remaining search space. After 30 steps you've covered 2\u00b3\u2070 = 1 billion elements. O(log n). Every database index, every autocomplete, every sorted lookup is binary search or a close cousin.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Invariant\"</span> \u2014 a condition that stays true throughout a loop or recursive process. Binary search's invariant: <em>the target, if it exists, is always within [lo, hi]</em>. If you maintain this invariant every iteration, the algorithm is correct. Invariants are how you reason about whether a loop actually works \u2014 and why binary search implementations fail when the invariant breaks at the boundary.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Binary Search on the Answer\"</span> \u2014 the technique generalizes beyond sorted arrays. Any yes/no question with a monotone answer (\"is X feasible at this threshold?\") can be binary searched. \"What's the minimum buffer size where the task fits?\" Binary search over buffer sizes. Turns \"find the optimal value\" into \"check feasibility at a given value\" \u2014 which is usually much simpler. Used in resource allocation, scheduling, and optimization everywhere.</div>\n\n<div class=\"step-card\"><span class=\"step-num\">GETTING IT RIGHT \u2014 THE BUGS LIVE AT THE EDGES</span>\nBinary search is notorious for off-by-one errors. Three specific bugs eat implementations:<br><br>\n<strong>Loop condition:</strong> <code>lo &lt;= hi</code> (inclusive) vs <code>lo &lt; hi</code> (exclusive). The wrong choice skips the last element or loops forever.<br>\n<strong>Midpoint overflow:</strong> <code>(lo + hi) / 2</code> overflows 32-bit integers with large arrays. Always use <code>lo + ((hi - lo) >> 1)</code>.<br>\n<strong>Update step:</strong> after a failed comparison, update to <code>mid + 1</code> or <code>mid - 1</code> \u2014 not just <code>mid</code>, or you loop forever.<br><br>\nJon Bentley found that most professional programmers couldn't write a correct binary search from scratch in a timed study. The bug lived in Java's standard library for <strong>20 years</strong>, found in 2006.\n</div>\n\n<div class=\"step-card\"><span class=\"step-num\">THE CANONICAL IMPLEMENTATION</span>\n<code>function binarySearch(arr, target) {<br>\n&nbsp;&nbsp;let lo = 0, hi = arr.length - 1;<br>\n&nbsp;&nbsp;while (lo &lt;= hi) {<br>\n&nbsp;&nbsp;&nbsp;&nbsp;const mid = lo + ((hi - lo) >> 1);<br>\n&nbsp;&nbsp;&nbsp;&nbsp;if (arr[mid] === target) return mid;<br>\n&nbsp;&nbsp;&nbsp;&nbsp;if (arr[mid] &lt; target) lo = mid + 1;<br>\n&nbsp;&nbsp;&nbsp;&nbsp;else hi = mid - 1;<br>\n&nbsp;&nbsp;}<br>\n&nbsp;&nbsp;return -1;<br>\n}</code><br><br>\nMemorize this shape. The invariant: target is in [lo, hi] if it exists. When lo > hi, the range is empty \u2014 not found.\n</div>\n\n<div class=\"artists\"><code>git bisect</code> is binary search over your commit history. Mark a \"good\" commit and a \"bad\" commit; git checks out the midpoint; you test and mark it; git halves the range. O(log n) steps to find the exact commit that introduced a bug, through potentially thousands of commits. Every version control system's \"find the regression\" workflow is binary search in disguise.</div>\n\n<div class=\"spamton\">JavaScript's <code>Array.sort().indexOf()</code> is O(n) \u2014 it scans from the beginning every time. If you're searching a sorted array more than once, you're paying O(n) when you could pay O(log n). At 10,000 elements that's 10,000 comparisons vs 14. At 1,000,000 it's 1,000,000 vs 20. <strong>The savings grow with the problem.</strong> If your data is sorted and you're using indexOf, you're leaving performance on the table every single call.</div>\n\n<div class=\"challenge\">Write a function that finds the first element in a sorted array that is greater than or equal to a target (lower bound search). It's binary search with a twist: instead of returning on an exact match, you track the best candidate seen so far and keep narrowing. This variant shows up constantly in real problems \u2014 range queries, scheduling, coordinate compression.</div>\n\n<p class=\"tip\">If you're searching a sorted collection more than once in a loop, binary search. If you're searching an unsorted collection more than once, sort it first and then binary search \u2014 O(n log n) sort + O(log n) per query beats O(n) per query after enough queries. The crossover point is roughly log(n) queries.</p>"
+},
+{
+subtitle:"03 \u2014 Sorting",
+title:"Order From Chaos",
+viz:"sorting",
+code:"<span class=\"cm\">// Three sorts. Same result, very different paths.</span>\n\n<span class=\"cm\">// Bubble sort \u2014 O(n\u00b2). Educational only.</span>\n<span class=\"kw\">function</span> <span class=\"fn\">bubble</span>(a) {\n  <span class=\"kw\">for</span>(<span class=\"kw\">let</span> i=<span class=\"nm\">0</span>;i&lt;a.length;i++)\n    <span class=\"kw\">for</span>(<span class=\"kw\">let</span> j=<span class=\"nm\">0</span>;j&lt;a.length-i-<span class=\"nm\">1</span>;j++)\n      <span class=\"kw\">if</span>(a[j]>a[j+<span class=\"nm\">1</span>])[a[j],a[j+<span class=\"nm\">1</span>]]=[a[j+<span class=\"nm\">1</span>],a[j]];\n}\n\n<span class=\"cm\">// Merge sort \u2014 O(n log n). Stable. Good for linked lists.</span>\n<span class=\"kw\">function</span> <span class=\"fn\">merge</span>(a) {\n  <span class=\"kw\">if</span>(a.length &lt;= <span class=\"nm\">1</span>) <span class=\"kw\">return</span> a;\n  <span class=\"kw\">const</span> m=a.length>><span class=\"nm\">1</span>;\n  <span class=\"kw\">const</span> L=<span class=\"fn\">merge</span>(a.slice(<span class=\"nm\">0</span>,m)), R=<span class=\"fn\">merge</span>(a.slice(m));\n  <span class=\"kw\">const</span> out=[]; <span class=\"kw\">let</span> i=<span class=\"nm\">0</span>,j=<span class=\"nm\">0</span>;\n  <span class=\"kw\">while</span>(i&lt;L.length && j&lt;R.length)\n    out.<span class=\"fn\">push</span>(L[i]&lt;=R[j] ? L[i++] : R[j++]);\n  <span class=\"kw\">return</span> out.<span class=\"fn\">concat</span>(L.slice(i), R.slice(j));\n}\n\n<span class=\"cm\">// Quick sort \u2014 O(n log n) avg, O(n\u00b2) worst.</span>\n<span class=\"cm\">// Fast in practice. In-place. Unstable.</span>\n<span class=\"kw\">function</span> <span class=\"fn\">quick</span>(a, lo=<span class=\"nm\">0</span>, hi=a.length-<span class=\"nm\">1</span>) {\n  <span class=\"kw\">if</span>(lo >= hi) <span class=\"kw\">return</span>;\n  <span class=\"kw\">const</span> pivot=a[hi]; <span class=\"kw\">let</span> p=lo;\n  <span class=\"kw\">for</span>(<span class=\"kw\">let</span> i=lo;i&lt;hi;i++)\n    <span class=\"kw\">if</span>(a[i]&lt;=pivot) [a[p],a[i]]=[a[i],a[p++]];\n  [a[p],a[hi]]=[a[hi],a[p]];\n  <span class=\"fn\">quick</span>(a,lo,p-<span class=\"nm\">1</span>); <span class=\"fn\">quick</span>(a,p+<span class=\"nm\">1</span>,hi);\n}\n\n<span class=\"cm\">// The one you actually ship:</span>\n<span class=\"cm\">// arr.sort((a, b) => a - b)  \u2190 ALWAYS with comparator</span>",
+body:"<p>Sorting is invisible infrastructure. Every leaderboard, every feed, every file browser, every search result: sorted. Your music library ordered by date added \u2014 sorted. The autocomplete suggestions ranked by relevance \u2014 sorted. You interact with sorting hundreds of times a day without noticing. This lesson is about what's actually happening, and why three algorithms that all produce the same result can differ by orders of magnitude in how they get there.</p>\n\n<div class=\"vocab\"><span class=\"vt\">\"Stable Sort\"</span> \u2014 preserves the relative order of equal elements. If two records share a sort key, their order after sorting matches before. Merge sort is stable. Quick sort (standard) isn't. Stability matters when sorting by multiple fields: sort a playlist by play count, then by date \u2014 a stable sort keeps same-count tracks in their original date order. Unstable means that guarantee disappears.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"The O(n log n) Floor\"</span> \u2014 any algorithm that sorts by comparing pairs of elements needs at least O(n log n) comparisons. This is a mathematical proof, not an engineering limitation: to sort n items you must distinguish among n! possible orderings; each comparison gives one bit of information; log\u2082(n!) \u2248 n log n. You cannot beat this with a comparison sort. Radix sort bypasses it \u2014 but only by exploiting the structure of the data itself.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Timsort\"</span> \u2014 the sort running on most of the world's computers right now. Used by Python, Java (objects), V8's <code>Array.sort()</code>, and Android. A hybrid of merge sort and insertion sort that detects natural runs \u2014 already-sorted subsequences \u2014 in real data. Near O(n) on nearly-sorted input, O(n log n) on random. Stable, adaptive, and quietly excellent. Tim Peters wrote it in 2002 for Python and it spread everywhere.</div>\n\n<div class=\"step-card\"><span class=\"step-num\">WHAT THE THREE ALGORITHMS ACTUALLY DO</span>\n<strong>Bubble sort</strong> \u2014 repeatedly scan the array, swapping adjacent elements that are out of order. Each full scan \"bubbles\" the largest unsorted element to the end. O(n\u00b2) comparisons, O(1) space. Never use in production. The value is understanding \"what does sorted mean?\" \u2014 bubbling is the most literal answer.<br><br>\n<strong>Merge sort</strong> \u2014 divide the array in half recursively until you have single-element arrays (trivially sorted), then merge sorted halves back together. O(n log n) always. Stable. Uses O(n) extra memory. The right choice for linked lists and any situation requiring stability.<br><br>\n<strong>Quick sort</strong> \u2014 pick a pivot element, partition the array so everything smaller is left and everything larger is right, recursively sort both sides. O(n log n) average, O(n\u00b2) worst case (bad pivots). In-place. Not stable. Faster in practice than merge sort due to cache behavior \u2014 which is why it's the default in most languages.\n</div>\n\n<div class=\"step-card\"><span class=\"step-num\">PRACTICAL JAVASCRIPT SORTING</span>\n<code>// Sort numbers (comparator REQUIRED \u2014 default is string sort)<br>\narr.sort((a, b) => a - b);  // ascending<br>\narr.sort((a, b) => b - a);  // descending<br><br>\n// Sort objects by property<br>\npeople.sort((a, b) => a.age - b.age);<br><br>\n// Sort strings (locale-aware)<br>\nwords.sort((a, b) => a.localeCompare(b));<br><br>\n// Multi-key sort: primary by score desc, secondary by name asc<br>\nitems.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));</code><br><br>\nThe <code>.sort((a, b) => a - b)</code> comparator is the single most Googled JS snippet. Now you won't need to Google it.\n</div>\n\n<div class=\"artists\">Timsort was designed specifically because real data isn't random. Music libraries, contact lists, game leaderboards \u2014 all have natural runs of already-sorted data. The sort in your DAW's timeline view, the sort in your photo library by date, the sort on every e-commerce site: all Timsort or Timsort derivatives. When you drag a clip to reorder it in Premiere, a sort ran. When Spotify recalculates your Discover Weekly overnight, billions of scores get sorted. The algorithm that handles it was written by one person for Python and quietly conquered everything.</div>\n\n<div class=\"spamton\">JavaScript's <code>[1, 10, 2, 20].sort()</code> returns <code>[1, 10, 2, 20]</code> \u2014 because the default sort converts to strings and compares lexicographically. \"10\" comes before \"2\" because \"1\" < \"2\". This bug has bitten every JavaScript developer at least once. It's been in the spec since 1997. <strong>Always pass a comparator. Always.</strong></div>\n\n<div class=\"challenge\">Implement merge sort from scratch without looking it up. The signature: <code>function mergeSort(arr)</code>. The shape: base case if length \u2264 1, split in half, recursively sort both halves, merge. Writing the merge step cleanly \u2014 two pointers, one result array \u2014 is where understanding either clicks or doesn't. Run it on 1000 random numbers and verify the output is sorted.</div>\n\n<p class=\"tip\"><code>arr.sort((a, b) => a - b)</code> for numbers. Every time. Without the comparator, JavaScript sorts by string representation and your numbers come out wrong. This is the #1 silent sort bug in JavaScript codebases. The two seconds it takes to type the comparator has saved thousands of hours of debugging.</p>"
+},
+{
+subtitle:"04 \u2014 Data Structures",
+title:"The Right Container Changes Everything",
+viz:"dataStructures",
+code:"<span class=\"cm\">// Four structures that cover 90% of real cases.</span>\n\n<span class=\"cm\">// Stack \u2014 LIFO. O(1) push/pop. Undo, DFS, call stack.</span>\n<span class=\"kw\">class</span> Stack {\n  #s=[];\n  <span class=\"fn\">push</span>(v){<span class=\"kw\">this</span>.#s.<span class=\"fn\">push</span>(v);}\n  <span class=\"fn\">pop</span>() {<span class=\"kw\">return</span> <span class=\"kw\">this</span>.#s.<span class=\"fn\">pop</span>();}\n  <span class=\"fn\">peek</span>(){<span class=\"kw\">return</span> <span class=\"kw\">this</span>.#s.at(-<span class=\"nm\">1</span>);}\n}\n\n<span class=\"cm\">// Queue \u2014 FIFO. O(1) with head/tail index trick.</span>\n<span class=\"cm\">// Array.shift() is O(n) \u2014 never use as a queue.</span>\n<span class=\"kw\">class</span> Queue {\n  #b={}; #h=<span class=\"nm\">0</span>; #t=<span class=\"nm\">0</span>;\n  <span class=\"fn\">enqueue</span>(v) {<span class=\"kw\">this</span>.#b[<span class=\"kw\">this</span>.#t++]=v;}\n  <span class=\"fn\">dequeue</span>()  {<span class=\"kw\">return</span> <span class=\"kw\">this</span>.#b[<span class=\"kw\">this</span>.#h++];}\n  get <span class=\"fn\">size</span>()  {<span class=\"kw\">return</span> <span class=\"kw\">this</span>.#t-<span class=\"kw\">this</span>.#h;}\n}\n\n<span class=\"cm\">// Min-Heap \u2014 O(1) peek min, O(log n) push/pop.</span>\n<span class=\"cm\">// Heap invariant: arr[i] &lt;= arr[2i+1] and arr[2i+2]</span>\n<span class=\"kw\">class</span> MinHeap {\n  #h=[];\n  <span class=\"fn\">push</span>(v){\n    <span class=\"kw\">this</span>.#h.<span class=\"fn\">push</span>(v); <span class=\"kw\">let</span> i=<span class=\"kw\">this</span>.#h.length-<span class=\"nm\">1</span>;\n    <span class=\"kw\">while</span>(i><span class=\"nm\">0</span>){\n      <span class=\"kw\">const</span> p=(i-<span class=\"nm\">1</span>)>><span class=\"nm\">1</span>;\n      <span class=\"kw\">if</span>(<span class=\"kw\">this</span>.#h[p]&lt;=<span class=\"kw\">this</span>.#h[i])<span class=\"kw\">break</span>;\n      [<span class=\"kw\">this</span>.#h[p],<span class=\"kw\">this</span>.#h[i]]=[<span class=\"kw\">this</span>.#h[i],<span class=\"kw\">this</span>.#h[p]];\n      i=p;\n    }\n  }\n  <span class=\"fn\">peek</span>(){<span class=\"kw\">return</span> <span class=\"kw\">this</span>.#h[<span class=\"nm\">0</span>];}\n  get <span class=\"fn\">size</span>(){<span class=\"kw\">return</span> <span class=\"kw\">this</span>.#h.length;}\n}\n\n<span class=\"cm\">// Hash Map \u2014 O(1) avg insert/lookup/delete.</span>\n<span class=\"cm\">// Turns O(n\u00b2) \"have we seen this?\" into O(n).</span>\n<span class=\"kw\">const</span> seen = <span class=\"kw\">new</span> <span class=\"fn\">Map</span>();\nseen.<span class=\"fn\">set</span>(<span class=\"st\">'key'</span>, <span class=\"nm\">42</span>); seen.<span class=\"fn\">has</span>(<span class=\"st\">'key'</span>); <span class=\"cm\">// O(1)</span>",
+body:"<p>The algorithm decides the approach. The data structure decides whether that approach is actually possible efficiently. You can write a perfect algorithm and tank it completely with the wrong container. An array where you needed a set. A queue built on an array instead of a proper deque. A heap problem solved with repeated sorting. The four structures in this lesson cover 90% of what you'll ever need \u2014 the skill is knowing which one to reach for and exactly when.</p>\n\n<div class=\"vocab\"><span class=\"vt\">\"Stack (LIFO)\"</span> \u2014 Last In, First Out. O(1) push and pop from one end. The call stack in your JavaScript runtime is literally a stack \u2014 when a function calls another, a new frame is pushed; when it returns, the frame is popped. Used for: undo/redo history, DFS traversal, bracket/paren matching, expression evaluation, any \"reverse the order\" problem. JavaScript's <code>array.push()</code> and <code>array.pop()</code> give you a stack for free.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Priority Queue / Min-Heap\"</span> \u2014 like a queue, but instead of dequeuing in insertion order, you always dequeue the minimum (or maximum) element. Backed by a binary heap: a complete binary tree stored in an array where every parent is \u2264 its children. O(log n) push and pop, O(1) peek. The structure that powers Dijkstra, A*, and every \"always process the cheapest/most urgent thing first\" problem. JavaScript has no built-in heap \u2014 you implement it yourself or reach for a library.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Hash Table\"</span> \u2014 maps keys to values in O(1) average time by hashing the key to an array index. JavaScript's <code>Map</code> and <code>Set</code> are hash tables. The structure that turns \"have we seen this before?\" from O(n) to O(1), converting O(n\u00b2) loops into O(n) single passes. The most performance-critical structure to learn to reach for instinctively. When in doubt: could a Map or Set help here?</div>\n\n<div class=\"step-card\"><span class=\"step-num\">THE DECISION TREE</span>\n<strong>Need to process in reverse?</strong> Stack.<br>\n<strong>Need to process in arrival order?</strong> Queue (real deque, not array.shift).<br>\n<strong>Need the min or max, repeatedly?</strong> Heap.<br>\n<strong>Need O(1) lookup by key?</strong> Hash map.<br>\n<strong>Need sorted order AND fast insert/delete?</strong> Balanced BST (lesson 11).<br><br>\nThe escalation pattern: start with an array. The moment you're searching it repeatedly, upgrade to a Map or Set. The moment you need the min or max after every mutation, upgrade to a heap. Reach for the simplest structure that gives you the operations you need at the complexity you can afford.\n</div>\n\n<div class=\"step-card\"><span class=\"step-num\">THE TRAP: array.shift() IS NOT A QUEUE</span>\n<code>array.shift()</code> removes the first element by copying every remaining element down one slot. It's O(n). BFS implemented with <code>push()</code> + <code>shift()</code> runs in O(V + E\u00b2) instead of O(V + E). At 10,000 nodes with 50,000 edges, that's milliseconds vs <strong>minutes</strong>.<br><br>\nA real O(1) queue in JavaScript uses a head/tail index trick:<br>\n<code>const queue = [], head = 0;<br>\nqueue.push(value);          // enqueue: O(1)<br>\nconst val = queue[head++];  // dequeue: O(1)</code><br><br>\nThe array grows but head just advances. Memory isn't freed, but for short-lived traversals this is fast and simple.\n</div>\n\n<div class=\"artists\">Every game inventory is a hash map (item ID \u2192 quantity). Every undo history is a stack. Every task scheduler \u2014 from operating system process queues to audio plugin processing order in a DAW \u2014 uses a priority queue. The browser's event loop is itself a queue. React's state update batching is a queue. You interact with these four structures constantly through every piece of software you've ever used; now you understand what's underneath.</div>\n\n<div class=\"spamton\">JavaScript's <code>Map</code> preserves insertion order and accepts any type as a key \u2014 even objects. But <code>{}</code> (plain object) coerces all keys to strings, so <code>obj[{x:1}]</code> and <code>obj[{x:2}]</code> are <em>the same key</em> (<code>\"[object Object]\"</code>). This silent coercion has caused more subtle bugs than almost any other JavaScript behavior. <strong>If your keys aren't strings, use Map. Always.</strong></div>\n\n<div class=\"challenge\">Implement a min-heap from scratch: <code>push(value)</code> and <code>pop()</code> (returns minimum). The array representation: index 0 is the root, index i's children are at 2i+1 and 2i+2, parent is at (i-1)>>1. Push: add to end, then \"bubble up\" by swapping with parent while smaller. Pop: swap root with last, remove last, then \"bubble down\" by swapping with smaller child while larger. Test: push [5,3,8,1,4], pop three times should give [1,3,4].</div>\n\n<p class=\"tip\"><code>array.shift()</code> is O(n). It copies the entire array. Never use it as a queue in any performance-sensitive code. The head-index trick above is two lines and genuinely O(1). If you're implementing BFS and your queue is <code>array.push()</code> + <code>array.shift()</code>, that's why it feels slow on large graphs.</p>"
+},
+{
+subtitle:"05 \u2014 Graphs",
+title:"Everything Is a Graph",
+viz:"graphViz",
+code:"<span class=\"cm\">// Graph representations \u2014 choose based on density</span>\n\n<span class=\"cm\">// Adjacency list \u2014 O(V+E) space. Best for sparse graphs.</span>\n<span class=\"kw\">const</span> graph = {\n  A: [{node:<span class=\"st\">'B'</span>,w:<span class=\"nm\">4</span>}, {node:<span class=\"st\">'C'</span>,w:<span class=\"nm\">2</span>}],\n  B: [{node:<span class=\"st\">'D'</span>,w:<span class=\"nm\">5</span>}],\n  C: [{node:<span class=\"st\">'D'</span>,w:<span class=\"nm\">1</span>}],\n  D: [],\n};\n\n<span class=\"cm\">// BFS vs DFS \u2014 one line apart</span>\n<span class=\"kw\">function</span> <span class=\"fn\">traverse</span>(graph, start, bfs=<span class=\"kw\">true</span>) {\n  <span class=\"kw\">const</span> visited  = <span class=\"kw\">new</span> <span class=\"fn\">Set</span>();\n  <span class=\"kw\">const</span> frontier = [start];\n  <span class=\"kw\">while</span>(frontier.length) {\n    <span class=\"kw\">const</span> node = bfs\n      ? frontier.<span class=\"fn\">shift</span>()  <span class=\"cm\">// BFS: queue</span>\n      : frontier.<span class=\"fn\">pop</span>();   <span class=\"cm\">// DFS: stack</span>\n    <span class=\"kw\">if</span>(visited.<span class=\"fn\">has</span>(node)) <span class=\"kw\">continue</span>;\n    visited.<span class=\"fn\">add</span>(node);\n    graph[node].<span class=\"fn\">forEach</span>(nb => frontier.<span class=\"fn\">push</span>(nb.node));\n  }\n}\n\n<span class=\"cm\">// Topological sort (Kahn's) \u2014 build order, task scheduling</span>\n<span class=\"kw\">function</span> <span class=\"fn\">topoSort</span>(graph) {\n  <span class=\"kw\">const</span> inDeg=<span class=\"kw\">new</span> <span class=\"fn\">Map</span>();\n  <span class=\"kw\">for</span>(<span class=\"kw\">const</span> [n,edges] <span class=\"kw\">of</span> <span class=\"fn\">Object</span>.<span class=\"fn\">entries</span>(graph)){\n    <span class=\"kw\">if</span>(!inDeg.<span class=\"fn\">has</span>(n)) inDeg.<span class=\"fn\">set</span>(n,<span class=\"nm\">0</span>);\n    edges.<span class=\"fn\">forEach</span>(e=>inDeg.<span class=\"fn\">set</span>(e.node,(inDeg.<span class=\"fn\">get</span>(e.node)||<span class=\"nm\">0</span>)+<span class=\"nm\">1</span>));\n  }\n  <span class=\"kw\">const</span> q=[...[...inDeg].<span class=\"fn\">filter</span>(([,d])=>d===<span class=\"nm\">0</span>).<span class=\"fn\">map</span>(([n])=>n)];\n  <span class=\"kw\">const</span> out=[];\n  <span class=\"kw\">while</span>(q.length){\n    <span class=\"kw\">const</span> n=q.<span class=\"fn\">shift</span>(); out.<span class=\"fn\">push</span>(n);\n    graph[n].<span class=\"fn\">forEach</span>(e=>{\n      inDeg.<span class=\"fn\">set</span>(e.node, inDeg.<span class=\"fn\">get</span>(e.node)-<span class=\"nm\">1</span>);\n      <span class=\"kw\">if</span>(inDeg.<span class=\"fn\">get</span>(e.node)===<span class=\"nm\">0</span>) q.<span class=\"fn\">push</span>(e.node);\n    });\n  }\n  <span class=\"kw\">return</span> out;\n}",
+body:"<p>You already work with graphs. You just didn't know the name. Blender's node editor: graph. TouchDesigner: graph. Max/MSP: graph. Your package.json dependency tree: directed acyclic graph. Every game level with connected rooms: graph. The internet itself \u2014 routers connected by cables, each router a node \u2014 is one enormous graph. Once you see what the word means, you realize the entire discipline of computer science is largely the study of graphs and what you can do with them.</p>\n\n<div class=\"vocab\"><span class=\"vt\">\"Graph\"</span> \u2014 nodes (also called vertices) connected by edges. Directed means edges have direction (A\u2192B doesn't imply B\u2192A). Undirected means edges go both ways. Weighted means edges have costs. A tree is a special graph: connected, no cycles, exactly one path between any two nodes. A DAG (Directed Acyclic Graph) is directed with no cycles \u2014 used for dependency modeling everywhere, from package managers to shader graphs.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Adjacency List\"</span> \u2014 the standard representation. Each node stores a list of its neighbors. <code>{ A: ['B','C'], B: ['A','D'], C: ['A'] }</code>. O(V+E) space. Iterating a node's neighbors is O(degree). Best for sparse graphs \u2014 which is most real graphs (roads, social networks, game maps). The alternative, an adjacency matrix (V\u00d7V boolean grid), uses O(V\u00b2) space and is only better for very dense graphs or when you need O(1) edge existence checks.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Topological Sort\"</span> \u2014 an ordering of a DAG's nodes where every directed edge A\u2192B has A appearing before B in the output. Only possible on acyclic graphs. Used by: npm to install packages in dependency order, build systems to compile files in the right sequence, Blender's geometry nodes to evaluate the graph in data-flow order, TypeScript to resolve type definitions before using them. When a package manager detects a circular dependency, it's detecting that no topological sort is possible.</div>\n\n<div class=\"step-card\"><span class=\"step-num\">BUILDING A GRAPH IN CODE</span>\n<code>// Adjacency list \u2014 use this for almost everything<br>\nconst graph = new Map();<br>\nfunction addEdge(u, v, weight = 1) {<br>\n&nbsp;&nbsp;if (!graph.has(u)) graph.set(u, []);<br>\n&nbsp;&nbsp;if (!graph.has(v)) graph.set(v, []);<br>\n&nbsp;&nbsp;graph.get(u).push({ node: v, weight });<br>\n&nbsp;&nbsp;graph.get(v).push({ node: u, weight }); // omit for directed<br>\n}<br><br>\n// Get all neighbors of node u<br>\nconst neighbors = graph.get(u) || [];</code><br><br>\nFor unweighted graphs, store arrays of node IDs directly. Add weight only when needed.\n</div>\n\n<div class=\"step-card\"><span class=\"step-num\">PROPERTIES THAT CHANGE YOUR ALGORITHM</span>\n<strong>Cyclic vs Acyclic:</strong> Cycles require explicit visited tracking. DAGs support topological sort and are simpler to reason about.<br>\n<strong>Connected vs Disconnected:</strong> BFS/DFS from one node won't reach everything in a disconnected graph. Need to restart from unvisited nodes for full coverage.<br>\n<strong>Sparse vs Dense:</strong> Most real-world graphs are sparse (far fewer than V\u00b2 edges). Adjacency list + heap-based Dijkstra is O((V+E) log V) \u2014 much better than O(V\u00b2) on sparse graphs.<br>\n<strong>Directed vs Undirected:</strong> A road network is mostly undirected. A dependency graph is directed. Twitter follows: directed. Facebook friends: undirected. The direction determines whether edge (u,v) implies edge (v,u).\n</div>\n\n<div class=\"artists\">Procedural generation tools like Spelunky and Dwarf Fortress use graph algorithms to guarantee every generated level is fully connected \u2014 no unreachable rooms. The algorithm runs a connectivity check (essentially BFS) on the generated map and regenerates if it fails. Blender's geometry nodes, Max/MSP, TouchDesigner, and Pure Data are all literal graphs you draw by hand \u2014 nodes and edges that you connect with cables. The dependency graph in a DAW that determines which audio plugins process in which order is a directed acyclic graph evaluated in topological order on every frame. You've been building graphs this whole time.</div>\n\n<div class=\"spamton\">The entire World Wide Web is a directed graph \u2014 pages are nodes, hyperlinks are edges. Google's original PageRank algorithm ranked pages by how many other pages linked to them, weighted by how important those linking pages were. This is eigenvector centrality on a graph with billions of nodes. <strong>The entire early history of Google is one graph algorithm.</strong></div>\n\n<div class=\"challenge\">Build a graph visualizer in Canvas: click to add nodes, drag between nodes to connect them. Then implement a simple DFS that highlights the traversal order \u2014 starting from the most recently added node, light up each visited node in sequence with a small delay. This is the project that makes graphs click. Once you've built the data structure yourself and watched it traverse, the abstraction becomes real.</div>\n\n<p class=\"tip\">When you're not sure if your problem is a graph problem: ask \"are there entities with relationships between them?\" If yes, it's a graph. The next question: are the relationships directed? Weighted? Cyclic? Those answers determine which algorithm applies. Most of the time you want BFS or DFS \u2014 the others are specializations.</p>"
+},
+{
+subtitle:"06 \u2014 BFS & DFS",
+title:"Flood Fill the World",
+viz:"bfsDfs",
+code:"<span class=\"cm\">// BFS \u2014 queue \u2014 level by level \u2014 shortest path (unweighted)</span>\n<span class=\"kw\">function</span> <span class=\"fn\">bfs</span>(graph, start, goal) {\n  <span class=\"kw\">const</span> queue  = [start];\n  <span class=\"kw\">const</span> visited= <span class=\"kw\">new</span> <span class=\"fn\">Set</span>([start]);\n  <span class=\"kw\">const</span> parent = <span class=\"kw\">new</span> <span class=\"fn\">Map</span>([[start, <span class=\"kw\">null</span>]]);\n  <span class=\"kw\">while</span>(queue.length) {\n    <span class=\"kw\">const</span> node = queue.<span class=\"fn\">shift</span>();\n    <span class=\"kw\">if</span>(node===goal) <span class=\"kw\">return</span> <span class=\"fn\">buildPath</span>(parent, goal);\n    <span class=\"kw\">for</span>(<span class=\"kw\">const</span> nb <span class=\"kw\">of</span> graph[node]) {\n      <span class=\"kw\">if</span>(!visited.<span class=\"fn\">has</span>(nb)) {\n        visited.<span class=\"fn\">add</span>(nb); <span class=\"cm\">// \u2190 mark at PUSH, not pop</span>\n        parent.<span class=\"fn\">set</span>(nb, node);\n        queue.<span class=\"fn\">push</span>(nb);\n      }\n    }\n  }\n  <span class=\"kw\">return</span> <span class=\"kw\">null</span>;\n}\n\n<span class=\"cm\">// DFS \u2014 recursive (call stack is the stack)</span>\n<span class=\"kw\">function</span> <span class=\"fn\">dfs</span>(graph, node, goal, vis=<span class=\"kw\">new</span> <span class=\"fn\">Set</span>()) {\n  <span class=\"kw\">if</span>(node===goal) <span class=\"kw\">return</span> <span class=\"kw\">true</span>;\n  vis.<span class=\"fn\">add</span>(node);\n  <span class=\"kw\">for</span>(<span class=\"kw\">const</span> nb <span class=\"kw\">of</span> graph[node])\n    <span class=\"kw\">if</span>(!vis.<span class=\"fn\">has</span>(nb) && <span class=\"fn\">dfs</span>(graph,nb,goal,vis))\n      <span class=\"kw\">return</span> <span class=\"kw\">true</span>;\n  <span class=\"kw\">return</span> <span class=\"kw\">false</span>;\n}\n\n<span class=\"cm\">// Flood fill \u2014 BFS on a 2D grid</span>\n<span class=\"kw\">function</span> <span class=\"fn\">flood</span>(grid,r,c,fill,orig=grid[r][c]) {\n  <span class=\"kw\">if</span>(grid[r]?.[c] !== orig) <span class=\"kw\">return</span>;\n  grid[r][c] = fill;\n  [[-<span class=\"nm\">1</span>,<span class=\"nm\">0</span>],[<span class=\"nm\">1</span>,<span class=\"nm\">0</span>],[<span class=\"nm\">0</span>,-<span class=\"nm\">1</span>],[<span class=\"nm\">0</span>,<span class=\"nm\">1</span>]].\n    <span class=\"fn\">forEach</span>(([dr,dc])=><span class=\"fn\">flood</span>(grid,r+dr,c+dc,fill,orig));\n}",
+body:"<p>Two algorithms enter a maze. BFS takes one step in every possible direction simultaneously, like a ripple expanding in water. DFS picks one path and sprints \u2014 turning back only when it hits a wall. BFS guarantees the shortest route but searches broadly. DFS may wander but uses less memory and finds <em>something</em> faster. One queue, one stack. That swap \u2014 literally one word of code \u2014 produces entirely different exploration behavior.</p>\n\n<div class=\"vocab\"><span class=\"vt\">\"BFS (Breadth-First Search)\"</span> \u2014 explores all nodes at distance 1 from the start before any at distance 2, all distance-2 before distance-3. Uses a queue (FIFO). O(V+E) time and space. The critical property: in an unweighted graph, BFS always finds the <em>shortest path</em> from start to any reachable node. The step at which BFS first reaches a node equals its shortest distance from the start.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"DFS (Depth-First Search)\"</span> \u2014 explores one branch as deep as possible before backtracking to try the next. Uses a stack or recursion. O(V+E) time, O(V) space for visited plus O(depth) call stack. Does not find shortest paths. Does find: whether a path exists, cycles, topological order, connected components, and all solutions to a constraint problem (when you need to backtrack and try alternatives).</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Flood Fill\"</span> \u2014 BFS or DFS from a starting cell on a 2D grid, visiting all connected cells that match a condition. The paint bucket tool in every image editor \u2014 it's exactly flood fill. Island counting in grid problems. Connected component labeling in computer vision. The algorithm is identical to graph traversal: the grid is a graph where each cell connects to its up/down/left/right neighbors.</div>\n\n<div class=\"step-card\"><span class=\"step-num\">BFS IN 12 LINES \u2014 THE EXACT PATTERN</span>\n<code>function bfs(graph, start, target) {<br>\n&nbsp;&nbsp;const visited = new Set([start]);<br>\n&nbsp;&nbsp;const queue = [start];<br>\n&nbsp;&nbsp;const parent = new Map([[start, null]]);<br>\n&nbsp;&nbsp;while (queue.length) {<br>\n&nbsp;&nbsp;&nbsp;&nbsp;const node = queue.shift(); // use head-index trick for speed<br>\n&nbsp;&nbsp;&nbsp;&nbsp;if (node === target) return reconstructPath(parent, target);<br>\n&nbsp;&nbsp;&nbsp;&nbsp;for (const neighbor of graph.get(node) || []) {<br>\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (!visited.has(neighbor)) {<br>\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;visited.add(neighbor);<br>\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;parent.set(neighbor, node);<br>\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;queue.push(neighbor);<br>\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>\n&nbsp;&nbsp;&nbsp;&nbsp;}<br>\n&nbsp;&nbsp;}<br>\n&nbsp;&nbsp;return null;<br>\n}</code><br><br>\nDFS: replace <code>queue.shift()</code> with <code>queue.pop()</code>. The queue becomes a stack. That is the <em>entire</em> algorithmic difference.\n</div>\n\n<div class=\"step-card\"><span class=\"step-num\">WHEN TO USE WHICH</span>\n<strong>Use BFS when:</strong> you need the shortest path (fewest hops) in an unweighted graph. Level-order traversal of a tree. Finding all nodes within k steps. \"What's the minimum number of moves to reach X?\"<br><br>\n<strong>Use DFS when:</strong> checking whether a path exists. Detecting cycles. Topological sort. Finding all possible solutions (backtracking). Tree traversal where you process parents before children or children before parents. DFS uses less queue memory on wide graphs.<br><br>\n<strong>The big trap:</strong> marking nodes visited when you pop them instead of when you push them. Push-when-visit is correct \u2014 it prevents the same node from being queued multiple times. Pop-when-visit will add duplicate entries and potentially visit nodes many more times than necessary.\n</div>\n\n<div class=\"artists\">Pac-Man's original ghost AI used different traversal strategies. Blinky (red) tracked Pac-Man's current position directly. Pinky targeted four tiles ahead of his facing direction. Inky used a vector from Blinky through that point doubled. Clyde ran away when close. These aren't random \u2014 they're four distinct pursuit algorithms running simultaneously on the same graph, each with their own heuristic about where Pac-Man will be. The emergent behavior of four simple graph traversals produced one of the most analyzed game AI systems ever written.</div>\n\n<div class=\"spamton\">The \"six degrees of separation\" claim \u2014 that any two people on Earth are connected by at most six mutual acquaintances \u2014 is a BFS claim on the social graph. A 2011 Facebook study found the average distance between two users was 4.74 hops. Microsoft Research found it was 6.6 on the full public internet. BFS from any node on this planet terminates within <strong>roughly six steps</strong>. The entire human social graph has a diameter of six. That's absurd and it's true.</div>\n\n<div class=\"challenge\">Implement flood fill on a 2D grid: given a grid of 0s and 1s, a starting cell, and a target value, fill all connected cells of the starting value with the target. Then extend it to count the number of distinct \"islands\" (connected groups of 1s) in the grid \u2014 run a BFS/DFS from each unvisited 1-cell, marking the whole island as visited, counting how many separate BFS/DFS operations you needed.</div>\n\n<p class=\"tip\">The most common BFS bug: marking nodes visited when you <em>pop</em> them from the queue instead of when you <em>push</em> them. If you mark on pop, the same node can be added to the queue many times before it's processed \u2014 blowing up your memory and time. Mark on push. Always add to visited the moment you add to the queue.</p>"
+},
+{
+subtitle:"07 \u2014 Dijkstra",
+title:"Shortest Path in a Weighted World",
+viz:"dijkstra",
+code:"<span class=\"cm\">// Dijkstra: single-source shortest path.</span>\n<span class=\"cm\">// No negative edge weights. O((V+E) log V) with a heap.</span>\n<span class=\"kw\">function</span> <span class=\"fn\">dijkstra</span>(graph, start) {\n  <span class=\"kw\">const</span> dist = <span class=\"kw\">new</span> <span class=\"fn\">Map</span>();\n  <span class=\"kw\">const</span> prev = <span class=\"kw\">new</span> <span class=\"fn\">Map</span>();\n  <span class=\"kw\">const</span> pq   = <span class=\"kw\">new</span> <span class=\"fn\">MinHeap</span>(); <span class=\"cm\">// [cost, node]</span>\n\n  <span class=\"kw\">for</span>(<span class=\"kw\">const</span> n <span class=\"kw\">of</span> graph.<span class=\"fn\">keys</span>()) dist.<span class=\"fn\">set</span>(n, Infinity);\n  dist.<span class=\"fn\">set</span>(start, <span class=\"nm\">0</span>);\n  pq.<span class=\"fn\">push</span>([<span class=\"nm\">0</span>, start]);\n\n  <span class=\"kw\">while</span>(pq.size) {\n    <span class=\"kw\">const</span> [d, u] = pq.<span class=\"fn\">pop</span>();\n    <span class=\"cm\">// Stale entry \u2014 already found shorter path</span>\n    <span class=\"kw\">if</span>(d > dist.<span class=\"fn\">get</span>(u)) <span class=\"kw\">continue</span>;\n\n    <span class=\"kw\">for</span>(<span class=\"kw\">const</span> {node:v, w} <span class=\"kw\">of</span> graph.<span class=\"fn\">get</span>(u)) {\n      <span class=\"kw\">const</span> alt = d + w;   <span class=\"cm\">// tentative cost through u</span>\n      <span class=\"kw\">if</span>(alt &lt; dist.<span class=\"fn\">get</span>(v)) {\n        dist.<span class=\"fn\">set</span>(v, alt);\n        prev.<span class=\"fn\">set</span>(v, u);\n        pq.<span class=\"fn\">push</span>([alt, v]);\n      }\n    }\n  }\n  <span class=\"kw\">return</span> {dist, prev};\n}\n\n<span class=\"cm\">// Reconstruct path from prev map</span>\n<span class=\"kw\">function</span> <span class=\"fn\">getPath</span>(prev, target) {\n  <span class=\"kw\">const</span> path=[];\n  <span class=\"kw\">let</span> cur=target;\n  <span class=\"kw\">while</span>(cur !== <span class=\"kw\">undefined</span>) {\n    path.<span class=\"fn\">unshift</span>(cur);\n    cur = prev.<span class=\"fn\">get</span>(cur);\n  }\n  <span class=\"kw\">return</span> path;\n}",
+body:"<p>BFS counts hops. But every road has a different travel time, every flight has a different cost, every network link has a different latency. \"Fewest edges\" and \"cheapest path\" are different questions. Dijkstra answers the second one. It's the algorithm in your GPS, in every internet routing protocol, in every \"find the cheapest connection\" system ever built. Remarkably simple once you see the idea. Everywhere once you know to look.</p>\n\n<div class=\"vocab\"><span class=\"vt\">\"Relaxation\"</span> \u2014 the core operation of Dijkstra. When you visit node u, check each neighbor v: is dist[u] + weight(u\u2192v) smaller than your current best estimate for dist[v]? If yes, update dist[v] \u2014 you've found a cheaper path to v through u. The name \"relaxation\" comes from an analogy: distances start tense (overestimated at infinity) and relax down to their true values as better paths are discovered.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Why Negative Weights Break It\"</span> \u2014 Dijkstra makes a greedy assumption: once a node is popped from the priority queue (committed to), no cheaper path to it will ever be found. With negative weights, a long path with a large negative edge could be cheaper \u2014 but Dijkstra has already committed to the short positive-weight path. It's not that Dijkstra has a bug; it's that the greedy assumption is wrong when edges can subtract from the cost. Use Bellman-Ford for negative weights.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Lazy Deletion\"</span> \u2014 the standard Dijkstra trick: when a better path to a node is found, don't remove the old heap entry \u2014 just push a new one with the lower distance. When the old entry is eventually popped, check if its stored distance matches the current known best; if not, skip it. More entries in the heap, but no complex heap update operation. Still O((V+E) log V) overall.</div>\n\n<div class=\"step-card\"><span class=\"step-num\">THE ALGORITHM IN PLAIN ENGLISH</span>\n1. Set dist[start] = 0, dist[everything else] = \u221e.<br>\n2. Push start onto a min-heap with priority 0.<br>\n3. Pop the node with smallest current distance. If already visited, skip it.<br>\n4. Mark it visited. For each unvisited neighbor: if dist[current] + edge_weight &lt; dist[neighbor], update dist[neighbor] and push it to the heap.<br>\n5. Repeat until the heap is empty or you've popped the target node.<br><br>\nThe invariant: when a node is popped from the heap, its stored distance is its true shortest distance from the start (assuming no negative weights).\n</div>\n\n<div class=\"step-card\"><span class=\"step-num\">DIJKSTRA VS BFS \u2014 WHEN TO USE WHICH</span>\n<strong>BFS:</strong> unweighted graphs. Every edge costs the same. Finds shortest path by hop count in O(V+E).<br>\n<strong>Dijkstra:</strong> weighted graphs with non-negative weights. Finds shortest path by total cost in O((V+E) log V).<br>\n<strong>Bellman-Ford:</strong> weighted graphs with possible negative weights. O(VE) \u2014 much slower. Use only when you can't avoid negative edges.<br>\n<strong>A*:</strong> Dijkstra + a heuristic guiding toward the goal. Same correctness guarantees, often much faster in practice. Next lesson.\n</div>\n\n<div class=\"artists\">OSRM (Open Source Routing Machine) and Valhalla are open-source routing engines built on OpenStreetMap data \u2014 the same map data that powers many navigation apps. They run Dijkstra (actually a variant called contraction hierarchies, a preprocessed Dijkstra on a hierarchical graph) to route cross-country trips in under 10ms. Every time you ask Google Maps for directions, some variant of this algorithm runs on a graph with hundreds of millions of nodes. Your car's offline GPS stores a compressed version of this graph on a chip smaller than your thumbnail.</div>\n\n<div class=\"spamton\">The Border Gateway Protocol (BGP) \u2014 the routing protocol that determines how data travels between internet service providers \u2014 is a path-finding algorithm on a graph of roughly 900,000 network prefixes, updated in real time. Every time a major ISP has an outage or misconfigures a router, BGP reconverges \u2014 running Dijkstra-adjacent logic across the entire internet. In 2010, a Pakistani ISP accidentally advertised that it owned YouTube's IP range. BGP believed it. <strong>YouTube was unreachable for most of the world for two hours.</strong> One bad path update. One graph algorithm propagated it everywhere.</div>\n\n<div class=\"challenge\">Add Dijkstra to the graph visualizer from lesson 5. Click two nodes to set start and end. Run Dijkstra and animate the exploration: highlight visited nodes as they're committed, show the current distance label inside each node, and at the end highlight the shortest path. The distance label updating in real time \u2014 numbers decreasing as cheaper paths are found \u2014 is what makes relaxation click.</div>\n\n<p class=\"tip\">The most common Dijkstra bug: forgetting the stale-entry check. When you pop a node from the heap, compare its stored distance to <code>dist[node]</code>. If they differ, a shorter path was found after this entry was pushed \u2014 skip it. Without this check, the algorithm still produces correct results but processes stale entries unnecessarily, blowing up your runtime on graphs with many edge updates.</p>"
+},
+{
+subtitle:"08 \u2014 A*",
+title:"Guided Search With a Heuristic",
+viz:"astar",
+code:"<span class=\"cm\">// A* = Dijkstra + heuristic guide toward the goal.</span>\n<span class=\"cm\">// f(n) = g(n) + h(n)</span>\n<span class=\"cm\">// g = actual cost from start. h = estimated remaining.</span>\n\n<span class=\"cm\">// Heuristics for 2D grids:</span>\n<span class=\"kw\">const</span> manhattan = (a,b) =>\n  Math.<span class=\"fn\">abs</span>(a.r-b.r) + Math.<span class=\"fn\">abs</span>(a.c-b.c);\n\n<span class=\"kw\">function</span> <span class=\"fn\">aStar</span>(grid, start, goal) {\n  <span class=\"kw\">const</span> g    = <span class=\"kw\">new</span> <span class=\"fn\">Map</span>([[<span class=\"fn\">k</span>(start), <span class=\"nm\">0</span>]]);\n  <span class=\"kw\">const</span> open  = <span class=\"kw\">new</span> <span class=\"fn\">MinHeap</span>(); <span class=\"cm\">// [f, node]</span>\n  <span class=\"kw\">const</span> prev  = <span class=\"kw\">new</span> <span class=\"fn\">Map</span>();\n  <span class=\"kw\">const</span> closed= <span class=\"kw\">new</span> <span class=\"fn\">Set</span>();\n  open.<span class=\"fn\">push</span>([<span class=\"fn\">manhattan</span>(start,goal), start]);\n\n  <span class=\"kw\">while</span>(open.size) {\n    <span class=\"kw\">const</span> [,cur] = open.<span class=\"fn\">pop</span>();\n    <span class=\"kw\">if</span>(<span class=\"fn\">same</span>(cur,goal)) <span class=\"kw\">return</span> <span class=\"fn\">buildPath</span>(prev,goal);\n    <span class=\"kw\">if</span>(closed.<span class=\"fn\">has</span>(<span class=\"fn\">k</span>(cur))) <span class=\"kw\">continue</span>;\n    closed.<span class=\"fn\">add</span>(<span class=\"fn\">k</span>(cur));\n    <span class=\"kw\">for</span>(<span class=\"kw\">const</span> nb <span class=\"kw\">of</span> <span class=\"fn\">neighbors</span>(grid,cur)) {\n      <span class=\"kw\">const</span> ng = (g.<span class=\"fn\">get</span>(<span class=\"fn\">k</span>(cur))??Infinity) + <span class=\"nm\">1</span>;\n      <span class=\"kw\">if</span>(ng &lt; (g.<span class=\"fn\">get</span>(<span class=\"fn\">k</span>(nb))??Infinity)) {\n        g.<span class=\"fn\">set</span>(<span class=\"fn\">k</span>(nb), ng);\n        prev.<span class=\"fn\">set</span>(<span class=\"fn\">k</span>(nb), cur);\n        open.<span class=\"fn\">push</span>([ng + <span class=\"fn\">manhattan</span>(nb,goal), nb]);\n      }\n    }\n  }\n  <span class=\"kw\">return</span> <span class=\"kw\">null</span>;\n}\n\n<span class=\"cm\">// Weighted A*: f = g + w*h.</span>\n<span class=\"cm\">// w=0 \u2192 Dijkstra. w=1 \u2192 optimal A*. w=1.5 \u2192 fast/near-optimal.</span>",
+body:"<p>Dijkstra is brilliant and oblivious. It expands outward in all directions equally, not caring that the goal is right over there, just to the right, obvious to anyone glancing at the map. A* fixes this with one addition: a guess about how far the goal is. That guess \u2014 called a heuristic \u2014 biases the search toward promising directions. With a good heuristic, A* finds the optimal path while looking at a tiny fraction of what Dijkstra examines. It's the pathfinding algorithm in basically every game ever shipped.</p>\n\n<div class=\"vocab\"><span class=\"vt\">\"Heuristic\"</span> \u2014 a function h(n) that estimates the cost from node n to the goal. A* uses f(n) = g(n) + h(n): actual cost from start (g) plus estimated remaining cost (h). An <em>admissible</em> heuristic never overestimates \u2014 this guarantees A* finds the optimal path. An inadmissible one finds a path faster but may miss the optimum. Games often deliberately use inadmissible heuristics for speed, accepting slightly suboptimal paths.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Manhattan Distance\"</span> \u2014 for a 4-directional grid, |\u0394row| + |\u0394col| between two cells. Always \u2264 true path length (admissible) because walls can only add detours, never reduce them. Named after Manhattan's grid streets. For 8-directional movement: Chebyshev distance, max(|\u0394row|, |\u0394col|). For continuous 2D/3D space: Euclidean distance. For abstract spaces (word ladders, puzzle states): problem-specific functions.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Weighted A*\"</span> \u2014 f = g + w \u00d7 h. w=0 gives Dijkstra (no guidance, explores everything). w=1 gives standard A* (optimal). w > 1 is greedier: it explores toward the goal faster but may find a path that costs up to w\u00d7 the optimal. w=1.1 to 1.5 is the game pathfinding sweet spot \u2014 near-optimal paths with a fraction of the computation. The viz lets you compare A* vs Dijkstra directly on the same grid.</div>\n\n<div class=\"step-card\"><span class=\"step-num\">CHOOSING YOUR HEURISTIC</span>\n<strong>4-directional grid:</strong> Manhattan distance \u2014 <code>Math.abs(dx) + Math.abs(dy)</code><br>\n<strong>8-directional grid:</strong> Chebyshev \u2014 <code>Math.max(Math.abs(dx), Math.abs(dy))</code><br>\n<strong>Free movement / 3D space:</strong> Euclidean \u2014 <code>Math.sqrt(dx*dx + dy*dy)</code><br>\n<strong>Road network:</strong> straight-line distance between GPS coordinates<br>\n<strong>Puzzle state:</strong> number of pieces out of place, or sum of Manhattan distances of each piece<br><br>\nRule: if you're not sure whether your heuristic is admissible, scale it down \u2014 <code>h * 0.9</code> guarantees admissibility at a tiny performance cost. An inadmissible heuristic is a correctness bug, not just a performance issue.\n</div>\n\n<div class=\"step-card\"><span class=\"step-num\">A* VS DIJKSTRA \u2014 THE NUMBERS</span>\nOn a clear 1000\u00d71000 grid, start to opposite corner:<br>\n<strong>Dijkstra:</strong> explores ~500,000 cells<br>\n<strong>A* (Manhattan):</strong> explores ~50,000\u2013100,000 cells (10\u201320%)<br>\n<strong>A* (perfect heuristic):</strong> explores only the optimal path cells<br>\n<strong>Jump Point Search (grid A* variant):</strong> 10\u201340\u00d7 fewer cells than A* by skipping symmetric paths<br><br>\nThe gap grows as maps get larger. On a 1M-node road network, Dijkstra vs A* is the difference between routing in 10ms and routing in 0.1ms. This is why navigation apps feel instant.\n</div>\n\n<div class=\"artists\">Every major game engine \u2014 Unity, Unreal, Godot \u2014 has A* built in or available as a first-class navigation system. Left 4 Dead's AI Director uses A* to model where survivors will walk through each level, then places infected accordingly to create tension. Hades uses it for all NPC navigation in the procedurally generated rooms. Civilization uses weighted A* to route units across terrain with different movement costs. The \"movement cost\" weight on terrain tiles \u2014 forest is 2, road is 0.5, mountain is 5 \u2014 is a direct A* edge weight. Every time a unit takes the most sensible-looking path across a game map, A* ran.</div>\n\n<div class=\"spamton\">NASA's Mars rovers use A* variants to plan safe paths across terrain they've never traversed. The rover receives a terrain map from orbital imagery, runs A* with a heuristic based on terrain slope and rock density, and follows the planned path autonomously. When the path changes \u2014 unexpected obstacle, updated terrain model \u2014 it reruns A* in real time on a computer with less processing power than your phone. <strong>A* is driving robots on another planet right now.</strong></div>\n\n<div class=\"challenge\">Add wall drawing and a toggle between A* and Dijkstra to your pathfinding visualizer. Draw a maze with a narrow corridor. Run both algorithms and count cells explored. Then make the heuristic inadmissible (multiply by 2) and compare the path cost vs the optimal. This is how you physically feel the trade-off between speed and optimality \u2014 the moment you understand why game devs deliberately break admissibility.</div>\n\n<p class=\"tip\">The most common A* mistake: using Euclidean distance as a heuristic on a 4-directional grid. It underestimates correctly (admissible) but barely \u2014 the algorithm degrades toward Dijkstra because diagonal distances aren't achievable on the grid. Use Manhattan distance for 4-directional grids. It's tighter \u2014 closer to the true cost \u2014 so A* can prune more aggressively and run faster.</p>"
+},
+{
+subtitle:"09 \u2014 Dynamic Programming",
+title:"Never Solve the Same Problem Twice",
+viz:"dynamicProg",
+code:"<span class=\"cm\">// DP: memoize overlapping subproblems.</span>\n\n<span class=\"cm\">// Fibonacci: O(2\u207f) naive \u2192 O(n) with memo</span>\n<span class=\"kw\">const</span> memo = <span class=\"kw\">new</span> <span class=\"fn\">Map</span>();\n<span class=\"kw\">function</span> <span class=\"fn\">fib</span>(n) {\n  <span class=\"kw\">if</span>(n &lt;= <span class=\"nm\">1</span>) <span class=\"kw\">return</span> n;\n  <span class=\"kw\">if</span>(memo.<span class=\"fn\">has</span>(n)) <span class=\"kw\">return</span> memo.<span class=\"fn\">get</span>(n);\n  <span class=\"kw\">const</span> r = <span class=\"fn\">fib</span>(n-<span class=\"nm\">1</span>) + <span class=\"fn\">fib</span>(n-<span class=\"nm\">2</span>);\n  memo.<span class=\"fn\">set</span>(n, r);\n  <span class=\"kw\">return</span> r;\n}\n\n<span class=\"cm\">// 0/1 Knapsack \u2014 bottom-up tabulation</span>\n<span class=\"cm\">// dp[i][c] = max value, first i items, capacity c</span>\n<span class=\"kw\">function</span> <span class=\"fn\">knapsack</span>(items, cap) {\n  <span class=\"kw\">const</span> n = items.length;\n  <span class=\"kw\">const</span> dp = <span class=\"fn\">Array</span>.<span class=\"fn\">from</span>({length:n+<span class=\"nm\">1</span>},\n    () => <span class=\"kw\">new</span> <span class=\"fn\">Array</span>(cap+<span class=\"nm\">1</span>).<span class=\"fn\">fill</span>(<span class=\"nm\">0</span>));\n  <span class=\"kw\">for</span>(<span class=\"kw\">let</span> i=<span class=\"nm\">1</span>; i&lt;=n; i++) {\n    <span class=\"kw\">const</span> {w, v} = items[i-<span class=\"nm\">1</span>];\n    <span class=\"kw\">for</span>(<span class=\"kw\">let</span> c=<span class=\"nm\">0</span>; c&lt;=cap; c++) {\n      dp[i][c] = dp[i-<span class=\"nm\">1</span>][c];           <span class=\"cm\">// skip item</span>\n      <span class=\"kw\">if</span>(c &gt;= w)\n        dp[i][c] = Math.<span class=\"fn\">max</span>(dp[i][c],\n          dp[i-<span class=\"nm\">1</span>][c-w] + v);          <span class=\"cm\">// take item</span>\n    }\n  }\n  <span class=\"kw\">return</span> dp[n][cap];\n}\n\n<span class=\"cm\">// LCS \u2014 git diff, DNA alignment, spell check</span>\n<span class=\"kw\">function</span> <span class=\"fn\">lcs</span>(a, b) {\n  <span class=\"kw\">const</span> dp = <span class=\"fn\">Array</span>.<span class=\"fn\">from</span>({length:a.length+<span class=\"nm\">1</span>},\n    () => <span class=\"kw\">new</span> <span class=\"fn\">Array</span>(b.length+<span class=\"nm\">1</span>).<span class=\"fn\">fill</span>(<span class=\"nm\">0</span>));\n  <span class=\"kw\">for</span>(<span class=\"kw\">let</span> i=<span class=\"nm\">1</span>; i&lt;=a.length; i++)\n    <span class=\"kw\">for</span>(<span class=\"kw\">let</span> j=<span class=\"nm\">1</span>; j&lt;=b.length; j++)\n      dp[i][j] = a[i-<span class=\"nm\">1</span>]===b[j-<span class=\"nm\">1</span>]\n        ? dp[i-<span class=\"nm\">1</span>][j-<span class=\"nm\">1</span>]+<span class=\"nm\">1</span>\n        : Math.<span class=\"fn\">max</span>(dp[i-<span class=\"nm\">1</span>][j], dp[i][j-<span class=\"nm\">1</span>]);\n  <span class=\"kw\">return</span> dp[a.length][b.length];\n}",
+body:"<p>Computing fib(40) with na\u00efve recursion calls itself 331 million times. Add one rule \u2014 cache the result the first time, return the cache every subsequent time \u2014 and it makes 79 calls. That's the entire idea. Dynamic programming is the discipline of <em>never solving the same subproblem twice</em>. The rest is just recognizing which problems have subproblems worth caching, and figuring out the right shape of the cache.</p>\n\n<div class=\"vocab\"><span class=\"vt\">\"Overlapping Subproblems\"</span> \u2014 the first DP signal. A problem has overlapping subproblems if the same sub-computation appears multiple times in the recursion tree. fib(n) needs fib(n-2) both directly and via fib(n-1). The knapsack problem needs the same (items, capacity) sub-state repeatedly. Merge sort does NOT \u2014 each element is in exactly one subarray. Without overlap, caching doesn't help. With it, caching changes the game.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Optimal Substructure\"</span> \u2014 the second DP signal. The optimal solution to the whole problem is built from optimal solutions to its subproblems. Shortest path: shortest A\u2192C through B = shortest A\u2192B + shortest B\u2192C. Knapsack: best value with capacity W and items 1..n = max(skip item n, take item n + best value with W minus item n's weight and items 1..n-1). Both signals together are the DP fingerprint. Neither alone is sufficient.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Memoization vs Tabulation\"</span> \u2014 two implementation styles, same correctness. Memoization (top-down): write the recursion naturally, add a cache. Only computes needed subproblems. Easier to reason about. Tabulation (bottom-up): fill a table iteratively from base cases, no recursion. Better cache performance, no stack overflow risk on deep recursion, easier to optimize for space. Start with memoization. Optimize to tabulation if needed.</div>\n\n<div class=\"step-card\"><span class=\"step-num\">HOW TO THINK ABOUT ANY DP PROBLEM</span>\n1. <strong>Define the subproblem</strong> \u2014 what does dp[i] answer? \"Maximum value using items 1..i with capacity exactly j.\" This step is the whole game.<br>\n2. <strong>Write the recurrence</strong> \u2014 how does dp[i] relate to smaller subproblems? \"dp[i][j] = max(dp[i-1][j], dp[i-1][j-w[i]] + v[i]) if j \u2265 w[i].\"<br>\n3. <strong>Identify base cases</strong> \u2014 what are the smallest subproblems with known answers? dp[0][*] = 0 (no items, any capacity).<br>\n4. <strong>Fill in order</strong> \u2014 which subproblems must be solved before which? Usually left to right, top to bottom.<br>\n5. <strong>Read the answer</strong> \u2014 dp[n][W]? min(dp[n][*])? The recurrence determines this.<br><br>\nStep 1 is always the hard part. Get the subproblem definition wrong and everything downstream fails.\n</div>\n\n<div class=\"step-card\"><span class=\"step-num\">SPACE OPTIMIZATION \u2014 THE ROLLING ARRAY TRICK</span>\nMany DP tables only look at the previous row to compute the current row. Knapsack is one: dp[i][j] depends only on dp[i-1][*]. This means you can replace the full n\u00d7W table with two 1D arrays (previous row, current row), or even one if you iterate in the right direction. Reduces space from O(n\u00d7W) to O(W). For large inputs this is the difference between \"fits in memory\" and \"out of memory.\"<br><br>\n<code>// 1D knapsack \u2014 iterate capacity backwards<br>\nconst dp = new Array(CAP + 1).fill(0);<br>\nfor (const item of items)<br>\n&nbsp;&nbsp;for (let c = CAP; c >= item.w; c--)<br>\n&nbsp;&nbsp;&nbsp;&nbsp;dp[c] = Math.max(dp[c], dp[c - item.w] + item.v);</code>\n</div>\n\n<div class=\"artists\">The autocorrect on your phone uses edit distance \u2014 a DP algorithm \u2014 to find the closest word to what you typed. Every time it corrects \"teh\" to \"the,\" that's Levenshtein distance DP. Video compression (H.264, H.265, AV1) uses DP to decide which frames to encode as full images vs changes from the previous frame. Git's diff algorithm (Myers diff) is a DP problem over two sequences. Shazam's audio fingerprinting uses DP-based sequence matching. VSCO and Lightroom's auto-tone adjustments optimize over parameters using DP variants. Every \"smart\" feature in creative software has DP somewhere underneath.</div>\n\n<div class=\"spamton\">The Needleman-Wunsch algorithm, developed in 1970 to align DNA sequences, is O(nm) DP \u2014 the same structure as edit distance. Every genetic comparison, every BLAST database query, every COVID genome sequencing pipeline runs this algorithm. Bioinformatics is largely applied dynamic programming on strings. The same conceptual structure that finds the best knapsack packing also <strong>maps the human genome</strong>.</div>\n\n<div class=\"challenge\">Implement the longest common subsequence (LCS) of two strings. Given strings A and B, find the longest sequence of characters that appears in both (not necessarily contiguous). dp[i][j] = LCS length of A[0..i] and B[0..j]. If A[i] === B[j], dp[i][j] = dp[i-1][j-1] + 1. Otherwise, max(dp[i-1][j], dp[i][j-1]). This is the algorithm inside <code>git diff</code> \u2014 the diff output you see every day is this DP table reconstructed.</div>\n\n<p class=\"tip\">If the recursive solution with memoization is hitting a stack overflow on large inputs, switch to tabulation. The algorithmic logic is identical \u2014 you're just filling a table instead of recursing. The tabulation order follows the same dependency direction as the recursion: if the recursive call goes to smaller n, fill the table from small n to large n.</p>"
+},
+{
+subtitle:"10 \u2014 Greedy",
+title:"Take the Best Option Now",
+viz:"greedyViz",
+code:"<span class=\"cm\">// Greedy: locally optimal choice at each step.</span>\n<span class=\"cm\">// Works when: greedy choice property + optimal substructure.</span>\n\n<span class=\"cm\">// Huffman coding \u2014 optimal prefix-free encoding.</span>\n<span class=\"cm\">// Greedy: merge the two lowest-frequency nodes.</span>\n<span class=\"kw\">function</span> <span class=\"fn\">huffman</span>(freqs) {\n  <span class=\"kw\">const</span> pq = <span class=\"kw\">new</span> <span class=\"fn\">MinHeap</span>(); <span class=\"cm\">// keyed by frequency</span>\n  <span class=\"kw\">for</span>(<span class=\"kw\">const</span> [sym,freq] <span class=\"kw\">of</span> <span class=\"fn\">Object</span>.<span class=\"fn\">entries</span>(freqs))\n    pq.<span class=\"fn\">push</span>({freq, sym, left:<span class=\"kw\">null</span>, right:<span class=\"kw\">null</span>});\n  <span class=\"kw\">while</span>(pq.size > <span class=\"nm\">1</span>) {\n    <span class=\"kw\">const</span> a = pq.<span class=\"fn\">pop</span>(); <span class=\"cm\">// lowest freq</span>\n    <span class=\"kw\">const</span> b = pq.<span class=\"fn\">pop</span>(); <span class=\"cm\">// second lowest</span>\n    pq.<span class=\"fn\">push</span>({freq:a.freq+b.freq, left:a, right:b});\n  }\n  <span class=\"kw\">return</span> pq.<span class=\"fn\">pop</span>(); <span class=\"cm\">// Huffman tree root</span>\n}\n\n<span class=\"cm\">// Interval scheduling \u2014 max non-overlapping.</span>\n<span class=\"cm\">// Greedy: always pick the one ending earliest.</span>\n<span class=\"kw\">function</span> <span class=\"fn\">schedule</span>(intervals) {\n  intervals.<span class=\"fn\">sort</span>((a,b)=>a.end-b.end);\n  <span class=\"kw\">const</span> result = [intervals[<span class=\"nm\">0</span>]];\n  <span class=\"kw\">for</span>(<span class=\"kw\">let</span> i=<span class=\"nm\">1</span>; i&lt;intervals.length; i++)\n    <span class=\"kw\">if</span>(intervals[i].start >= result.at(-<span class=\"nm\">1</span>).end)\n      result.<span class=\"fn\">push</span>(intervals[i]);\n  <span class=\"kw\">return</span> result;\n}\n\n<span class=\"cm\">// Coin change \u2014 greedy FAILS for {1,5,6} at 10.</span>\n<span class=\"cm\">// Greedy: 6+1+1+1+1 = 5 coins.</span>\n<span class=\"cm\">// Optimal: 5+5 = 2 coins. Use DP.</span>",
+body:"<p>Some problems are nice to you. They let you grab the best available option at every step and it always works out perfectly \u2014 no backtracking, no table, no regret. Huffman coding is this. Kruskal's minimum spanning tree is this. Dijkstra's selection of the cheapest node is this. The challenge isn't implementing a greedy algorithm \u2014 they're usually simpler than DP. The challenge is <em>knowing when greedy is actually correct</em> versus when it's wrong in a way that looks right until your edge case arrives.</p>\n\n<div class=\"vocab\"><span class=\"vt\">\"Greedy Choice Property\"</span> \u2014 a problem has this property if there always exists an optimal solution that includes the locally optimal (greedy) choice. Proven by the exchange argument: assume an optimal solution doesn't include the greedy choice; show you can swap it in without making things worse; therefore some optimal solution includes the greedy choice. This is the standard proof technique. If you can't construct this argument, greedy probably isn't correct.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"When Greedy Fails\"</span> \u2014 coins {1, 5, 6}, target 10. Greedy takes 6, then four 1s = 5 coins. Optimal: two 5s = 2 coins. Greedy failed because taking the largest coin foreclosed the globally better option. The 0/1 knapsack is greedy-hard: the item with the best value/weight ratio may leave capacity that nothing fills well. Fractional knapsack (you can split items) is greedy-correct. The difference between these two problems \u2014 split vs no-split \u2014 determines whether greedy works.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Huffman Coding\"</span> \u2014 assign shorter bit codes to more frequent symbols, longer codes to rare ones. Greedy rule: always merge the two lowest-frequency nodes. The resulting tree assigns codes: left=0, right=1. Produces the provably optimal prefix-free encoding. No lossless code can do better with whole bits per symbol. This is inside ZIP, PNG, gzip, HTTP/2 header compression, and DEFLATE. Every download you've ever made was decoded by Huffman.</div>\n\n<div class=\"step-card\"><span class=\"step-num\">HOW TO CHECK IF GREEDY WORKS \u2014 THE EXCHANGE ARGUMENT</span>\nBefore implementing a greedy algorithm, try to prove it:<br><br>\n1. <strong>Assume</strong> an optimal solution exists that does NOT include your greedy choice at step 1.<br>\n2. <strong>Swap</strong> your greedy choice into that solution in place of whatever it chose instead.<br>\n3. <strong>Show</strong> the swapped solution is no worse.<br>\n4. <strong>Conclude</strong> some optimal solution includes the greedy choice \u2014 so being greedy from step 1 is safe.<br><br>\nIf you can construct this argument: greedy is correct. If you can't, or you find a counterexample in step 3: use DP.\n</div>\n\n<div class=\"step-card\"><span class=\"step-num\">THE HUFFMAN TREE STEP BY STEP</span>\nGiven frequencies: E=21, T=15, A=13, O=11, N=9, S=7, R=5, H=4 (total 85)<br><br>\nRound 1: merge R(5) + H(4) \u2192 node(9). Queue: E=21,T=15,A=13,O=11,N=9,node=9,S=7<br>\nRound 2: merge S(7) + node(9) \u2192 node(16). And so on until one root remains.<br><br>\nResult: E gets 2 bits (most common), H gets 5 bits (rarest). Average bits/symbol \u2248 3.1 vs 3 bits with fixed-width encoding. That's a real compression gain \u2014 every bit saved multiplied across billions of transmissions every day.\n</div>\n\n<div class=\"artists\">JPEG, MP3, ZIP, PNG, FLAC, WebP, HEIC, and AVIF all use Huffman coding as their entropy coding stage \u2014 the last compression step that squeezes the final redundancy out. HTTP/2's header compression (HPACK) uses a static Huffman table compiled from a massive sample of HTTP traffic. Brotli, used by modern web servers for everything you download, uses Huffman coding at its core. Every image you've edited, every audio file you've exported, every web page you've loaded: Huffman decoded it. The tree you watch grow in this viz is the structure that compresses the internet.</div>\n\n<div class=\"spamton\">Huffman coding is provably optimal for symbol-by-symbol coding. But arithmetic coding, developed later, can get arbitrarily close to the theoretical entropy limit by encoding entire sequences rather than individual symbols. It's slightly slower but produces smaller files. Modern codecs like H.265 and AV1 use arithmetic coding precisely because JPEG and MP3 used Huffman and left <strong>a few percent of compression on the table</strong>. The quest to squeeze one more bit out of every file has been running for 70 years and is still going.</div>\n\n<div class=\"challenge\">Implement a complete Huffman encoder: take a string, count character frequencies, build the tree using a min-heap (the greedy step), generate the bit codes by traversing the tree, encode the string to a bit sequence, and report the compression ratio vs fixed-width ASCII. Compare the output size for a repetitive string (\"aaaaabbbcc\") vs a random string. The difference in compression ratio demonstrates exactly why frequency-adaptive coding works.</div>\n\n<p class=\"tip\">Before writing DP for a new problem, try the exchange argument for greedy first. If you can show that swapping in the greedy choice never makes things worse, greedy is simpler, faster, and just as correct. The coin change problem is a good calibration tool: it's greedy-correct for standard currency denominations (1,5,10,25) but greedy-wrong for arbitrary denominations. Understanding why the exchange argument works for one and fails for the other is the core intuition.</p>"
+},
+{
+subtitle:"11 \u2014 Trees & BSTs",
+title:"Hierarchy and Fast Ordered Lookup",
+viz:"bstViz",
+code:"<span class=\"cm\">// Binary Search Tree: left &lt; root &lt; right (recursively).</span>\n<span class=\"cm\">// Balanced \u2192 O(log n) search/insert/delete.</span>\n<span class=\"kw\">class</span> BST {\n  #root = <span class=\"kw\">null</span>;\n  <span class=\"fn\">insert</span>(v, n=<span class=\"kw\">this</span>.#root) {\n    <span class=\"kw\">if</span>(!n) { <span class=\"kw\">const</span> nd={v,l:<span class=\"kw\">null</span>,r:<span class=\"kw\">null</span>}; <span class=\"kw\">if</span>(!<span class=\"kw\">this</span>.#root) <span class=\"kw\">this</span>.#root=nd; <span class=\"kw\">return</span> nd; }\n    <span class=\"kw\">if</span>(v &lt; n.v)       n.l = <span class=\"kw\">this</span>.<span class=\"fn\">insert</span>(v,n.l) || n.l;\n    <span class=\"kw\">else if</span>(v > n.v)  n.r = <span class=\"kw\">this</span>.<span class=\"fn\">insert</span>(v,n.r) || n.r;\n    <span class=\"kw\">return</span> n;\n  }\n  <span class=\"fn\">search</span>(v, n=<span class=\"kw\">this</span>.#root) {\n    <span class=\"kw\">if</span>(!n) <span class=\"kw\">return</span> <span class=\"kw\">null</span>;\n    <span class=\"kw\">if</span>(v===n.v) <span class=\"kw\">return</span> n;\n    <span class=\"kw\">return</span> v &lt; n.v ? <span class=\"kw\">this</span>.<span class=\"fn\">search</span>(v,n.l) : <span class=\"kw\">this</span>.<span class=\"fn\">search</span>(v,n.r);\n  }\n  *<span class=\"fn\">inOrder</span>(n=<span class=\"kw\">this</span>.#root) { <span class=\"cm\">// sorted output</span>\n    <span class=\"kw\">if</span>(!n) <span class=\"kw\">return</span>;\n    <span class=\"kw\">yield</span>* <span class=\"kw\">this</span>.<span class=\"fn\">inOrder</span>(n.l);\n    <span class=\"kw\">yield</span> n.v;\n    <span class=\"kw\">yield</span>* <span class=\"kw\">this</span>.<span class=\"fn\">inOrder</span>(n.r);\n  }\n}\n<span class=\"cm\">// Sorted insertion \u2192 linked list \u2192 O(n) search.</span>\n<span class=\"cm\">// Self-balancing (AVL/Red-Black) maintains O(log n).</span>\n\n<span class=\"cm\">// Trie: O(L) insert/search (L = word length)</span>\n<span class=\"kw\">class</span> Trie {\n  #r = {};\n  <span class=\"fn\">insert</span>(w) { <span class=\"kw\">let</span> n=<span class=\"kw\">this</span>.#r; <span class=\"kw\">for</span>(<span class=\"kw\">const</span> c <span class=\"kw\">of</span> w) n=(n[c]??={}); n.$=<span class=\"kw\">true</span>; }\n  <span class=\"fn\">has</span>(w)     { <span class=\"kw\">let</span> n=<span class=\"kw\">this</span>.#r; <span class=\"kw\">for</span>(<span class=\"kw\">const</span> c <span class=\"kw\">of</span> w) <span class=\"kw\">if</span>(!(n=n[c]))<span class=\"kw\">return</span> <span class=\"kw\">false</span>; <span class=\"kw\">return</span> !!n.$; }\n  <span class=\"fn\">prefix</span>(p)  { <span class=\"kw\">let</span> n=<span class=\"kw\">this</span>.#r; <span class=\"kw\">for</span>(<span class=\"kw\">const</span> c <span class=\"kw\">of</span> p) <span class=\"kw\">if</span>(!(n=n[c]))<span class=\"kw\">return</span> <span class=\"kw\">false</span>; <span class=\"kw\">return</span> <span class=\"kw\">true</span>; }\n}",
+body:"<p>Your file system is a tree. The HTML of every webpage is a tree. The way your code gets parsed and compiled is a tree. Game AI decision logic: tree. JSON: tree. The React component hierarchy you've been staring at: tree. Trees are everywhere in computing and almost entirely invisible \u2014 you use them constantly through every piece of software without thinking about the structure underneath. The BST is the entry point: a sorted tree where the <em>shape</em> of the structure does the searching for you.</p>\n\n<div class=\"vocab\"><span class=\"vt\">\"Binary Search Tree (BST)\"</span> \u2014 a binary tree with one invariant: every value in the left subtree is less than the node's value; every value in the right is greater. This single rule makes search, insert, and delete all O(log n) on a balanced tree \u2014 you navigate left or right at each node, halving the remaining candidates, exactly like binary search. In-order traversal produces sorted output. The conceptual foundation of Java's TreeMap, C++'s std::map, and Python's SortedList.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Self-Balancing Trees\"</span> \u2014 a BST built by inserting already-sorted values degrades to a linked list: every insert goes right, the tree becomes a straight line, and search is O(n). Self-balancing trees (AVL, Red-Black) prevent this through rotations on insert and delete, maintaining O(log n) height. Red-Black trees allow height up to 2 log n and require fewer rotations than AVL \u2014 which is why Java's TreeMap, C++'s std::map, and the Linux kernel's process scheduler all use Red-Black trees over AVL.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Trie (Prefix Tree)\"</span> \u2014 a tree where edges represent characters and paths from root to node represent prefixes. Insert and search in O(L) where L = word length \u2014 independent of how many words are stored. Used for: autocomplete (search all words with this prefix), spell checking, IP routing tables (longest-prefix match), and any problem where you need to find strings by prefix. The root has 26 children (for lowercase letters), each of those has 26, etc. Pronounced \"try\" to distinguish from \"tree.\"</div>\n\n<div class=\"step-card\"><span class=\"step-num\">TREE TRAVERSAL \u2014 FOUR ORDERS, FOUR USE CASES</span>\n<strong>In-order</strong> (left \u2192 root \u2192 right): produces sorted output from a BST. If you need \"all values in order,\" in-order traversal is your O(n) answer.<br><br>\n<strong>Pre-order</strong> (root \u2192 left \u2192 right): serializes the tree \u2014 you can reconstruct the exact tree from pre-order output. Used for copying, for expression trees, for compilers serializing ASTs.<br><br>\n<strong>Post-order</strong> (left \u2192 right \u2192 root): processes children before parents. Used for deletion (delete children before the parent node), and for compilers evaluating expression trees (evaluate operands before the operator).<br><br>\n<strong>Level-order</strong> (BFS by depth): visits all nodes at depth 1 before depth 2. Used for \"find the shortest path to a leaf,\" for pretty-printing trees, for building complete binary heaps from sorted input.\n</div>\n\n<div class=\"step-card\"><span class=\"step-num\">WHEN TO USE BST VS HASH MAP</span>\nUse a <strong>Hash Map</strong> when: you need O(1) average lookup/insert/delete and don't need ordered access. JavaScript's <code>Map</code>. Most use cases.<br><br>\nUse a <strong>BST (TreeMap/TreeSet)</strong> when: you need sorted iteration + fast insert/delete/search. \"Find all items in range [a, b].\" \"Find the next larger element.\" \"Keep a sorted set and query it efficiently.\" Java's <code>TreeMap</code> and <code>TreeSet</code>. C++'s <code>std::map</code> and <code>std::set</code>.<br><br>\nThe sorted vs unsorted requirement is the primary decision factor. Hash maps are faster on average but give you nothing ordered. BSTs are O(log n) but give you range queries, predecessor/successor queries, and sorted iteration \"for free.\"\n</div>\n\n<div class=\"artists\">The DOM (Document Object Model) of every webpage is a tree \u2014 your browser does DFS to match CSS selectors against it, and events bubble up the tree from target to root (that's why it's called event bubbling \u2014 it's literally parent traversal). React's reconciliation algorithm (\"the virtual DOM diff\") is a tree comparison. Unreal Engine's behavior trees and Godot's scene tree are exactly what they say. Every file system folder structure: tree. Every XML or JSON document: tree. The syntax tree your code compiles to before it becomes machine instructions: tree. You work with trees every day; now you can build them.</div>\n\n<div class=\"spamton\">B-trees \u2014 the structure inside every relational database's index \u2014 are trees with hundreds of children per node instead of two, specifically designed so that a single node fits in one disk block. A B-tree search for one row in a table with a billion rows takes about 3\u20134 disk seeks (tree height), regardless of table size. Without this tree structure, a linear scan of a billion-row table would take minutes. <strong>Every SQL query you've ever run found its data through a B-tree.</strong></div>\n\n<div class=\"challenge\">Add search animation to the BST in the viz: click any node and watch the search path highlight from root to that node in sequence, showing the left/right decision at each step. Then try to insert a value and let it find its own position. This is how the O(log n) claim becomes visceral \u2014 you watch it ignore half the tree at every comparison.</div>\n\n<p class=\"tip\">Need sorted order AND fast insert/delete/search? That's a BST. Need O(1) average lookup and don't care about order? That's a hash map. Need both? Use a hash map for lookups and a separate sorted array for ordered iteration \u2014 rebuild the array when the set changes, or maintain both structures simultaneously. The sorted-vs-unsorted requirement is the primary decision factor between these two structures.</p>"
+},
+{
+subtitle:"12 \u2014 MCTS & Game Trees",
+title:"How Machines Learn to Play",
+viz:"mcts",
+code:"<span class=\"cm\">// MCTS: UCB1 selection + random rollout.</span>\n<span class=\"cm\">// f = wins/visits + C*sqrt(ln(parent.visits)/visits)</span>\n<span class=\"cm\">// First term: exploit what works.</span>\n<span class=\"cm\">// Second term: explore the undervisited.</span>\n\n<span class=\"kw\">class</span> Node {\n  constructor(state, parent=<span class=\"kw\">null</span>, move=<span class=\"kw\">null</span>) {\n    <span class=\"kw\">this</span>.state=state; <span class=\"kw\">this</span>.parent=parent; <span class=\"kw\">this</span>.move=move;\n    <span class=\"kw\">this</span>.wins=<span class=\"nm\">0</span>; <span class=\"kw\">this</span>.visits=<span class=\"nm\">0</span>; <span class=\"kw\">this</span>.children=[];\n    <span class=\"kw\">this</span>.untried=<span class=\"fn\">legalMoves</span>(state);\n  }\n  <span class=\"fn\">ucb1</span>(C=Math.SQRT2) {\n    <span class=\"kw\">if</span>(!<span class=\"kw\">this</span>.visits) <span class=\"kw\">return</span> Infinity;\n    <span class=\"kw\">return</span> <span class=\"kw\">this</span>.wins/<span class=\"kw\">this</span>.visits\n      + C*Math.<span class=\"fn\">sqrt</span>(Math.<span class=\"fn\">log</span>(<span class=\"kw\">this</span>.parent.visits)/<span class=\"kw\">this</span>.visits);\n  }\n}\n\n<span class=\"kw\">function</span> <span class=\"fn\">mcts</span>(state, iters=<span class=\"nm\">500</span>) {\n  <span class=\"kw\">const</span> root=<span class=\"kw\">new</span> <span class=\"fn\">Node</span>(state); root.visits=<span class=\"nm\">1</span>;\n\n  <span class=\"kw\">for</span>(<span class=\"kw\">let</span> i=<span class=\"nm\">0</span>; i&lt;iters; i++) {\n    <span class=\"cm\">// 1. SELECT: max UCB1 to leaf</span>\n    <span class=\"kw\">let</span> nd=root;\n    <span class=\"kw\">while</span>(!nd.untried.length && nd.children.length)\n      nd=nd.children.<span class=\"fn\">reduce</span>((a,b)=>b.<span class=\"fn\">ucb1</span>()>a.<span class=\"fn\">ucb1</span>()?b:a);\n\n    <span class=\"cm\">// 2. EXPAND: one new child</span>\n    <span class=\"kw\">if</span>(nd.untried.length) {\n      <span class=\"kw\">const</span> mv=nd.untried.<span class=\"fn\">pop</span>();\n      nd=nd.children[nd.children.<span class=\"fn\">push</span>(\n        <span class=\"kw\">new</span> <span class=\"fn\">Node</span>(<span class=\"fn\">apply</span>(nd.state,mv),nd,mv))-<span class=\"nm\">1</span>];\n    }\n\n    <span class=\"cm\">// 3. SIMULATE: random rollout to terminal</span>\n    <span class=\"kw\">let</span> res=<span class=\"fn\">rollout</span>(nd.state);\n\n    <span class=\"cm\">// 4. BACKPROPAGATE: update ancestors</span>\n    <span class=\"kw\">while</span>(nd){nd.visits++;nd.wins+=res;nd=nd.parent;}\n  }\n\n  <span class=\"kw\">return</span> root.children.<span class=\"fn\">reduce</span>((a,b)=>b.visits>a.visits?b:a).move;\n}",
+body:"<p>For thirty years, computers were terrible at Go. Chess they could brute-force \u2014 not Go. Too many moves, boards too complex to evaluate statically. Monte Carlo Tree Search cracked it by abandoning board evaluation entirely. Instead: simulate thousands of random games from each candidate move and trust the statistics. It sounds foolish. It beat the world champion. Now it's inside every game AI that needs to make decisions in a space too large to analyze completely \u2014 from board games to robotics to drug discovery.</p>\n\n<div class=\"vocab\"><span class=\"vt\">\"Game Tree\"</span> \u2014 a tree where nodes are game states and edges are legal moves. Root = current position, leaves = terminal states (win/loss/draw). Branching factor = average legal moves per position. Chess: ~35, so depth-10 search = 35\u00b9\u2070 \u2248 2.8 \u00d7 10\u00b9\u2075 states. Full enumeration is impossible for anything serious. MCTS avoids enumerating the full tree by sampling it statistically \u2014 visiting the most promising branches many times and ignoring the rest.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"UCB1 (Upper Confidence Bound)\"</span> \u2014 the formula that drives MCTS selection: <code>wins/visits + C \u00d7 \u221a(ln(parent_visits)/visits)</code>. First term: exploit \u2014 favor moves with high win rates. Second term: explore \u2014 favor moves tried rarely. C = \u221a2 is theoretically optimal. The balance between these two terms is the entire intelligence of MCTS: it automatically spends more time on promising moves while ensuring every option gets tried enough to rule it out.</div>\n\n<div class=\"vocab\"><span class=\"vt\">\"Multi-Armed Bandit\"</span> \u2014 the abstract problem underlying UCB1: k slot machines with unknown payout rates, maximize total reward over N pulls. Focus on one machine and you miss better ones. Try every machine equally and you waste pulls on bad ones. UCB1 solves this optimally in theory \u2014 upper confidence bounds ensure you systematically explore uncertain options while exploiting known-good ones. MCTS applies this principle recursively at every node in the game tree.</div>\n\n<div class=\"step-card\"><span class=\"step-num\">THE FOUR PHASES \u2014 EACH ITERATION</span>\n<strong>Selection:</strong> starting from the root, follow the child with highest UCB1 score at each node, until you reach a node with unexplored moves or a terminal state.<br><br>\n<strong>Expansion:</strong> add one new child node for one unexplored move from the selected node.<br><br>\n<strong>Simulation (rollout):</strong> from the new node, play random moves to game end. Record win/loss/draw.<br><br>\n<strong>Backpropagation:</strong> walk back up to root, updating visit count and win count at every node on the path.<br><br>\nAfter thousands of iterations, the most-visited child of root is the best move. Not highest win rate \u2014 most visits. High win rate with few samples is less trustworthy than moderate win rate with many.\n</div>\n\n<div class=\"step-card\"><span class=\"step-num\">UCB1 IN CODE \u2014 EXACTLY AS IMPLEMENTED</span>\n<code>ucb1(parentVisits, C = 1.41) {<br>\n&nbsp;&nbsp;if (this.visits === 0) return Infinity; // always explore unvisited<br>\n&nbsp;&nbsp;const exploit = this.wins / this.visits;<br>\n&nbsp;&nbsp;const explore = C * Math.sqrt(Math.log(parentVisits) / this.visits);<br>\n&nbsp;&nbsp;return exploit + explore;<br>\n}</code><br><br>\nThe C constant controls the exploration-exploitation tradeoff. Lower C (0.5\u20131.0): trust what you know, exploit aggressively. Higher C (1.5\u20132.5): keep exploring uncertain options longer. C = \u221a2 \u2248 1.41 is the theoretical optimum for the classic bandit problem \u2014 but game-specific tuning often beats it.\n</div>\n\n<div class=\"artists\">AlphaGo's early versions were pure MCTS \u2014 thousands of random game simulations, UCB1 selection, win rate statistics. AlphaZero replaced the random rollouts with a neural network that evaluated board positions directly, removing the \"random\" from Monte Carlo. The MCTS skeleton stayed identical; the simulation step got smarter. Every procedural game that generates intelligent opponent behavior \u2014 Civilization's unit AI, the director AI in Left 4 Dead, behavior trees in The Last of Us \u2014 has MCTS or a close relative driving the decision-making. The viz in this lesson plays the same game as the AI that beat the world's best Go player. Same algorithm, 600 simulations instead of millions.</div>\n\n<div class=\"spamton\">In 2016, AlphaGo beat Lee Sedol 4-1 in Go. Lee was one of the highest-ranked players alive. Move 37 in game 2 \u2014 a move AlphaGo played that no human would have considered \u2014 was initially derided by commentators as a mistake. It was the decisive move. An algorithm built on random game simulations played a move that permanently changed Go theory and that human experts had never conceived of in a game played for 2,500 years. <strong>MCTS found a move that was invisible to human intuition.</strong></div>\n\n<div class=\"challenge\">The viz lets you play against MCTS tic-tac-toe. Play three games straight. Then open the console and log the visit counts of the AI's top moves before it plays. You'll see the exploration-exploitation dynamic in the numbers: early in the game, the visits are more spread out (exploring). Later, when the position is clearer, they concentrate on the best line (exploiting). That shift in distribution is UCB1 working in real time.</div>\n\n<p class=\"tip\">MCTS generalizes beyond games: drug discovery (exploring molecule space), neural architecture search (exploring network designs), robotic motion planning (exploring trajectory spaces), and compiler optimization (exploring instruction orderings). Any decision problem where the search space is too large to enumerate and you can simulate outcomes can be attacked with MCTS. The \"game\" just becomes whatever process you're optimizing.</p>"
+},
+{"subtitle": "13 \u2014 What Now?", "title": "You Built the Map. Now Use It.", "viz": "nextSteps", "code": "<span class=\"cm\">// Full-stack algorithm cheat sheet:</span>\n\n<span class=\"cm\">// Sort a list of objects by property</span>\narr.<span class=\"fn\">sort</span>((a,b) => a.score - b.score);   <span class=\"cm\">// O(n log n)</span>\n\n<span class=\"cm\">// Remove duplicates instantly</span>\n<span class=\"kw\">const</span> unique = [...<span class=\"kw\">new</span> <span class=\"fn\">Set</span>(arr)];          <span class=\"cm\">// O(n)</span>\n\n<span class=\"cm\">// Count occurrences</span>\n<span class=\"kw\">const</span> freq = <span class=\"kw\">new</span> <span class=\"fn\">Map</span>();\narr.<span class=\"fn\">forEach</span>(x => freq.<span class=\"fn\">set</span>(x, (freq.<span class=\"fn\">get</span>(x) || <span class=\"nm\">0</span>) + <span class=\"nm\">1</span>));\n\n<span class=\"cm\">// BFS from a node</span>\n<span class=\"kw\">const</span> visited = <span class=\"kw\">new</span> <span class=\"fn\">Set</span>([start]);\n<span class=\"kw\">const</span> queue = [start];\n<span class=\"kw\">while</span> (queue.length) {\n  <span class=\"kw\">const</span> node = queue.<span class=\"fn\">shift</span>();\n  <span class=\"kw\">for</span> (<span class=\"kw\">const</span> nb <span class=\"kw\">of</span> graph[node]) {\n    <span class=\"kw\">if</span> (!visited.<span class=\"fn\">has</span>(nb)) { visited.<span class=\"fn\">add</span>(nb); queue.<span class=\"fn\">push</span>(nb); }\n  }\n}\n\n<span class=\"cm\">// Memoize any function</span>\n<span class=\"kw\">const</span> memo = <span class=\"kw\">new</span> <span class=\"fn\">Map</span>();\n<span class=\"kw\">function</span> <span class=\"fn\">solve</span>(n) {\n  <span class=\"kw\">if</span> (memo.<span class=\"fn\">has</span>(n)) <span class=\"kw\">return</span> memo.<span class=\"fn\">get</span>(n);\n  <span class=\"kw\">const</span> result = <span class=\"cm\">/* your recursion */</span>;\n  memo.<span class=\"fn\">set</span>(n, result);\n  <span class=\"kw\">return</span> result;\n}", "body": "<p>You made it through twelve lessons. You now understand how computers think about problems \u2014 the shapes of time, the logic of search, the greed of greedy, the patience of DP, the cleverness of A*. That is not a small thing. Most people who build creative tools, games, and interactive art have never had this conversation. You have.</p>\n\n<div class=\"step-card\"><span class=\"step-num\">WHAT TO DO NEXT \u2014 IN ORDER</span>\n<strong>1. Build something with a graph.</strong> Draw a node graph in Canvas or SVG. Make nodes draggable. Run BFS on click. This is the single most transferable skill from this series.<br><br>\n<strong>2. Add pathfinding to a game.</strong> Grid-based A* takes a weekend and works in every game engine. Unity, Godot, and Phaser all have tutorials. Once you've done it yourself you'll understand every game map you'll ever make.<br><br>\n<strong>3. Learn Big-O for your own code.</strong> Profile something you've built. Find the loop inside the loop. Replace a <code>includes()</code> call with a <code>Set</code>. Watch it get fast.<br><br>\n<strong>4. Touch LeetCode once.</strong> Do 10 \"Easy\" problems. Not to get a job \u2014 to see the patterns naked. Array + hash map. Sliding window. Two pointers. These are the moves that unlock everything else.\n</div>\n\n<div class=\"artists\">The tools artists use are built on everything in this series. TouchDesigner's node graph is a DAG with topological evaluation. Max/MSP's scheduler is a priority queue. JUCE audio processing is DSP on top of data structures. Unreal's behavior trees are literally trees. Blender's geometry nodes run a topological sort on every update. If you now see the algorithm underneath the tool, this worked.</div>\n\n<div class=\"spamton\">The entire field of computer graphics \u2014 ray tracing, path tracing, global illumination, the images in every Pixar film and game \u2014 is A* and Monte Carlo sampling (a cousin of MCTS) applied to light. Rendering is literally: given a grid of pixels, find the paths of light that contribute most to each pixel's color, using heuristics to sample intelligently rather than compute every path. <strong>You now understand, at least in spirit, how Pixar movies are made.</strong></div>\n\n<div class=\"challenge\">Pick one algorithm from this series and implement it from scratch in whatever language or environment you work in most. Not to look it up \u2014 to rebuild it from memory, from the shape of it. You don't need to get it right the first time. The moment it works is the moment it becomes yours. Then explain it to someone else. That's when you actually know it.</div>\n\n<p class=\"tip\">You don't need to memorize all of this. You need to know that these tools exist and roughly what they're good for. When you encounter a performance problem, a graph problem, a search problem \u2014 you'll remember there's a name for it, and you'll know where to look. That recognition is the whole point.</p>"},
+{
+subtitle:"13 \u2014 What Now?",
+title:"You Built the Map. Now Use It.",
+viz:"nextSteps",
+code:"<span class=\"cm\">// Algorithms cheat sheet</span>\n\n<span class=\"cm\">// Sort by property  O(n log n)</span>\narr.<span class=\"fn\">sort</span>((a,b) => a.score - b.score);\n\n<span class=\"cm\">// Remove duplicates  O(n)</span>\n<span class=\"kw\">const</span> unique = [...<span class=\"kw\">new</span> <span class=\"fn\">Set</span>(arr)];\n\n<span class=\"cm\">// Count occurrences  O(n)</span>\n<span class=\"kw\">const</span> freq = <span class=\"kw\">new</span> <span class=\"fn\">Map</span>();\narr.<span class=\"fn\">forEach</span>(x => freq.<span class=\"fn\">set</span>(x,(freq.<span class=\"fn\">get</span>(x)||<span class=\"nm\">0</span>)+<span class=\"nm\">1</span>));\n\n<span class=\"cm\">// BFS \u2014 swap .shift()\u2192.pop() for DFS</span>\n<span class=\"kw\">const</span> visited = <span class=\"kw\">new</span> <span class=\"fn\">Set</span>([start]);\n<span class=\"kw\">const</span> queue = [start];\n<span class=\"kw\">while</span> (queue.length) {\n  <span class=\"kw\">const</span> node = queue.<span class=\"fn\">shift</span>();\n  <span class=\"kw\">for</span> (<span class=\"kw\">const</span> nb <span class=\"kw\">of</span> graph[node])\n    <span class=\"kw\">if</span> (!visited.<span class=\"fn\">has</span>(nb)) {\n      visited.<span class=\"fn\">add</span>(nb); queue.<span class=\"fn\">push</span>(nb);\n    }\n}\n\n<span class=\"cm\">// Memoize any recursion</span>\n<span class=\"kw\">const</span> memo = <span class=\"kw\">new</span> <span class=\"fn\">Map</span>();\n<span class=\"kw\">function</span> <span class=\"fn\">solve</span>(n) {\n  <span class=\"kw\">if</span> (memo.<span class=\"fn\">has</span>(n)) <span class=\"kw\">return</span> memo.<span class=\"fn\">get</span>(n);\n  <span class=\"kw\">const</span> r = <span class=\"cm\">/* recursion */</span>;\n  <span class=\"kw\">return</span> memo.<span class=\"fn\">set</span>(n,r), r;\n}",
+body:"<p>You made it through twelve lessons. Not as a spectator \u2014 you watched the algorithms run, you built walls for A* to navigate, you played tic-tac-toe against MCTS. That's different from reading about them. You have the shape of these things in your head now, which means you can recognize them in the wild: in the tools you use, in the systems you build, in the performance problems you'll eventually hit.</p>\n\n<div class=\"step-card\"><span class=\"step-num\">WHAT TO ACTUALLY DO NEXT \u2014 IN ORDER</span>\n<strong>1. Profile something you've built.</strong> Open any project. Find a loop. Ask: what's inside it? If there's another loop or an <code>includes()</code>, that's your complexity cliff. Fix it. Make it measurably faster. This is when Big-O stops being abstract.<br><br>\n<strong>2. Build a pathfinder.</strong> Grid-based A* from scratch. Any environment \u2014 Canvas, Unity, Godot, Phaser. Once you've implemented it yourself, every game map you ever make becomes legible. You'll see the edges and weights everywhere.<br><br>\n<strong>3. Build something with a graph.</strong> Node editor, dependency visualizer, connected-rooms dungeon. BFS for connectivity checks. DFS for traversal. The graph data structure is the most transferable thing in this series.<br><br>\n<strong>4. Touch LeetCode once.</strong> Ten Easy problems, not for a job \u2014 to see the canonical patterns raw: array+hashmap, sliding window, two pointers. These moves recur constantly in real code.\n</div>\n\n<div class=\"artists\">The tools artists use are built on everything in this series. TouchDesigner evaluates its node graph in topological sort order every frame \u2014 that's lesson 5. Max/MSP's audio scheduler is a priority queue \u2014 lesson 4. Blender's geometry nodes run a topological sort on the dependency graph before every update. Unreal's behavior trees are literally trees \u2014 lesson 11. JUCE audio processing chains are directed graphs. If you can now see the algorithm underneath a tool you already use \u2014 if you look at Blender's node editor and think \"directed acyclic graph with topological evaluation\" \u2014 then this series worked exactly the way it was supposed to.</div>\n\n<div class=\"spamton\">The entire field of computer graphics \u2014 ray tracing, path tracing, global illumination, every Pixar film, every game with realistic lighting \u2014 is Monte Carlo sampling and heuristic-guided search applied to light. A renderer asks: for this pixel, which paths of light contribute most to its color? It simulates thousands of random light paths (Monte Carlo) and uses heuristics to sample important directions more than unimportant ones (importance sampling, a cousin of A*). The mathematically correct answer to \"how do you render a Pixar film?\" involves every major algorithm in this series. <strong>You now understand, in rough outline, how Pixar movies are made.</strong></div>\n\n<div class=\"challenge\">Pick the one algorithm from this series that felt the most slippery \u2014 the one where you could follow it in the viz but couldn't quite hold the whole thing in your head. Implement it from scratch, without looking it up, in whatever language you're most comfortable in. Get it wrong first. Debug it. Get it right. Run it on test cases. The moment it works is the moment it becomes yours. Then, if you want to really know it: explain it to someone else who doesn't code.</div>\n\n<p class=\"tip\">You don't need to have all of this memorized. You need to know that these tools exist and roughly what shape of problem each one solves. When you hit a performance problem: is it a loop-inside-a-loop? Big-O problem, fix it with a hash map. Is it a \"find the best path\" problem? BFS, Dijkstra, or A* depending on weights. Is it a \"what's the optimal selection from these options\" problem? Greedy if you can prove it, DP if you can't. The pattern recognition is the skill. Everything else you can look up.</p>"
+}
+];
+</script>
+<script>
+'use strict';
+window.addEventListener('error', e => { e.preventDefault(); return true; }, true);
+window.addEventListener('unhandledrejection', e => e.preventDefault(), true);
+
+// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+const LIME  = '#a8ff47', CYAN  = '#38d9f5', RED   = '#ff6060',
+      AMBER = '#ffcc44', PURP  = '#cc66ff', PINK  = '#ff6699',
+      DIM   = '#1a3a1a', EDGE  = '#2a6a2a', NODE  = '#0a1e0a';
+
+// ─── ENGINE ──────────────────────────────────────────────────────────────────
+const NAV_SECTIONS = {0:'FOUNDATIONS',4:'GRAPHS & PATHS',8:'ADVANCED',12:'FINISH LINE'};
+let curLesson=0, animTimer=null, curViz=null;
+const lessonText  = document.getElementById('lesson-text');
+const lessonNav   = document.getElementById('lesson-nav');
+const progressEl  = document.getElementById('progress');
+const vizCanvas   = document.getElementById('viz-canvas');
+const vizLabelEl  = document.getElementById('viz-label');
+const vizStatusEl = document.getElementById('viz-status');
+const codeEl      = document.getElementById('code-display');
+const btnRun      = document.getElementById('btn-run');
+const btnReset    = document.getElementById('btn-reset');
+const speedSlider = document.getElementById('speed-slider');
+
+LESSONS.forEach((L,i)=>{
+  if(NAV_SECTIONS[i]){const d=document.createElement('span');d.className='nav-section';d.textContent=NAV_SECTIONS[i];lessonNav.appendChild(d);}
+  const btn=document.createElement('button');btn.className='nav-btn';btn.textContent=L.subtitle;
+  btn.addEventListener('click',()=>loadLesson(i));lessonNav.appendChild(btn);
+});
+
+const spd=()=>parseInt(speedSlider.value);
+const ms =()=>Math.round(1100-spd()*100);
+const W  =()=>vizCanvas.width;
+const H  =()=>vizCanvas.height;
+function stop(){if(animTimer){clearTimeout(animTimer);animTimer=null;}}
+
+function loadLesson(i){
+  stop(); curLesson=i;
+  const L=LESSONS[i];
+  progressEl.style.width=((i+1)/LESSONS.length*100).toFixed(1)+'%';
+  document.querySelectorAll('.nav-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+  lessonText.innerHTML='<div class="lesson-number">'+L.subtitle+'</div><div class="lesson-title">'+L.title+'</div><div class="lesson-body">'+L.body+'</div>';
+  lessonText.scrollTop=0;
+  codeEl.innerHTML=L.code;
+  vizLabelEl.textContent='';
+  vizStatusEl.textContent='press RUN';
+  btnRun.textContent='▶ RUN';
+  btnReset.textContent='RESET'; btnReset.onclick=null; btnReset._c=false;
+  vizCanvas.onclick=vizCanvas.onmousedown=vizCanvas.onmousemove=vizCanvas.onmouseup=vizCanvas.onmouseleave=null;
+  const ctx=vizCanvas.getContext('2d'); ctx.clearRect(0,0,W(),H());
+  curViz=buildViz(L.viz); resize();
+}
+document.getElementById('copy-btn').addEventListener('click',function(){
+  navigator.clipboard.writeText(codeEl.innerText||codeEl.textContent).then(()=>{this.textContent='COPIED';this.classList.add('done');setTimeout(()=>{this.textContent='COPY';this.classList.remove('done');},1500);});
+});
+btnRun.addEventListener('click',()=>{if(curViz&&curViz.run)curViz.run();});
+btnReset.addEventListener('click',()=>{if(btnReset._c)return;stop();curViz=buildViz(LESSONS[curLesson].viz);resize();vizStatusEl.textContent='press RUN';});
+
+// touch→mouse
+function fwd(ev,type){const t=ev.changedTouches[0];vizCanvas.dispatchEvent(new MouseEvent(type,{bubbles:true,cancelable:true,view:window,clientX:t.clientX,clientY:t.clientY,shiftKey:ev.shiftKey,altKey:ev.altKey}));}
+vizCanvas.addEventListener('touchstart', e=>{e.preventDefault();fwd(e,'mousedown');},{passive:false});
+vizCanvas.addEventListener('touchmove',  e=>{e.preventDefault();fwd(e,'mousemove');},{passive:false});
+vizCanvas.addEventListener('touchend',   e=>{e.preventDefault();fwd(e,'mouseup');fwd(e,'click');},{passive:false});
+vizCanvas.addEventListener('touchcancel',e=>{e.preventDefault();fwd(e,'mouseup');},{passive:false});
+
+function resize(){
+  const a=document.getElementById('viz-area');
+  vizCanvas.width=a.offsetWidth*devicePixelRatio; vizCanvas.height=a.offsetHeight*devicePixelRatio;
+  if(curViz&&curViz.resize)curViz.resize(); else if(curViz&&curViz.draw)curViz.draw();
+}
+window.addEventListener('resize',resize);
+
+function buildViz(type){
+  const ctx=vizCanvas.getContext('2d');
+  switch(type){
+    case 'bigO':           return vBigO(ctx);
+    case 'binarySearch':   return vBinarySearch(ctx);
+    case 'sorting':        return vSorting(ctx);
+    case 'dataStructures': return vDS(ctx);
+    case 'graphViz':       return vGraph(ctx);
+    case 'bfsDfs':         return vBfsDfs(ctx);
+    case 'dijkstra':       return vDijkstra(ctx);
+    case 'astar':          return vAstar(ctx);
+    case 'dynamicProg':    return vDP(ctx);
+    case 'greedyViz':      return vGreedy(ctx);
+    case 'bstViz':         return vBST(ctx);
+    case 'mcts':           return vMCTS(ctx);
+    case 'nextSteps':      return vNextSteps(ctx);
+    default: ctx.fillStyle='#000';ctx.fillRect(0,0,W(),H());return{draw(){}};
+  }
+}
+
+// ─── SHARED HELPERS ──────────────────────────────────────────────────────────
+function glow(ctx,col,r=18){ctx.shadowColor=col;ctx.shadowBlur=r;}
+function noGlow(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;}
+function hex2rgb(h){const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return[r,g,b];}
+function rgba(col,a){const[r,g,b]=hex2rgb(col);return`rgba(${r},${g},${b},${a})`;}
+function scanline(ctx,col,brightness=0.04){
+  const w=W(),h=H();
+  ctx.fillStyle=rgba(col,brightness);
+  for(let y=0;y<h;y+=4){ctx.fillRect(0,y,w,1);}
+}
+function grid(ctx,col='#0a1a0a'){
+  const w=W(),h=H(),s=Math.max(24,Math.min(40,w/24));
+  ctx.strokeStyle=col;ctx.lineWidth=1;
+  for(let x=0;x<w;x+=s){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(let y=0;y<h;y+=s){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+}
+function label(ctx,txt,x,y,col=LIME,sz=9){
+  ctx.fillStyle=col;ctx.font='bold '+sz*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText(txt,x,y);
+}
+function node(ctx,x,y,r,fill,stroke,txt,txtcol,bold=false){
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fillStyle=fill;ctx.fill();
+  glow(ctx,stroke,12);ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();noGlow(ctx);
+  if(txt!==undefined){
+    ctx.fillStyle=txtcol||stroke;
+    ctx.font=(bold?'bold ':'')+Math.min(12,r*0.72)*devicePixelRatio+'px Space Mono';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(txt,x,y);ctx.textBaseline='alphabetic';
+  }
+}
+function hBar(ctx,x,y,w,h,col,gCol){
+  ctx.fillStyle=rgba(col,0.15);ctx.fillRect(x,y,w,h);
+  glow(ctx,gCol||col,8);ctx.strokeStyle=col;ctx.lineWidth=1;ctx.strokeRect(x,y,w,h);noGlow(ctx);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  01 — BIG-O  (glowing curves on grid, live dot inspection)
+// ═══════════════════════════════════════════════════════════════════════════════
+function vBigO(ctx){
+  vizLabelEl.textContent='▶ hover or tap to inspect — RUN to sweep';
+  const curves=[
+    {l:'O(1)',     col:CYAN,  fn:n=>1},
+    {l:'O(log n)', col:LIME,  fn:n=>Math.log2(n+1)},
+    {l:'O(n)',     col:'#88ff99',fn:n=>n},
+    {l:'O(n log n)',col:AMBER, fn:n=>n*Math.log2(n+1)},
+    {l:'O(n²)',    col:RED,   fn:n=>n*n},
+  ];
+  const N=100; let hx=null;
+  const PAD={t:32,r:110,b:40,l:52};
+
+  function pw(){return W()-PAD.l-PAD.r;}
+  function ph(){return H()-PAD.t-PAD.b;}
+  function sc(n,v){const my=curves[3].fn(N)*1.12;return[PAD.l+(n/N)*pw(),PAD.t+ph()-(Math.min(v,my)/my)*ph()];}
+
+  function draw(){
+    const w=W(),h=H();
+    ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+    grid(ctx,'#071407');
+    // Axis
+    ctx.strokeStyle='#1a4a1a';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(PAD.l,PAD.t);ctx.lineTo(PAD.l,PAD.t+ph());ctx.lineTo(PAD.l+pw(),PAD.t+ph());ctx.stroke();
+    // Grid ticks
+    ctx.strokeStyle='#0e2e0e';ctx.lineWidth=1;
+    [0.25,0.5,0.75,1].forEach(f=>{const y=PAD.t+ph()*(1-f);ctx.beginPath();ctx.moveTo(PAD.l,y);ctx.lineTo(PAD.l+pw(),y);ctx.stroke();});
+    // Curves
+    curves.forEach(cv=>{
+      ctx.beginPath();
+      glow(ctx,cv.col,16);
+      ctx.strokeStyle=cv.col;ctx.lineWidth=2.5;
+      for(let n=1;n<=N;n++){const[x,y]=sc(n,cv.fn(n));n===1?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+      ctx.stroke();noGlow(ctx);
+      // End label
+      const[lx,ly]=sc(N,cv.fn(N));
+      ctx.fillStyle=cv.col;ctx.font='bold '+8.5*devicePixelRatio+'px Space Mono';ctx.textAlign='left';
+      ctx.fillText(cv.l,lx+5,Math.max(PAD.t+9,Math.min(PAD.t+ph()-4,ly+4)));
+    });
+    // Hover line + dots
+    if(hx!==null){
+      const n=Math.round(((hx-PAD.l)/pw())*N);
+      if(n>=1&&n<=N){
+        const lx=PAD.l+(n/N)*pw();
+        ctx.strokeStyle=rgba(LIME,0.3);ctx.lineWidth=1;ctx.setLineDash([4,4]);
+        ctx.beginPath();ctx.moveTo(lx,PAD.t);ctx.lineTo(lx,PAD.t+ph());ctx.stroke();
+        ctx.setLineDash([]);
+        const flip=lx>PAD.l+pw()*0.55;
+        curves.forEach((cv,ci)=>{
+          const v=cv.fn(n),[cx2,cy2]=sc(n,v);
+          glow(ctx,cv.col,14);
+          ctx.beginPath();ctx.arc(cx2,cy2,5,0,Math.PI*2);ctx.fillStyle=cv.col;ctx.fill();
+          noGlow(ctx);
+          ctx.fillStyle=cv.col;ctx.font=8*devicePixelRatio+'px Space Mono';
+          ctx.textAlign=flip?'right':'left';
+          ctx.fillText(v<10000?v.toFixed(v<10?1:0):'>10k',flip?lx-7:lx+7,PAD.t+11+ci*13);
+        });
+        ctx.fillStyle=rgba(LIME,0.6);ctx.font=8*devicePixelRatio+'px Space Mono';ctx.textAlign='center';
+        ctx.fillText('n='+n,lx,PAD.t+ph()+20);
+      }
+    }
+    scanline(ctx,LIME,0.03);
+  }
+
+  vizCanvas.onmousemove=e=>{const r=vizCanvas.getBoundingClientRect();hx=(e.clientX-r.left)*devicePixelRatio;draw();};
+  vizCanvas.onmouseleave=()=>{hx=null;draw();};
+  vizCanvas.onclick=e=>{const r=vizCanvas.getBoundingClientRect();hx=(e.clientX-r.left)*devicePixelRatio;draw();};
+
+  function run(){
+    let n=1;
+    function tick(){hx=PAD.l+(n/N)*pw();draw();n+=2;if(n<=N)animTimer=setTimeout(tick,ms()*0.3);else{hx=null;draw();vizStatusEl.textContent='hover to inspect';}}
+    vizStatusEl.textContent='sweeping…';tick();
+  }
+  draw();return{draw,run};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  02 — BINARY SEARCH  (large glowing bars, bracket, neon pointer)
+// ═══════════════════════════════════════════════════════════════════════════════
+function vBinarySearch(ctx){
+  vizLabelEl.textContent='▶ binary search — RUN picks a random target';
+  const N=32,arr=Array.from({length:N},(_,i)=>i*3+2);
+  let lo=0,hi=N-1,mid=-1,found=-1,steps=0,done=false,target=arr[Math.floor(Math.random()*N)];
+
+  function draw(){
+    const w=W(),h=H();
+    ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+    grid(ctx,'#060e06');
+    const pad=28,bw=(w-pad*2)/N,bh=Math.min(60,h*0.32),by=h*0.42-bh/2;
+    arr.forEach((v,i)=>{
+      const inR=i>=lo&&i<=hi,isMid=i===mid,isFound=i===found,isOut=i<lo||i>hi;
+      // Bar fill
+      let fc='#0a180a';
+      if(inR)fc='#0f2810';if(isMid||isFound)fc='#1e4a08';
+      ctx.fillStyle=fc;ctx.fillRect(pad+i*bw+1,by,bw-2,bh);
+      // Bar stroke / glow
+      if(isMid||isFound){
+        const col=isFound?CYAN:LIME;
+        glow(ctx,col,20);
+        ctx.strokeStyle=col;ctx.lineWidth=2;ctx.strokeRect(pad+i*bw+1,by,bw-2,bh);
+        noGlow(ctx);
+        // Top cap
+        ctx.fillStyle=col;ctx.fillRect(pad+i*bw+1,by,bw-2,3);
+      } else if(inR){
+        ctx.strokeStyle='#1e4a1e';ctx.lineWidth=1;ctx.strokeRect(pad+i*bw+1,by,bw-2,bh);
+      }
+      // Value label
+      if(bw>13||isMid||isFound){
+        const col=isFound?CYAN:isMid?LIME:isOut?'#1a3a1a':'#2a6a2a';
+        ctx.fillStyle=col;
+        ctx.font=(isMid||isFound?'bold ':'')+Math.min(11,bw*0.65)*devicePixelRatio+'px Space Mono';
+        ctx.textAlign='center';ctx.fillText(v,pad+i*bw+bw/2,by+bh/2+4);
+      }
+    });
+    // Search space bracket
+    if(!done&&lo<=hi){
+      const bx=pad+lo*bw,ex=pad+(hi+1)*bw-2;
+      glow(ctx,LIME,6);ctx.strokeStyle=LIME;ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(bx,by-11);ctx.lineTo(bx,by-4);ctx.moveTo(bx,by-7);ctx.lineTo(ex,by-7);ctx.moveTo(ex,by-4);ctx.lineTo(ex,by-11);ctx.stroke();noGlow(ctx);
+    }
+    // Pointer arrow
+    if(mid>=0&&!done){
+      const ax=pad+mid*bw+bw/2;
+      glow(ctx,LIME,14);ctx.fillStyle=LIME;
+      ctx.font='bold '+Math.min(18,bw*1.2)*devicePixelRatio+'px Space Mono';ctx.textAlign='center';
+      ctx.fillText('▲',ax,Math.min(h-8,by+bh+24));noGlow(ctx);
+    }
+    // Target
+    ctx.fillStyle='#2a6a2a';ctx.font='bold '+11*devicePixelRatio+'px Space Mono';ctx.textAlign='left';
+    ctx.fillText('target: '+target,pad,by-24);
+    if(done){
+      glow(ctx,found>=0?LIME:RED,16);
+      ctx.fillStyle=found>=0?LIME:RED;ctx.font='bold '+13*devicePixelRatio+'px Syne';ctx.textAlign='center';
+      ctx.fillText(found>=0?'✓ found in '+steps+' steps':'✗ not found',w/2,h*0.82);noGlow(ctx);
+    }
+    scanline(ctx,LIME,0.025);
+  }
+
+  function step(){
+    if(lo>hi||done){done=true;vizStatusEl.textContent=found>=0?'found in '+steps+' steps':'not found';return false;}
+    mid=lo+((hi-lo)>>1);steps++;
+    if(arr[mid]===target){found=mid;done=true;}else if(arr[mid]<target)lo=mid+1;else hi=mid-1;
+    vizStatusEl.textContent='step '+steps+' — arr['+mid+'] = '+arr[mid];draw();return!done;
+  }
+  function run(){done=false;lo=0;hi=N-1;mid=-1;found=-1;steps=0;target=arr[Math.floor(Math.random()*N)];function tick(){if(step())animTimer=setTimeout(tick,ms());}tick();}
+  draw();return{draw,run};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  03 — SORTING  (three neon bar charts, race to the top)
+// ═══════════════════════════════════════════════════════════════════════════════
+function vSorting(ctx){
+  vizLabelEl.textContent='▶ same data — three algorithms race';
+  const N=40,COLS=[RED,LIME,CYAN],NAMES=['BUBBLE','MERGE','QUICK'];
+  let arrays,ops,done,hi;
+  function fresh(){return Array.from({length:N},()=>Math.floor(Math.random()*N)+2);}
+  function init(){const b=fresh();arrays=[b.slice(),b.slice(),b.slice()];ops=[0,0,0];done=[false,false,false];hi=[[],[],[]];}
+  init();
+
+  function draw(){
+    const w=W(),h=H();
+    ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+    const cw=w/3,maxH=h-56,bw=(cw-14)/N;
+    arrays.forEach((arr,ai)=>{
+      const ox=ai*cw+7;
+      arr.forEach((v,i)=>{
+        const barH=(v/N)*maxH,isHi=hi[ai].includes(i);
+        // Dark background slot
+        ctx.fillStyle='#05100a';ctx.fillRect(ox+i*bw,h-42-maxH,bw-1,maxH);
+        // Bar
+        if(done[ai]){
+          // Filled solid on completion
+          glow(ctx,COLS[ai],isHi?16:4);
+          ctx.fillStyle=done[ai]?rgba(COLS[ai],0.7):'#1a3a1a';
+          ctx.fillRect(ox+i*bw,h-42-barH,bw-1,barH);
+        } else {
+          ctx.fillStyle=isHi?rgba(COLS[ai],0.8):'#0f2010';
+          ctx.fillRect(ox+i*bw,h-42-barH,bw-1,barH);
+          if(isHi){glow(ctx,COLS[ai],14);ctx.fillStyle=COLS[ai];ctx.fillRect(ox+i*bw,h-42-barH,bw-1,3);noGlow(ctx);}
+        }
+        noGlow(ctx);
+      });
+      // Divider
+      if(ai<2){ctx.strokeStyle='#0e200e';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo((ai+1)*cw,0);ctx.lineTo((ai+1)*cw,h);ctx.stroke();}
+      // Labels
+      glow(ctx,COLS[ai],done[ai]?12:0);
+      ctx.fillStyle=done[ai]?COLS[ai]:'#2a5a2a';
+      ctx.font='bold '+9*devicePixelRatio+'px Space Mono';ctx.textAlign='center';
+      ctx.fillText((done[ai]?'✓ ':'')+NAMES[ai],ox+(cw-14)/2,h-28);
+      noGlow(ctx);
+      ctx.fillStyle='#1a4a1a';ctx.font=8*devicePixelRatio+'px Space Mono';
+      ctx.fillText(ops[ai]+' ops',ox+(cw-14)/2,h-14);
+    });
+    scanline(ctx,LIME,0.025);
+  }
+
+  function*bG(a,i){for(let x=0;x<a.length;x++)for(let j=0;j<a.length-x-1;j++){ops[i]++;hi[i]=[j,j+1];if(a[j]>a[j+1])[a[j],a[j+1]]=[a[j+1],a[j]];yield;}done[i]=true;hi[i]=[];}
+  function*mG(a,i){function*ms(a,l,r){if(l>=r)return;const m=(l+r)>>1;yield*ms(a,l,m);yield*ms(a,m+1,r);const t=[];let p=l,q=m+1;while(p<=m&&q<=r){ops[i]++;hi[i]=[p,q];t.push(a[p]<=a[q]?a[p++]:a[q++]);yield;}while(p<=m)t.push(a[p++]);while(q<=r)t.push(a[q++]);for(let k=l;k<=r;k++){a[k]=t[k-l];hi[i]=[k];ops[i]++;yield;}}yield*ms(a,0,a.length-1);done[i]=true;hi[i]=[];}
+  function*qG(a,i){function*qs(a,lo,hi2){if(lo>=hi2)return;const pv=a[hi2];let p=lo;for(let j=lo;j<hi2;j++){ops[i]++;hi[i]=[j,hi2];if(a[j]<=pv){[a[p],a[j]]=[a[j],a[p]];p++;}yield;}[a[p],a[hi2]]=[a[hi2],a[p]];hi[i]=[p];yield;yield*qs(a,lo,p-1);yield*qs(a,p+1,hi2);}yield*qs(a,0,a.length-1);done[i]=true;hi[i]=[];}
+
+  function run(){init();const G=[bG(arrays[0],0),mG(arrays[1],1),qG(arrays[2],2)];function tick(){let any=false;G.forEach((g,i)=>{if(!done[i]){const r=g.next();if(!r.done)any=true;}});draw();if(any)animTimer=setTimeout(tick,Math.max(3,ms()*0.14));else vizStatusEl.textContent='bubble:'+ops[0]+' merge:'+ops[1]+' quick:'+ops[2];}tick();}
+  draw();return{draw,run};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  04 — DATA STRUCTURES  (centered, glowing, large)
+// ═══════════════════════════════════════════════════════════════════════════════
+function vDS(ctx){
+  vizLabelEl.textContent='▶ tap canvas to switch · RUN to animate';
+  let mode=0;const MODES=['STACK','QUEUE','MIN-HEAP','HASH MAP'],MCOLS=[LIME,CYAN,LIME,PURP];
+  let stack=[],queue=[],heap=[],hmap={},lastOp='',hiIdx=-1;
+  function hpush(v){heap.push(v);let i=heap.length-1;while(i>0){const p=(i-1)>>1;if(heap[p]<=heap[i])break;[heap[p],heap[i]]=[heap[i],heap[p]];i=p;}}
+  function hpop(){if(!heap.length)return;[heap[0],heap[heap.length-1]]=[heap[heap.length-1],heap[0]];const t=heap.pop();let i=0;for(;;){const l=2*i+1,r=2*i+2;let m=i;if(l<heap.length&&heap[l]<heap[m])m=l;if(r<heap.length&&heap[r]<heap[m])m=r;if(m===i)break;[heap[i],heap[m]]=[heap[m],heap[i]];i=m;}return t;}
+  vizCanvas.onclick=()=>{mode=(mode+1)%4;hiIdx=-1;lastOp='';draw();};
+  const IH=46,IW=82,GAP=6,COL=()=>MCOLS[mode];
+
+  function draw(){
+    const w=W(),h=H(),cx=w/2,cy=h/2;
+    ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+    grid(ctx,'#070d07');
+    // Mode label — top center, large glowing
+    glow(ctx,COL(),22);
+    ctx.fillStyle=COL();ctx.font='bold '+18*devicePixelRatio+'px Syne';ctx.textAlign='center';ctx.fillText(MODES[mode],cx,30);
+    noGlow(ctx);
+    if(lastOp){ctx.fillStyle=COL();ctx.font='bold '+10*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText(lastOp,cx,h-12);}
+
+    if(mode===0){// STACK — vertical tower centered
+      const n=stack.length,startY=cy+(n*(IH+GAP))/2-IH/2;
+      if(!n){ctx.fillStyle=DIM;ctx.font=10*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText('press RUN',cx,cy);}
+      stack.forEach((v,i)=>{
+        const y=startY-i*(IH+GAP),isHi=i===hiIdx;
+        if(isHi)glow(ctx,LIME,16);
+        ctx.fillStyle=isHi?'#1a3a08':'#0a1e0a';ctx.fillRect(cx-IW/2,y-IH/2,IW,IH);
+        ctx.strokeStyle=isHi?LIME:EDGE;ctx.lineWidth=isHi?2:1;ctx.strokeRect(cx-IW/2,y-IH/2,IW,IH);
+        noGlow(ctx);
+        ctx.fillStyle=isHi?LIME:'#4aaa4a';ctx.font='bold '+13*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText(v,cx,y+5);
+      });
+      if(n){ctx.fillStyle='#2a5a2a';ctx.font=9*devicePixelRatio+'px Space Mono';ctx.textAlign='left';ctx.fillText('← TOP',cx+IW/2+8,startY-n*(IH+GAP)+IH/2+5);}
+    }
+    else if(mode===1){// QUEUE — horizontal row centered
+      const n=queue.length,startX=cx-(n*(IW+GAP))/2+IW/2;
+      if(!n){ctx.fillStyle=DIM;ctx.font=10*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText('press RUN',cx,cy);}
+      queue.forEach((v,i)=>{
+        const x=startX+i*(IW+GAP),isHi=i===hiIdx;
+        if(isHi)glow(ctx,CYAN,16);
+        ctx.fillStyle=isHi?'#081828':'#050e14';ctx.fillRect(x-IW/2,cy-IH/2,IW,IH);
+        ctx.strokeStyle=isHi?CYAN:'#1a4a6a';ctx.lineWidth=isHi?2:1;ctx.strokeRect(x-IW/2,cy-IH/2,IW,IH);
+        noGlow(ctx);
+        ctx.fillStyle=isHi?CYAN:'#3a8aaa';ctx.font='bold '+13*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText(v,x,cy+5);
+      });
+      if(n>0){ctx.fillStyle='#1a5a7a';ctx.font=9*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText('FRONT',startX,cy-IH/2-8);}
+      if(n>1) {ctx.fillStyle='#1a5a7a';ctx.font=9*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText('BACK',startX+(n-1)*(IW+GAP),cy-IH/2-8);}
+    }
+    else if(mode===2){// HEAP — flat array with parent lines
+      if(!heap.length){ctx.fillStyle=DIM;ctx.font=10*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText('press RUN',cx,cy);return;}
+      const bw=Math.min(68,(W()-32)/Math.max(heap.length,6)),tot=heap.length*bw,ox=cx-tot/2;
+      heap.forEach((v,i)=>{
+        const x=ox+i*bw,isHi=i===hiIdx,isMin=i===0;
+        if(isHi||isMin)glow(ctx,LIME,14);
+        ctx.fillStyle=isHi?'#1a3a08':'#0a1e0a';ctx.fillRect(x,cy-IH/2,bw-3,IH);
+        ctx.strokeStyle=isHi?LIME:isMin?LIME:EDGE;ctx.lineWidth=isHi||isMin?2:1;ctx.strokeRect(x,cy-IH/2,bw-3,IH);
+        noGlow(ctx);
+        ctx.fillStyle=isHi||isMin?LIME:'#4aaa4a';ctx.font='bold '+11*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText(v,x+(bw-3)/2,cy+4);
+        if(i>0){const p=(i-1)>>1;ctx.strokeStyle='#1a3a1a';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+(bw-3)/2,cy-IH/2);ctx.lineTo(ox+p*bw+(bw-3)/2,cy-IH/2);ctx.stroke();}
+      });
+      ctx.fillStyle=LIME;ctx.font=10*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText('min: '+heap[0],cx,cy+IH/2+18);
+    }
+    else{// HASH MAP — card grid
+      const entries=Object.entries(hmap);
+      if(!entries.length){ctx.fillStyle=DIM;ctx.font=10*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText('press RUN',cx,cy);return;}
+      const cols=Math.min(4,entries.length),cw2=Math.min(130,(W()-24)/cols),ch2=48,rows=Math.ceil(entries.length/cols),ox=cx-(cols*cw2)/2,oy=cy-(rows*ch2)/2;
+      entries.forEach(([k,v],i)=>{
+        const x=ox+(i%cols)*cw2+2,y=oy+Math.floor(i/cols)*ch2,isHi=k===String(hiIdx);
+        if(isHi)glow(ctx,PURP,14);
+        ctx.fillStyle=isHi?'#1a0a30':'#0a0618';ctx.fillRect(x,y,cw2-4,ch2-5);
+        ctx.strokeStyle=isHi?PURP:'#2a1a4a';ctx.lineWidth=isHi?2:1;ctx.strokeRect(x,y,cw2-4,ch2-5);
+        noGlow(ctx);
+        ctx.fillStyle='#7a5aaa';ctx.font=8*devicePixelRatio+'px Space Mono';ctx.textAlign='left';ctx.fillText(k,x+6,y+15);
+        ctx.fillStyle=isHi?PURP:'#ccaaff';ctx.font='bold '+11*devicePixelRatio+'px Space Mono';ctx.fillText('→ '+v,x+6,y+33);
+      });
+    }
+    scanline(ctx,COL(),0.03);
+  }
+
+  const words=['apple','binary','cache','delta','echo','forest','grep','hash'];let stepN=0;
+  function run(){stepN=0;stack=[];queue=[];heap=[];hmap={};hiIdx=-1;lastOp='';
+    const vals=Array.from({length:10},()=>Math.floor(Math.random()*50)+1);
+    function tick(){if(stepN>=20){vizStatusEl.textContent='done';draw();return;}
+      const v=vals[stepN%10];
+      if(mode===0){if(stepN<10){stack.push(v);hiIdx=stack.length-1;lastOp='push('+v+')';}else{const p=stack.pop();hiIdx=-1;lastOp='pop() → '+p;}}
+      else if(mode===1){if(stepN<10){queue.push(v);hiIdx=queue.length-1;lastOp='enqueue('+v+')';}else{const d=queue.shift();hiIdx=-1;lastOp='dequeue() → '+d;}}
+      else if(mode===2){if(stepN<10){hpush(v);hiIdx=0;lastOp='push('+v+') min='+heap[0];}else{const p=hpop();lastOp='pop() → '+p;}}
+      else{const w=words[stepN%8],hash=w.split('').reduce((a,c)=>a+c.charCodeAt(0),0)%97;hmap[w]=hash;hiIdx=w;lastOp='set("'+w+'",'+hash+')';}
+      vizStatusEl.textContent=lastOp;stepN++;draw();animTimer=setTimeout(tick,ms());}tick();}
+  draw();return{draw,run};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  05 — GRAPH  (glowing nodes, pulsing on hover)
+// ═══════════════════════════════════════════════════════════════════════════════
+function vGraph(ctx){
+  vizLabelEl.textContent='▶ tap to add node · drag to connect · RUN traces';
+  const nodes=[],edges=[];let drag=null,hiPath=[];let _w=0,_h=0;
+  function mkDef(){
+    nodes.length=0;edges.length=0;const cx=W()/2,cy=H()/2,r=Math.min(W(),H())*0.33;
+    'ABCDEFG'.split('').forEach((l,i)=>{const a=(i/7)*Math.PI*2-Math.PI/2;nodes.push({id:l,x:cx+r*Math.cos(a),y:cy+r*Math.sin(a),label:l});});
+    [[0,1,4],[0,2,2],[1,3,5],[1,4,3],[2,5,6],[3,6,2],[4,5,1],[5,6,4],[4,6,7]].forEach(([a,b,w])=>edges.push({a:nodes[a].id,b:nodes[b].id,w}));
+    _w=W();_h=H();
+  }
+  mkDef();
+  function nodeAt(x,y){return nodes.find(n=>Math.hypot(n.x-x,n.y-y)<22);}
+  function resize(){const nw=W(),nh=H();if(_w&&_h){nodes.forEach(n=>{n.x=n.x*nw/_w;n.y=n.y*nh/_h;});}; _w=nw;_h=nh;draw();}
+
+  function draw(){
+    const w=W(),h=H();
+    ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+    if(w>0&&h>0&&nodes.length>0&&nodes[0].x===0)mkDef();
+    grid(ctx,'#060e06');
+    edges.forEach(e=>{
+      const a=nodes.find(n=>n.id===e.a),b=nodes.find(n=>n.id===e.b);if(!a||!b)return;
+      const hi=hiPath.includes(e.a+'-'+e.b)||hiPath.includes(e.b+'-'+e.a);
+      if(hi)glow(ctx,LIME,12);
+      ctx.strokeStyle=hi?LIME:'#1a4a1a';ctx.lineWidth=hi?3:1.5;
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();noGlow(ctx);
+      ctx.fillStyle=hi?LIME:'#2a5a2a';ctx.font=(hi?'bold ':'')+9*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText(e.w,(a.x+b.x)/2,(a.y+b.y)/2-7);
+    });
+    nodes.forEach(n=>{
+      const inH=hiPath.some(h=>h.startsWith(n.id+'-')||h.endsWith('-'+n.id));
+      node(ctx,n.x,n.y,inH?20:16,inH?'#1a3a08':NODE,inH?LIME:EDGE,n.label,inH?LIME:'#6acc6a',true);
+    });
+    scanline(ctx,LIME,0.025);
+  }
+  vizCanvas.onmousedown=e=>{const r=vizCanvas.getBoundingClientRect(),x=(e.clientX-r.left)*devicePixelRatio,y=(e.clientY-r.top)*devicePixelRatio,n=nodeAt(x,y);if(n)drag=n;else{const id=String.fromCharCode(65+nodes.length%26);nodes.push({id,x,y,label:id});}draw();};
+  vizCanvas.onmousemove=e=>{if(!drag)return;const r=vizCanvas.getBoundingClientRect();drag.x=(e.clientX-r.left)*devicePixelRatio;drag.y=(e.clientY-r.top)*devicePixelRatio;draw();};
+  vizCanvas.onmouseup=e=>{if(drag){const r=vizCanvas.getBoundingClientRect(),x=(e.clientX-r.left)*devicePixelRatio,y=(e.clientY-r.top)*devicePixelRatio,n=nodeAt(x,y);if(n&&n!==drag&&!edges.find(ed=>(ed.a===drag.id&&ed.b===n.id)||(ed.a===n.id&&ed.b===drag.id)))edges.push({a:drag.id,b:n.id,w:Math.max(1,Math.round(Math.hypot(drag.x-n.x,drag.y-n.y)/18))});drag=null;draw();}};
+  function run(){hiPath=[];if(nodes.length<2){draw();return;}const vis=new Set([nodes[0].id]);let cur=nodes[0].id;const path=[];for(let i=0;i<nodes.length-1;i++){const nb=edges.filter(e=>e.a===cur||e.b===cur).map(e=>e.a===cur?e.b:e.a).filter(x=>!vis.has(x));if(!nb.length)break;const next=nb[Math.floor(Math.random()*nb.length)];path.push(cur+'-'+next);vis.add(next);cur=next;}let i=0;function tick(){hiPath=path.slice(0,i+1);draw();if(i<path.length){i++;animTimer=setTimeout(tick,ms());}}tick();}
+  draw();return{draw,run,resize};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  06 — BFS/DFS  (grid with vivid wave colors)
+// ═══════════════════════════════════════════════════════════════════════════════
+function vBfsDfs(ctx){
+  vizLabelEl.textContent='▶ tap: wall · RESET: BFS↔DFS · RUN: find path';
+  const ROWS=16,COLS=24;let grid2=Array.from({length:ROWS},()=>Array(COLS).fill(0));
+  let sR=1,sC=1,eR=ROWS-2,eC=COLS-2,mode='BFS';
+  btnReset._c=true;btnReset.textContent='→ DFS';btnReset.onclick=()=>{mode=mode==='BFS'?'DFS':'BFS';btnReset.textContent='→ '+(mode==='BFS'?'DFS':'BFS');draw();};
+  function cs(){return Math.min(W()/COLS,H()/ROWS);}
+  function ox(){return(W()-COLS*cs())/2;}function oy(){return(H()-ROWS*cs())/2;}
+
+  function draw(open=new Set(),closed=new Set(),pathS=new Set(),cur=null){
+    const w=W(),h=H(),s=cs(),OX=ox(),OY=oy();
+    ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+    const isBFS=mode==='BFS';
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+      const k=r+','+c,isSt=r===sR&&c===sC,isEn=r===eR&&c===eC;
+      let fill='#060e06';
+      if(grid2[r][c])fill='#4a2a08';
+      if(open.has(k))fill=isBFS?'#0a2a6a':'#4a0a6a';
+      if(closed.has(k))fill=isBFS?'#0a4a20':'#20086a';
+      if(pathS.has(k))fill='#3a5208';
+      if(k===cur)fill=isBFS?'#22cc44':'#aa22ff';
+      if(isSt)fill='#085858';if(isEn)fill='#680808';
+      ctx.fillStyle=fill;ctx.fillRect(OX+c*s+1,OY+r*s+1,s-2,s-2);
+      if(pathS.has(k)){glow(ctx,LIME,8);ctx.strokeStyle=LIME;ctx.lineWidth=1.5;ctx.strokeRect(OX+c*s+1.5,OY+r*s+1.5,s-3,s-3);noGlow(ctx);}
+      if(isSt||isEn){
+        glow(ctx,isSt?CYAN:RED,12);
+        ctx.fillStyle=isSt?CYAN:RED;ctx.font='bold '+s*0.6+'px Space Mono';ctx.textAlign='center';ctx.fillText(isSt?'S':'E',OX+c*s+s/2,OY+r*s+s*0.72);
+        noGlow(ctx);
+      }
+    }
+    ctx.fillStyle='#2a5a3a';ctx.font=9*devicePixelRatio+'px Space Mono';ctx.textAlign='left';ctx.fillText(mode,OX,OY-6);
+    scanline(ctx,isBFS?CYAN:PURP,0.025);
+  }
+
+  vizCanvas.onmousedown=e=>{const r=vizCanvas.getBoundingClientRect(),s=cs(),OX=ox(),OY=oy();const co=Math.floor(((e.clientX-r.left)*devicePixelRatio-OX)/s),ro=Math.floor(((e.clientY-r.top)*devicePixelRatio-OY)/s);if(ro<0||ro>=ROWS||co<0||co>=COLS)return;if(e.shiftKey){sR=ro;sC=co;}else if(e.altKey){eR=ro;eC=co;}else grid2[ro][co]=grid2[ro][co]?0:1;draw();};
+
+  function*bfsG(){const q=[[sR,sC]],vis=new Set([sR+','+sC]),par=new Map([[sR+','+sC,null]]);while(q.length){const[r,c]=q.shift(),k=r+','+c;if(r===eR&&c===eC){let c2=k;const p=[];while(c2){p.push(c2);c2=par.get(c2);}return p;}yield{vis,cur:k};for(const[dr,dc]of[[-1,0],[1,0],[0,-1],[0,1]]){const nr=r+dr,nc=c+dc,nk=nr+','+nc;if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&!grid2[nr][nc]&&!vis.has(nk)){vis.add(nk);par.set(nk,k);q.push([nr,nc]);}}}return null;}
+  function*dfsG(){const stk=[[sR,sC]],vis=new Set(),par=new Map([[sR+','+sC,null]]);while(stk.length){const[r,c]=stk.pop(),k=r+','+c;if(vis.has(k))continue;vis.add(k);if(r===eR&&c===eC){let c2=k;const p=[];while(c2){p.push(c2);c2=par.get(c2);}return p;}yield{vis,cur:k};for(const[dr,dc]of[[-1,0],[1,0],[0,-1],[0,1]]){const nr=r+dr,nc=c+dc,nk=nr+','+nc;if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&!grid2[nr][nc]&&!vis.has(nk)){par.set(nk,k);stk.push([nr,nc]);}}}return null;}
+
+  function run(){const gen=mode==='BFS'?bfsG():dfsG();let n=0;function tick(){const r=gen.next();if(r.done){const p=r.value;if(p){vizStatusEl.textContent='path: '+p.length+' steps, '+n+' explored';draw(new Set(),new Set(),new Set(p));}else{vizStatusEl.textContent='no path';draw();}return;}n++;vizStatusEl.textContent=mode+': '+n+' explored';draw(r.value.vis,new Set(),new Set(),r.value.cur);animTimer=setTimeout(tick,Math.max(4,ms()*0.28));}tick();}
+  draw();return{draw,run};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  07 — DIJKSTRA  (glowing graph, distance labels inside nodes)
+// ═══════════════════════════════════════════════════════════════════════════════
+function vDijkstra(ctx){
+  vizLabelEl.textContent='▶ Dijkstra — cheapest unvisited node expands first';
+  const ns=[],es=[];let dist=new Map(),vis=new Set(),inQ=new Set(),cur=-1,fp=[];let _w=0,_h=0;
+  function build(){ns.length=0;es.length=0;const w=W(),h=H(),cols=6,rows=4;for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){ns.push({id:r*cols+c,x:62+c*(w-104)/(cols-1)+(Math.random()-.5)*18,y:52+r*(h-80)/(rows-1)+(Math.random()-.5)*18});}for(let i=0;i<ns.length;i++){const r=Math.floor(i/cols),c=i%cols;[[0,1],[1,0],[1,1],[-1,1]].forEach(([dr,dc])=>{const nr=r+dr,nc=c+dc,ni=nr*cols+nc;if(nr>=0&&nr<rows&&nc>=0&&nc<cols&&!es.find(e=>(e.a===i&&e.b===ni)||(e.a===ni&&e.b===i)))es.push({a:i,b:ni,w:Math.round(Math.hypot(ns[i].x-ns[ni].x,ns[i].y-ns[ni].y)/18)+Math.floor(Math.random()*4)+1});});} dist=new Map();vis=new Set();inQ=new Set();cur=-1;fp=[];_w=W();_h=H();}
+  build();
+  function resize(){const nw=W(),nh=H();if(_w&&_h)ns.forEach(n=>{n.x=n.x*nw/_w;n.y=n.y*nh/_h;});_w=nw;_h=nh;draw();}
+
+  function draw(){
+    const w=W(),h=H();ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+    if(w>0&&h>0&&ns.length>0&&ns[0].x<2)build();
+    grid(ctx,'#060e06');
+    const R=14;
+    es.forEach(e=>{const a=ns[e.a],b=ns[e.b];if(!a||!b)return;const hi=fp.includes(e.a+'-'+e.b)||fp.includes(e.b+'-'+e.a);if(hi)glow(ctx,LIME,10);ctx.strokeStyle=hi?LIME:'#1a3a1a';ctx.lineWidth=hi?3:1;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();noGlow(ctx);if(hi){ctx.fillStyle=LIME;ctx.font='bold '+9*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText(e.w,(a.x+b.x)/2,(a.y+b.y)/2-5);}});
+    ns.forEach((n,i)=>{const d=dist.get(i)??Infinity,isSt=i===0,isEn=i===ns.length-1,isV=vis.has(i),isQ=inQ.has(i),isC=i===cur;const col=isSt?CYAN:isEn?RED:isC?LIME:isV?'#4aaa4a':isQ?'#4a7aaa':EDGE;const fill=isSt?'#0a5050':isEn?'#600000':isC?'#204a10':isV?'#1a4a1a':isQ?'#1a2840':NODE;node(ctx,n.x,n.y,isC?R+3:R,fill,col,d===Infinity?'∞':d,isC?LIME:isV?'#88cc88':'#446644',isC);});
+    ctx.font='bold '+11*devicePixelRatio+'px Space Mono';ctx.textAlign='center';
+    glow(ctx,CYAN,8);ctx.fillStyle=CYAN;ctx.fillText('S',ns[0].x,ns[0].y-20);noGlow(ctx);
+    glow(ctx,RED,8);ctx.fillStyle=RED;ctx.fillText('E',ns[ns.length-1].x,ns[ns.length-1].y-20);noGlow(ctx);
+    scanline(ctx,LIME,0.025);
+  }
+
+  function run(){dist=new Map([[0,0]]);vis=new Set();inQ=new Set([0]);cur=-1;fp=[];ns.forEach((_,i)=>{if(i!==0)dist.set(i,Infinity);});const pq=[[0,0]],prev=new Map();function step(){if(!pq.length){vizStatusEl.textContent='done';draw();return;}pq.sort((a,b)=>a[0]-b[0]);const[d,u]=pq.shift();if(vis.has(u)){step();return;}vis.add(u);inQ.delete(u);cur=u;vizStatusEl.textContent='node '+u+' dist='+d;if(u===ns.length-1){let c2=u;while(prev.has(c2)){const p=prev.get(c2);fp.push(p+'-'+c2);c2=p;}vizStatusEl.textContent='✓ shortest path cost='+d;cur=-1;draw();return;}es.filter(e=>e.a===u||e.b===u).forEach(e=>{const v=e.a===u?e.b:e.a,alt=(dist.get(u)??Infinity)+e.w;if(alt<(dist.get(v)??Infinity)){dist.set(v,alt);prev.set(v,u);inQ.add(v);pq.push([alt,v]);}});draw();animTimer=setTimeout(step,ms());}step();}
+  draw();return{draw,run,resize};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  08 — A*  (bright vivid grid, centered)
+// ═══════════════════════════════════════════════════════════════════════════════
+function vAstar(ctx){
+  vizLabelEl.textContent='▶ tap: wall · RESET: A*↔Dijkstra · RUN: search';
+  const ROWS=16,COLS=24;let grid3=Array.from({length:ROWS},()=>Array(COLS).fill(0));
+  let sR=1,sC=1,eR=ROWS-2,eC=COLS-2,useA=true;
+  for(let r=3;r<ROWS-3;r++)grid3[r][Math.floor(COLS/2)]=1;grid3[Math.floor(ROWS/2)][Math.floor(COLS/2)]=0;
+  btnReset._c=true;btnReset.textContent='→ DIJKSTRA';btnReset.onclick=()=>{useA=!useA;btnReset.textContent='→ '+(useA?'DIJKSTRA':'A*');draw();};
+  function mh(r1,c1,r2,c2){return Math.abs(r1-r2)+Math.abs(c1-c2);}
+  function cs(){return Math.min(W()/COLS,H()/ROWS);}
+  function ox(){return(W()-COLS*cs())/2;}function oy(){return(H()-ROWS*cs())/2;}
+
+  function draw(open=new Set(),closed=new Set(),pathS=new Set(),cur=null){
+    const w=W(),h=H(),s=cs(),OX=ox(),OY=oy();
+    ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+      const k=r+','+c,isSt=r===sR&&c===sC,isEn=r===eR&&c===eC;
+      let fill='#060e06';
+      if(grid3[r][c])fill='#4a2a08';
+      if(open.has(k))  fill=useA?'#0a2a6a':'#0a4a20';
+      if(closed.has(k))fill=useA?'#0a4a20':'#300870';
+      if(pathS.has(k)) fill='#3a5208';
+      if(k===cur)      fill=useA?'#22ee66':'#aaff44';
+      if(isSt)fill='#085858';if(isEn)fill='#680808';
+      ctx.fillStyle=fill;ctx.fillRect(OX+c*s+1,OY+r*s+1,s-2,s-2);
+      if(pathS.has(k)){glow(ctx,LIME,8);ctx.strokeStyle=LIME;ctx.lineWidth=1.5;ctx.strokeRect(OX+c*s+1.5,OY+r*s+1.5,s-3,s-3);noGlow(ctx);}
+      if(isSt||isEn){glow(ctx,isSt?CYAN:RED,12);ctx.fillStyle=isSt?CYAN:RED;ctx.font='bold '+s*0.6+'px Space Mono';ctx.textAlign='center';ctx.fillText(isSt?'S':'E',OX+c*s+s/2,OY+r*s+s*0.72);noGlow(ctx);}
+    }
+    ctx.fillStyle='#2a5a3a';ctx.font=9*devicePixelRatio+'px Space Mono';ctx.textAlign='left';ctx.fillText(useA?'A*':'DIJKSTRA',OX,OY-6);
+    scanline(ctx,LIME,0.025);
+  }
+
+  vizCanvas.onmousedown=e=>{const r=vizCanvas.getBoundingClientRect(),s=cs(),OX=ox(),OY=oy();const co=Math.floor(((e.clientX-r.left)*devicePixelRatio-OX)/s),ro=Math.floor(((e.clientY-r.top)*devicePixelRatio-OY)/s);if(ro<0||ro>=ROWS||co<0||co>=COLS)return;if(e.shiftKey){sR=ro;sC=co;}else if(e.altKey){eR=ro;eC=co;}else grid3[ro][co]=grid3[ro][co]?0:1;draw();};
+
+  function*sG(){const g=new Map([[sR+','+sC,0]]),open=new Map([[sR+','+sC,useA?mh(sR,sC,eR,eC):0]]),closed=new Set(),par=new Map();let ex=0;while(open.size){let c2=null,best=Infinity;for(const[k,fv]of open)if(fv<best){best=fv;c2=k;}if(!c2)break;open.delete(c2);closed.add(c2);ex++;if(c2===eR+','+eC){const p=[];let c3=c2;while(par.has(c3)){p.push(c3);c3=par.get(c3);}p.push(c3);return{path:p,ex};}const[r,c]=c2.split(',').map(Number);yield{open:new Set(open.keys()),closed,cur:c2,ex};for(const[dr,dc]of[[-1,0],[1,0],[0,-1],[0,1]]){const nr=r+dr,nc=c+dc,nk=nr+','+nc;if(nr<0||nr>=ROWS||nc<0||nc>=COLS||grid3[nr][nc]||closed.has(nk))continue;const ng=(g.get(c2)??Infinity)+1;if(ng<(g.get(nk)??Infinity)){g.set(nk,ng);open.set(nk,ng+(useA?mh(nr,nc,eR,eC):0));par.set(nk,c2);}}}return{path:null,ex};}
+
+  function run(){const gen=sG();function tick(){const r=gen.next();if(r.done){const{path,ex}=r.value;if(path){vizStatusEl.textContent=(useA?'A*':'Dijkstra')+': '+path.length+' steps, '+ex+' explored';draw(new Set(),new Set(),new Set(path));}else{vizStatusEl.textContent='no path';draw();}return;}draw(r.value.open,r.value.closed,new Set(),r.value.cur);vizStatusEl.textContent=(useA?'A*':'Dijkstra')+' — '+r.value.ex+' explored';animTimer=setTimeout(tick,Math.max(4,ms()*0.26));}tick();}
+  draw();return{draw,run};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  09 — DP  (glowing table, heat-map coloring)
+// ═══════════════════════════════════════════════════════════════════════════════
+function vDP(ctx){
+  vizLabelEl.textContent='▶ knapsack DP table — RUN fills cell by cell';
+  const ITEMS=[{name:'gem',w:2,v:6},{name:'sword',w:3,v:8},{name:'potion',w:1,v:3},{name:'armour',w:4,v:9},{name:'scroll',w:2,v:5}],CAP=8;
+  let dp=null,curI=-1,curC=-1;
+
+  function draw(){
+    const w=W(),h=H();ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);grid(ctx,'#060e06');if(!dp)return;
+    const rows=ITEMS.length+1,cols=CAP+1,lW=60,hH=28,pad=8;
+    const cw=(w-lW-pad*2)/cols,ch=(h-hH-pad*2)/rows,ox=lW+pad,oy=hH+pad;
+    for(let c=0;c<=CAP;c++){ctx.fillStyle='#2a5a2a';ctx.font='bold '+9*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText(c,ox+c*cw+cw/2,oy-8);}
+    ctx.fillStyle=DIM;ctx.font=8*devicePixelRatio+'px Space Mono';ctx.textAlign='right';ctx.fillText('cap →',ox-4,oy-8);
+    dp.forEach((row,i)=>{
+      ctx.fillStyle=i===0?'#2a5a2a':'#3a7a4a';ctx.font=9*devicePixelRatio+'px Space Mono';ctx.textAlign='right';ctx.fillText(i===0?'∅':ITEMS[i-1].name,ox-5,oy+i*ch+ch/2+3);
+      row.forEach((v,c)=>{
+        const x=ox+c*cw,y=oy+i*ch;
+        const isCur=i===curI&&c===curC,imp=i>0&&c>=ITEMS[i-1].w&&dp[i-1][c-ITEMS[i-1].w]+ITEMS[i-1].v>dp[i-1][c];
+        // Heat: value intensity
+        const intensity=v/9;
+        ctx.fillStyle=isCur?'#2a4012':imp&&i<=curI?`rgba(8,60,8,${0.4+intensity*0.4})`:'#070e07';
+        ctx.fillRect(x+1,y+1,cw-2,ch-2);
+        if(isCur)glow(ctx,LIME,12);
+        ctx.strokeStyle=isCur?LIME:imp&&i<=curI?rgba(CYAN,0.6):'#0f1f0f';ctx.lineWidth=isCur?2:imp&&i<=curI?1:0.4;
+        ctx.strokeRect(x+1,y+1,cw-2,ch-2);noGlow(ctx);
+        if(v>0||i===0){ctx.fillStyle=isCur?LIME:imp&&i<=curI?CYAN:`rgba(90,160,90,${0.3+intensity*0.6})`;ctx.font=(v>0?'bold ':'')+Math.min(12,ch*0.56)*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText(v,x+cw/2,y+ch/2+4);}
+      });
+    });
+    if(curI>=ITEMS.length){let ri=ITEMS.length,rc=CAP;const sel=[];while(ri>0){if(dp[ri][rc]!==dp[ri-1][rc]){sel.push(ITEMS[ri-1].name);rc-=ITEMS[ri-1].w;}ri--;}glow(ctx,LIME,10);ctx.fillStyle=LIME;ctx.font='bold '+10*devicePixelRatio+'px Syne';ctx.textAlign='center';ctx.fillText('✓ '+sel.join(' + ')+' = '+dp[ITEMS.length][CAP],w/2,h-8);noGlow(ctx);}
+    scanline(ctx,LIME,0.025);
+  }
+
+  function run(){dp=Array.from({length:ITEMS.length+1},()=>new Array(CAP+1).fill(0));let i=1;function sR(){if(i>ITEMS.length){curI=ITEMS.length;vizStatusEl.textContent='optimal: '+dp[ITEMS.length][CAP];draw();return;}const{w:iw,v:iv}=ITEMS[i-1];let c=0;function sC(){if(c>CAP){i++;animTimer=setTimeout(sR,ms());return;}dp[i][c]=dp[i-1][c];if(c>=iw)dp[i][c]=Math.max(dp[i][c],dp[i-1][c-iw]+iv);curI=i;curC=c;vizStatusEl.textContent=ITEMS[i-1].name+' @ cap='+c+' → '+dp[i][c];draw();c++;animTimer=setTimeout(sC,Math.max(12,ms()*0.38));}sC();}sR();}
+  dp=Array.from({length:ITEMS.length+1},()=>new Array(CAP+1).fill(0));draw();return{draw,run};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  10 — HUFFMAN  (tree grows from bottom, vivid nodes)
+// ═══════════════════════════════════════════════════════════════════════════════
+function vGreedy(ctx){
+  vizLabelEl.textContent='▶ Huffman — RUN to watch the tree grow';
+  const chars=[{c:'E',f:21},{c:'T',f:15},{c:'A',f:13},{c:'O',f:11},{c:'N',f:9},{c:'S',f:7},{c:'R',f:5},{c:'H',f:4}];
+  let roots=[],lastNew=null,step2=0;
+  function init(){roots=chars.map(ch=>({label:ch.c,freq:ch.f,left:null,right:null,isLeaf:true,x:0,y:0}));lastNew=null;step2=0;}
+
+  function place(nd,cx,ty,hw){if(!nd)return;nd.x=cx;nd.y=ty;if(nd.left&&nd.right){place(nd.left,cx-hw/2,ty+64,hw/2);place(nd.right,cx+hw/2,ty+64,hw/2);}}
+
+  function layout(){
+    const w=W(),h=H();
+    if(roots.length===1){function depth(nd){return(!nd||nd.isLeaf)?0:1+Math.max(depth(nd.left),depth(nd.right));}const d=depth(roots[0]),gap=Math.min(68,Math.max(44,(h-40)/(d+1))),treeH=(d+1)*gap,topY=(h-treeH)/2;place(roots[0],w/2,topY,w*0.44);}
+    else{const n=roots.length,gap=w/(n+1),baseY=h*0.76;roots.forEach((nd,i)=>{function sd(n2){return(!n2||n2.isLeaf)?0:1+Math.max(sd(n2.left),sd(n2.right));}place(nd,gap*(i+1),baseY-sd(nd)*58,gap*0.44);});}
+  }
+
+  function drawNode(nd){
+    if(!nd)return;
+    const isNew=nd===lastNew;
+    if(nd.left){if(isNew)glow(ctx,LIME,10);ctx.strokeStyle=isNew?LIME:'#2a6a2a';ctx.lineWidth=isNew?2.5:1.5;ctx.beginPath();ctx.moveTo(nd.x,nd.y);ctx.lineTo(nd.left.x,nd.left.y);ctx.stroke();noGlow(ctx);ctx.fillStyle=rgba(CYAN,0.8);ctx.font='bold '+9*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText('0',(nd.x+nd.left.x)/2-8,(nd.y+nd.left.y)/2);}
+    if(nd.right){if(isNew)glow(ctx,LIME,10);ctx.strokeStyle=isNew?LIME:'#2a6a2a';ctx.lineWidth=isNew?2.5:1.5;ctx.beginPath();ctx.moveTo(nd.x,nd.y);ctx.lineTo(nd.right.x,nd.right.y);ctx.stroke();noGlow(ctx);ctx.fillStyle=rgba(LIME,0.8);ctx.font='bold '+9*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText('1',(nd.x+nd.right.x)/2+8,(nd.y+nd.right.y)/2);}
+    drawNode(nd.left);drawNode(nd.right);
+    const R=nd.isLeaf?18:13;
+    if(isNew)glow(ctx,LIME,18);
+    ctx.beginPath();ctx.arc(nd.x,nd.y,R,0,Math.PI*2);
+    ctx.fillStyle=isNew?'#1e4000':nd.isLeaf?'#0e2808':'#071812';ctx.fill();
+    ctx.strokeStyle=isNew?LIME:nd.isLeaf?'#5aaa2a':CYAN;ctx.lineWidth=isNew?2.5:2;ctx.stroke();noGlow(ctx);
+    if(nd.isLeaf){ctx.fillStyle=LIME;ctx.font='bold '+11*devicePixelRatio+'px Syne';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(nd.label,nd.x,nd.y-3);ctx.textBaseline='alphabetic';ctx.fillStyle='#5aaa2a';ctx.font=8*devicePixelRatio+'px Space Mono';ctx.fillText(nd.freq,nd.x,nd.y+11);}
+    else{ctx.fillStyle=isNew?LIME:CYAN;ctx.font='bold '+11*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(nd.freq,nd.x,nd.y);ctx.textBaseline='alphabetic';}
+  }
+
+  function draw(){ctx.fillStyle='#000';ctx.fillRect(0,0,W(),H());grid(ctx,'#060e06');layout();roots.forEach(drawNode);ctx.fillStyle=rgba(CYAN,0.7);ctx.font='bold '+9*devicePixelRatio+'px Space Mono';ctx.textAlign='left';ctx.fillText('0 = left',4,H()-4);ctx.fillStyle=rgba(LIME,0.7);ctx.textAlign='right';ctx.fillText('right = 1',W()-4,H()-4);scanline(ctx,LIME,0.025);}
+
+  function run(){init();draw();const pq=[...roots];let nextId=chars.length;function tick(){if(pq.length<=1){lastNew=null;vizStatusEl.textContent='✓ '+chars.length+' symbols encoded';draw();return;}pq.sort((a,b)=>a.freq-b.freq);const a=pq.shift(),b=pq.shift();roots=roots.filter(r=>r!==a&&r!==b);const par={label:'',freq:a.freq+b.freq,left:a,right:b,isLeaf:false,x:0,y:0};roots.push(par);pq.push(par);lastNew=par;step2++;vizStatusEl.textContent='merge '+(a.isLeaf?a.label:a.freq)+'['+a.freq+']+' +(b.isLeaf?b.label:b.freq)+'['+b.freq+']='+par.freq;draw();animTimer=setTimeout(tick,ms()*1.2);}tick();}
+  init();draw();return{draw,run};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  11 — BST  (in-order layout, glowing search path)
+// ═══════════════════════════════════════════════════════════════════════════════
+function vBST(ctx){
+  vizLabelEl.textContent='▶ RUN inserts values · tap a node to search';
+  let root=null,searchPath=[],searchTarget=-1,inserting=-1;
+  function ins(nd,v){if(!nd)return{v,l:null,r:null,x:0,y:0,_rank:0};if(v<nd.v)nd.l=ins(nd.l,v);else if(v>nd.v)nd.r=ins(nd.r,v);return nd;}
+
+  function layout(){
+    if(!root)return;
+    let rank=0;function inorder(nd){if(!nd)return;inorder(nd.l);nd._rank=rank++;inorder(nd.r);}inorder(root);
+    function size(nd){if(!nd)return 0;return 1+size(nd.l)+size(nd.r);}
+    const n=size(root),w=W(),pad=30;function applyX(nd){if(!nd)return;nd.x=pad+(nd._rank/(n-1||1))*(w-pad*2);applyX(nd.l);applyX(nd.r);}applyX(root);
+    function maxD(nd){if(!nd)return 0;return 1+Math.max(maxD(nd.l),maxD(nd.r));}
+    const d=maxD(root),h=H(),gap=Math.min(64,Math.max(34,(h-48)/Math.max(d,1))),treeH=d*gap,topY=(h-treeH)/2;
+    function applyY(nd,depth){if(!nd)return;nd.y=topY+depth*gap;applyY(nd.l,depth+1);applyY(nd.r,depth+1);}applyY(root,0);
+  }
+
+  const R=16;
+  function drawT(nd){
+    if(!nd)return;
+    [nd.l,nd.r].forEach(child=>{if(!child)return;const inP=searchPath.includes(nd.v)&&searchPath.includes(child.v)&&searchPath.indexOf(child.v)===searchPath.indexOf(nd.v)+1;if(inP)glow(ctx,LIME,10);ctx.strokeStyle=inP?LIME:'#2a6a2a';ctx.lineWidth=inP?3:1.5;ctx.beginPath();ctx.moveTo(nd.x,nd.y);ctx.lineTo(child.x,child.y);ctx.stroke();noGlow(ctx);});
+    drawT(nd.l);drawT(nd.r);
+    const inP=searchPath.includes(nd.v),hi=nd.v===searchTarget,isIns=nd.v===inserting;
+    const col=hi?'#ffffff':inP?LIME:isIns?CYAN:'#6acc6a';
+    const fill=hi?'#2a4a00':inP?'#1a3a08':isIns?'#003a20':NODE;
+    const stroke=hi?'#fff':inP?LIME:isIns?CYAN:EDGE;
+    node(ctx,nd.x,nd.y,hi?R+4:R,fill,stroke,nd.v,col,hi||inP);
+    if(hi||isIns){noGlow(ctx);}
+  }
+
+  function draw(){
+    const w=W(),h=H();ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);grid(ctx,'#060e06');
+    if(!root){glow(ctx,LIME,6);ctx.fillStyle='#3a7a3a';ctx.font='bold '+13*devicePixelRatio+'px Syne';ctx.textAlign='center';ctx.fillText('press RUN to build the BST',w/2,h/2-14);noGlow(ctx);ctx.fillStyle=DIM;ctx.font=10*devicePixelRatio+'px Space Mono';ctx.fillText('tap any node to trace search path',w/2,h/2+10);return;}
+    layout();drawT(root);
+    if(searchPath.length){const arrow=searchPath.join(' → ');glow(ctx,LIME,6);ctx.fillStyle=LIME;ctx.font='bold '+9*devicePixelRatio+'px Space Mono';ctx.textAlign='center';ctx.fillText(arrow.length<54?arrow:arrow.slice(0,51)+'…',w/2,h-8);noGlow(ctx);}
+    scanline(ctx,LIME,0.025);
+  }
+
+  vizCanvas.onclick=e=>{if(!root)return;layout();const r2=vizCanvas.getBoundingClientRect(),x=(e.clientX-r2.left)*devicePixelRatio,y=(e.clientY-r2.top)*devicePixelRatio;function fnd(nd){if(!nd)return null;if(Math.hypot(nd.x-x,nd.y-y)<R+6)return nd;return fnd(nd.l)||fnd(nd.r);}const clicked=fnd(root);if(!clicked)return;searchTarget=clicked.v;searchPath=[];let c=root;while(c){searchPath.push(c.v);if(c.v===clicked.v)break;c=clicked.v<c.v?c.l:c.r;}vizStatusEl.textContent='found '+clicked.v+' in '+searchPath.length+' step'+(searchPath.length>1?'s':'');draw();};
+
+  const vals=[15,8,20,5,12,18,25,3,7,10,14,17,22,28];let vidx=0;
+  function run(){if(vidx>=vals.length){vidx=0;root=null;}searchPath=[];searchTarget=-1;inserting=-1;function tick(){if(vidx>=vals.length){inserting=-1;vizStatusEl.textContent='✓ done — tap any node to search';draw();return;}const v=vals[vidx];root=ins(root,v);inserting=v;vizStatusEl.textContent='inserted '+v;vidx++;draw();animTimer=setTimeout(tick,ms()*0.68);}tick();}
+  draw();return{draw,run};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  12 — MCTS  (tic-tac-toe with real X/O strokes, MCTS bars)
+// ═══════════════════════════════════════════════════════════════════════════════
+function vMCTS(ctx){
+  vizLabelEl.textContent='▶ tap a square · you are X · AI uses MCTS';
+  let board=Array(9).fill(0),tree=null,pturn=true,over=false;
+  const WL=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  function chk(b){for(const[a,c,d]of WL)if(b[a]&&b[a]===b[c]&&b[a]===b[d])return b[a];return b.every(v=>v)?3:0;}
+  function rnd(b){const e=b.map((v,i)=>v?-1:i).filter(i=>i>=0);return e[Math.floor(Math.random()*e.length)]??-1;}
+  function rollout(b,pl){let pb=[...b],t=pl;for(let i=0;i<9;i++){const m=rnd(pb);if(m<0)break;pb[m]=t;const r=chk(pb);if(r)return r;t=t===1?2:1;}return chk(pb);}
+  class N2{constructor(b,par=null,mv=null){this.b=b;this.par=par;this.mv=mv;this.w=0;this.v=0;this.ch=[];this.u=b.map((x,i)=>x?-1:i).filter(i=>i>=0);}ucb(C=1.41){if(!this.v)return Infinity;return this.w/this.v+C*Math.sqrt(Math.log(this.par.v)/this.v);}}
+  function ai(b){const root=new N2([...b]);root.v=1;for(let i=0;i<600;i++){let nd=root;while(!nd.u.length&&nd.ch.length)nd=nd.ch.reduce((a,b)=>b.ucb()>a.ucb()?b:a);if(nd.u.length){const mv=nd.u.splice(Math.floor(Math.random()*nd.u.length),1)[0];const nb=[...nd.b];nb[mv]=2;const child=new N2(nb,nd,mv);nd.ch.push(child);nd=child;}const res=rollout([...nd.b],2);let c=nd;while(c){c.v++;if(res===2)c.w+=1;else if(res!==1)c.w+=0.5;c=c.par;}}tree=root;return root.ch.reduce((a,b)=>b.v>a.v?b:a).mv;}
+
+  function draw(){
+    const w=W(),h=H();ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);grid(ctx,'#060e06');
+    const sz=Math.min(w*0.5,h*0.7),cs2=sz/3,ox2=Math.max(16,(w*0.46-sz)/2+8),oy2=(h-sz)/2;
+    // Grid lines
+    glow(ctx,EDGE,6);ctx.strokeStyle='#2a6a2a';ctx.lineWidth=2;
+    for(let i=1;i<3;i++){ctx.beginPath();ctx.moveTo(ox2+i*cs2,oy2);ctx.lineTo(ox2+i*cs2,oy2+sz);ctx.stroke();ctx.beginPath();ctx.moveTo(ox2,oy2+i*cs2);ctx.lineTo(ox2+sz,oy2+i*cs2);ctx.stroke();}
+    noGlow(ctx);
+    // Cells
+    for(let i=0;i<9;i++){
+      const r=Math.floor(i/3),c=i%3,x=ox2+c*cs2,y=oy2+r*cs2;
+      if(!board[i]&&!over&&pturn){ctx.fillStyle='#0a180a';ctx.fillRect(x+2,y+2,cs2-4,cs2-4);}
+      if(board[i]===1){const p=cs2*0.24;glow(ctx,CYAN,16);ctx.strokeStyle=CYAN;ctx.lineWidth=cs2*0.13;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x+p,y+p);ctx.lineTo(x+cs2-p,y+cs2-p);ctx.stroke();ctx.beginPath();ctx.moveTo(x+cs2-p,y+p);ctx.lineTo(x+p,y+cs2-p);ctx.stroke();ctx.lineCap='butt';noGlow(ctx);}
+      if(board[i]===2){glow(ctx,RED,14);ctx.strokeStyle=RED;ctx.lineWidth=cs2*0.1;ctx.beginPath();ctx.arc(x+cs2/2,y+cs2/2,cs2*0.3,0,Math.PI*2);ctx.stroke();noGlow(ctx);}
+    }
+    const res=chk(board);
+    const msg=res===1?'You win! 🎉':res===2?'AI wins!':res===3?'Draw!':pturn?'Your turn':'AI…';
+    const col=res===1?CYAN:res===2?RED:res===3?AMBER:pturn?LIME:'#888';
+    glow(ctx,col,res?16:0);
+    ctx.fillStyle=col;ctx.font='bold '+12*devicePixelRatio+'px Syne';ctx.textAlign='center';ctx.fillText(msg,ox2+sz/2,oy2-14);noGlow(ctx);
+    // MCTS bars
+    if(tree&&tree.ch.length){const tw=w-ox2-sz-20,tx=ox2+sz+14;if(tw>50){const maxV=Math.max(...tree.ch.map(c=>c.v));ctx.fillStyle='#2a5a2a';ctx.font=8.5*devicePixelRatio+'px Space Mono';ctx.textAlign='left';ctx.fillText('AI searched:',tx,oy2+2);tree.ch.sort((a,b)=>b.v-a.v).slice(0,8).forEach((ch,i)=>{const bw=(ch.v/maxV)*(tw-40),y2=oy2+18+i*19;ctx.fillStyle='#0a180a';ctx.fillRect(tx,y2,tw-40,13);if(i===0)glow(ctx,LIME,6);ctx.fillStyle=i===0?LIME:'#2a5a2a';ctx.fillRect(tx,y2,bw,13);noGlow(ctx);ctx.fillStyle=i===0?LIME:'#4a8a4a';ctx.font=8*devicePixelRatio+'px Space Mono';ctx.textAlign='left';ctx.fillText('sq'+(ch.mv+1)+' '+(ch.w/ch.v*100).toFixed(0)+'%',tx+Math.max(bw+2,2),y2+10);});}}
+    scanline(ctx,LIME,0.03);
+  }
+
+  vizCanvas.onclick=e=>{if(!pturn||over)return;const w2=W(),h2=H(),sz=Math.min(w2*0.5,h2*0.7),cs2=sz/3,ox2=Math.max(16,(w2*0.46-sz)/2+8),oy2=(h2-sz)/2;const r2=vizCanvas.getBoundingClientRect(),co=Math.floor(((e.clientX-r2.left)*devicePixelRatio-ox2)/cs2),ro=Math.floor(((e.clientY-r2.top)*devicePixelRatio-oy2)/cs2);if(co<0||co>2||ro<0||ro>2)return;const idx=ro*3+co;if(board[idx])return;board[idx]=1;pturn=false;const res=chk(board);if(res){over=true;vizStatusEl.textContent=res===1?'You win!':'Draw!';draw();return;}draw();animTimer=setTimeout(()=>{const mv=ai(board);if(mv>=0)board[mv]=2;pturn=true;const res2=chk(board);if(res2)over=true;vizStatusEl.textContent=res2===2?'AI wins!':res2===3?'Draw!':'Your turn';draw();},350);};
+  function run(){board=Array(9).fill(0);tree=null;pturn=true;over=false;vizStatusEl.textContent='tap a square to play';draw();}
+  draw();return{draw,run};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  13 — NEXT STEPS  (lemur + confetti)
+// ═══════════════════════════════════════════════════════════════════════════════
+function vNextSteps(ctx){
+  vizLabelEl.textContent='▶ press RUN to celebrate';
+  let particles=[],rafId=null;
+  function spawn(){particles=[];const w=W(),h=H();for(let i=0;i<90;i++)particles.push({x:Math.random()*w,y:-10-Math.random()*h*0.5,vx:(Math.random()-.5)*3.5,vy:1.8+Math.random()*3,sz:4+Math.random()*9,col:[LIME,CYAN,RED,AMBER,PURP][Math.floor(Math.random()*5)],rot:Math.random()*Math.PI*2,spin:(Math.random()-.5)*0.16,shape:Math.random()>.5?'rect':'circle'});}
+
+  function drawLemur(cx,cy,sc){
+    ctx.fillStyle='#2a2a2a';ctx.beginPath();ctx.ellipse(cx,cy+sc*.3,sc*.38,sc*.48,0,0,Math.PI*2);ctx.fill();
+    for(let i=0;i<7;i++){ctx.strokeStyle=i%2?'#ddd':'#111';ctx.lineWidth=sc*.12;ctx.beginPath();ctx.arc(cx+sc*.35,cy+sc*.6-i*sc*.18,sc*.5-i*sc*.02,-Math.PI*.8,-Math.PI*.15);ctx.stroke();}
+    ctx.fillStyle='#2a2a2a';ctx.beginPath();ctx.arc(cx,cy-sc*.28,sc*.3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#e8e8e8';ctx.beginPath();ctx.ellipse(cx-sc*.09,cy-sc*.28,sc*.12,sc*.14,-.2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(cx+sc*.09,cy-sc*.28,sc*.12,sc*.14,.2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ff8800';ctx.beginPath();ctx.arc(cx-sc*.1,cy-sc*.3,sc*.065,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+sc*.1,cy-sc*.3,sc*.065,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#111';ctx.beginPath();ctx.arc(cx-sc*.1,cy-sc*.3,sc*.032,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+sc*.1,cy-sc*.3,sc*.032,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ddd';ctx.beginPath();ctx.ellipse(cx,cy-sc*.18,sc*.14,sc*.1,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#333';ctx.beginPath();ctx.arc(cx,cy-sc*.15,sc*.035,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#2a2a2a';ctx.beginPath();ctx.arc(cx-sc*.24,cy-sc*.48,sc*.1,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(cx+sc*.24,cy-sc*.48,sc*.1,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#2a2a2a';ctx.lineWidth=sc*.1;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(cx-sc*.3,cy);ctx.lineTo(cx-sc*.5,cy+sc*.2);ctx.stroke();ctx.beginPath();ctx.moveTo(cx+sc*.3,cy);ctx.lineTo(cx+sc*.5,cy+sc*.2);ctx.stroke();ctx.lineCap='butt';
+  }
+
+  function draw(){
+    const w=W(),h=H(),cx=w/2,cy=h/2;
+    ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);grid(ctx,'#060e06');
+    particles.forEach(p=>{ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.col;if(p.shape==='rect')ctx.fillRect(-p.sz/2,-p.sz/4,p.sz,p.sz/2);else{ctx.beginPath();ctx.arc(0,0,p.sz/2,0,Math.PI*2);ctx.fill();}ctx.restore();});
+    const sc=Math.min(w,h)*0.22;
+    drawLemur(cx,cy-sc*.1,sc);
+    glow(ctx,LIME,14);ctx.fillStyle=LIME;ctx.font='bold '+15*devicePixelRatio+'px Syne';ctx.textAlign='center';ctx.fillText('you did it 🎉',cx,cy+sc*.9);noGlow(ctx);
+    ctx.fillStyle='#2a5a2a';ctx.font=9*devicePixelRatio+'px Space Mono';ctx.fillText('12 algorithms. now go build something.',cx,cy+sc*1.08);
+    scanline(ctx,LIME,0.03);
+  }
+
+  function animate(){particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.rot+=p.spin;if(p.y>H()+20){p.y=-10;p.x=Math.random()*W();}});draw();rafId=requestAnimationFrame(animate);}
+  function run(){if(rafId)cancelAnimationFrame(rafId);spawn();animate();vizStatusEl.textContent='all 12 done — now go build something';}
+  function resize(){draw();}
+  draw();return{draw,run,resize};
+}
+
+// ─── HERO ─────────────────────────────────────────────────────────────────────
+(function(){
+  const hC=document.getElementById('hero'),hCtx=hC.getContext('2d');let hW,hH;
+  function r(){hW=hC.width=hC.offsetWidth;hH=hC.height=hC.offsetHeight;}r();window.addEventListener('resize',r);
+  const pts=Array.from({length:28},()=>({x:Math.random()*100,y:Math.random()*100,vx:(Math.random()-.5)*.28,vy:(Math.random()-.5)*.28}));
+  function fr(){requestAnimationFrame(fr);hCtx.clearRect(0,0,hW,hH);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>100)p.vx*=-1;if(p.y<0||p.y>100)p.vy*=-1;});pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{const dx=(a.x-b.x)*hW/100,dy=(a.y-b.y)*hH/100,d=Math.hypot(dx,dy);if(d<hW*.21){hCtx.strokeStyle='rgba(168,255,71,'+(0.5*(1-d/(hW*.21)))+')';hCtx.lineWidth=.7;hCtx.beginPath();hCtx.moveTo(a.x*hW/100,a.y*hH/100);hCtx.lineTo(b.x*hW/100,b.y*hH/100);hCtx.stroke();}}));pts.forEach(p=>{hCtx.beginPath();hCtx.arc(p.x*hW/100,p.y*hH/100,1.8,0,Math.PI*2);hCtx.fillStyle='rgba(168,255,71,.7)';hCtx.fill();});}fr();
+})();
+
+loadLesson(0);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,2796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice Synthesis for Lemurs — LEMUR Sound Synthesis School</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap');
+:root{
+  --bg:#0a0a0f; --panel:#111118; --border:#1e1e2e;
+  --accent:#b48eff; --accent2:#ff6b9d; --accent3:#6bc5ff;
+  --text:#e0e0f0; --muted:#666688; --code-bg:#0d0d15;
+}
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{ background:var(--bg); color:var(--text); font-family:'Syne',sans-serif; min-height:100vh; overflow-x:hidden; }
+header{ padding:3rem 2rem 2rem; text-align:center; border-bottom:1px solid var(--border); position:relative; overflow:hidden; }
+header canvas#hero{ position:absolute; inset:0; width:100%; height:100%; opacity:.25; pointer-events:none; }
+header .inner{ position:relative; z-index:1; }
+.tagline-chip{ display:inline-block; background:var(--accent); color:#000; font-family:'Space Mono',monospace; font-size:.65rem; padding:.25rem .75rem; letter-spacing:.15em; text-transform:uppercase; margin-bottom:1rem; }
+h1{ font-size:clamp(2.5rem,6vw,5rem); font-weight:800; line-height:1; letter-spacing:-.02em; }
+h1 span{ color:var(--accent); }
+.subtitle{ font-family:'Space Mono',monospace; font-size:.85rem; color:var(--muted); margin-top:.75rem; }
+.progress-bar{ height:2px; background:var(--border); }
+.progress-fill{ height:100%; background:var(--accent); transition:width .4s ease; }
+nav{ display:flex; gap:.4rem; padding:1rem 1.5rem; overflow-x:auto; border-bottom:1px solid var(--border); background:var(--panel); position:sticky; top:0; z-index:100; scrollbar-width:none; }
+nav::-webkit-scrollbar{ display:none; }
+.nav-btn{ flex-shrink:0; background:none; border:1px solid var(--border); color:var(--muted); font-family:'Space Mono',monospace; font-size:.7rem; padding:.4rem .8rem; cursor:pointer; transition:all .2s; white-space:nowrap; }
+.nav-btn:hover{ border-color:var(--accent); color:var(--accent); }
+.nav-btn.active{ background:var(--accent); color:#000; border-color:var(--accent); }
+.nav-btn.locked{ opacity:.4; cursor:not-allowed; }
+.nav-btn.locked:hover{ border-color:var(--border); color:var(--muted); }
+main{ display:grid; grid-template-columns:1fr 1fr; gap:0; height:calc(100vh - 185px); min-height:560px; }
+@media(max-width:900px){ main{ grid-template-columns:1fr; height:auto; } }
+.lesson-panel{ padding:2rem; overflow-y:auto; border-right:1px solid var(--border); scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+.lesson-number{ font-family:'Space Mono',monospace; font-size:.65rem; color:var(--accent); letter-spacing:.2em; text-transform:uppercase; margin-bottom:.5rem; }
+.lesson-title{ font-size:1.8rem; font-weight:800; line-height:1.1; margin-bottom:1rem; }
+.lesson-body{ font-family:'Space Mono',monospace; font-size:.78rem; line-height:1.9; color:#b0b0cc; }
+.lesson-body p{ margin-bottom:1rem; }
+.lesson-body strong{ color:var(--accent); font-weight:700; }
+.lesson-body em{ color:var(--accent3); font-style:normal; }
+.lesson-body .tip{ background:#1a1a2e; border-left:3px solid var(--accent2); padding:.75rem 1rem; margin:1rem 0; color:#d0d0e8; }
+.lesson-body .tip::before{ content:'>> TIP: '; color:var(--accent2); font-weight:700; }
+.lesson-body .warn{ background:#1e1208; border-left:3px solid var(--accent); padding:.75rem 1rem; margin:1rem 0; color:#d0d0e8; }
+.lesson-body .warn::before{ content:'>> NOTE: '; color:var(--accent); font-weight:700; }
+.lesson-body .step-card{ background:#0f0f1e; border:1px solid var(--border); border-left:3px solid var(--accent3); padding:.75rem 1rem; margin:.6rem 0; }
+.lesson-body .step-card .step-num{ color:var(--accent3); font-weight:700; font-size:.65rem; letter-spacing:.15em; display:block; margin-bottom:.25rem; }
+.lesson-body .challenge{ background:#160d1e; border:1px solid var(--accent2); padding:.75rem 1rem; margin:.6rem 0; }
+.lesson-body .challenge::before{ content:'>> CHALLENGE: '; color:var(--accent2); font-weight:700; }
+.lesson-body code{ background:#1a1a2e; color:var(--accent3); padding:.1em .4em; font-size:.85em; }
+/* vowel chart */
+.vowel-chart{ position:relative; width:100%; height:200px; background:#08080f; border:1px solid var(--border); margin:.8rem 0; }
+.vowel-chart .vc-label{ position:absolute; font-family:'Space Mono',monospace; font-size:.55rem; color:var(--muted); }
+.vowel-btn{ position:absolute; transform:translate(-50%,-50%); background:#1a1a2e; border:1px solid var(--accent3); color:var(--accent3); font-family:'Space Mono',monospace; font-size:.7rem; padding:.2rem .45rem; cursor:pointer; transition:all .15s; user-select:none; }
+.vowel-btn:hover,.vowel-btn.active{ background:var(--accent); color:#000; border-color:var(--accent); }
+/* phoneme row */
+.phoneme-row{ display:flex; gap:.35rem; flex-wrap:wrap; margin:.5rem 0; }
+.ph-btn{ background:#1a1a2e; border:1px solid var(--accent3); color:var(--accent3); font-family:'Space Mono',monospace; font-size:.72rem; padding:.28rem .55rem; cursor:pointer; transition:all .15s; user-select:none; min-width:2.2rem; text-align:center; }
+.ph-btn:hover{ background:var(--accent3); color:#000; }
+.ph-btn.plosive{ border-color:var(--accent2); color:var(--accent2); }
+.ph-btn.plosive:hover{ background:var(--accent2); color:#000; }
+.ph-btn.fricative{ border-color:var(--accent); color:var(--accent); }
+.ph-btn.fricative:hover{ background:var(--accent); color:#000; }
+/* synth panel */
+.synth-panel{ display:flex; flex-direction:column; background:var(--code-bg); overflow:hidden; position:relative; }
+.scope-area{ flex:0 0 175px; background:#000; border-bottom:1px solid var(--border); position:relative; }
+.scope-area canvas{ width:100%; height:100%; display:block; }
+.scope-label{ position:absolute; top:.35rem; left:.6rem; font-family:'Space Mono',monospace; font-size:.55rem; color:var(--muted); letter-spacing:.1em; pointer-events:none; z-index:1; }
+.controls-area{ flex:0 0 auto; padding:.55rem .75rem; background:var(--panel); border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:.4rem; }
+.transport-row{ display:flex; align-items:center; gap:.5rem; }
+.play-btn{ background:var(--accent); color:#000; border:none; font-family:'Space Mono',monospace; font-size:.75rem; font-weight:700; padding:.35rem 1.1rem; cursor:pointer; letter-spacing:.05em; flex-shrink:0; transition:opacity .15s; }
+.play-btn:hover{ opacity:.85; }
+.play-btn.playing{ background:var(--accent2); }
+.status-txt{ font-family:'Space Mono',monospace; font-size:.6rem; color:var(--muted); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.param-row{ display:flex; align-items:center; gap:.5rem; }
+.param-row label{ font-family:'Space Mono',monospace; font-size:.6rem; color:var(--accent3); width:9rem; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.param-row input[type=range]{ flex:1; accent-color:var(--accent); cursor:pointer; min-width:0; }
+.param-row .val{ font-family:'Space Mono',monospace; font-size:.6rem; color:var(--accent); width:4.5rem; text-align:right; flex-shrink:0; }
+#param-slots{ display:flex; flex-direction:column; gap:.32rem; }
+.code-toolbar{ display:flex; justify-content:space-between; align-items:center; padding:.4rem .75rem; border-bottom:1px solid var(--border); background:var(--panel); flex-shrink:0; }
+.code-toolbar span{ font-family:'Space Mono',monospace; font-size:.6rem; color:var(--muted); letter-spacing:.08em; }
+.run-btn{ background:var(--accent); color:#000; border:none; font-family:'Space Mono',monospace; font-size:.7rem; font-weight:700; padding:.28rem .85rem; cursor:pointer; transition:opacity .15s; }
+.run-btn:hover{ opacity:.85; }
+.code-editor{ flex:1; overflow:auto; min-height:0; }
+textarea#synth-code{ width:100%; height:100%; background:var(--code-bg); color:#c8f0c0; font-family:'Space Mono',monospace; font-size:.68rem; line-height:1.7; border:none; outline:none; padding:.8rem; resize:none; tab-size:2; }
+/* Phoneme Sequencer Overlay */
+#phoneme-overlay{ display:none; flex-direction:column; position:absolute; inset:0; background:var(--code-bg); z-index:10; overflow:hidden; }
+#phoneme-overlay.visible{ display:flex; }
+.phseq-top{ display:flex; align-items:center; gap:.5rem; padding:.45rem .65rem; background:var(--panel); border-bottom:1px solid var(--border); flex-shrink:0; flex-wrap:wrap; }
+.phseq-top label{ font-family:'Space Mono',monospace; font-size:.6rem; color:var(--accent3); }
+.phseq-top input[type=range]{ accent-color:var(--accent); cursor:pointer; width:70px; }
+#phseq-play{ background:var(--accent); color:#000; border:none; font-family:'Space Mono',monospace; font-size:.7rem; font-weight:700; padding:.28rem .85rem; cursor:pointer; }
+#phseq-play.playing{ background:var(--accent2); }
+#phseq-close{ background:none; border:1px solid var(--border); color:var(--muted); font-family:'Space Mono',monospace; font-size:.6rem; padding:.25rem .6rem; cursor:pointer; }
+#phseq-bpm-val{ font-family:'Space Mono',monospace; font-size:.6rem; color:var(--accent); width:2.5rem; }
+.phseq-pitch-row{ display:flex; align-items:center; gap:3px; padding:.2rem .5rem .1rem; border-bottom:1px solid #1e1e2e; }
+.phseq-pitch-label{ font-family:'Space Mono',monospace; font-size:.6rem; color:var(--accent2); width:2.4rem; flex-shrink:0; text-transform:uppercase; letter-spacing:.05em; }
+.phseq-pitch-cell{ flex:1; min-width:2rem; height:1.6rem; background:#0a0a14; border:1px solid #1e1e2e; border-radius:3px; font-family:'Space Mono',monospace; font-size:.6rem; color:#555; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .1s; }
+.phseq-pitch-cell:hover{ border-color:var(--accent2); color:var(--accent2); }
+.phseq-pitch-cell.has-pitch{ background:#1a0a2e; border-color:var(--accent); color:var(--accent); }
+.phseq-pitch-cell.beat{ border-color:#252535; }
+.phseq-pitch-cell.play-head{ background:var(--accent); color:#000; }
+#phseq-hint{ font-family:'Space Mono',monospace; font-size:.5rem; color:var(--muted); margin-left:auto; }
+.phseq-grid{ flex:1; overflow:auto; padding:.5rem .6rem; display:flex; gap:.3rem; min-height:0; align-items:flex-start; }
+.phseq-track{ display:flex; flex-direction:column; gap:.2rem; flex:1; min-width:0; }
+.phseq-track-label{ font-family:'Space Mono',monospace; font-size:.55rem; color:var(--muted); text-align:center; margin-bottom:.1rem; padding:.15rem 0; }
+.phseq-step{ background:#0f0f18; border:1px solid var(--border); font-family:'Space Mono',monospace; font-size:.65rem; color:var(--muted); text-align:center; padding:.3rem .05rem; cursor:pointer; user-select:none; transition:background .08s, color .08s; white-space:nowrap; overflow:hidden; }
+.phseq-step.on{ background:var(--accent); color:#000; border-color:var(--accent); font-weight:700; }
+.phseq-step.active-step{ outline:2px solid #fff; outline-offset:-2px; filter:brightness(1.3); }
+.phseq-step.beat{ border-color:#252535; }
+.phoneme-picker{ display:flex; flex-wrap:wrap; gap:.25rem; padding:.4rem .65rem; border-top:1px solid var(--border); flex-shrink:0; background:var(--panel); }
+.phoneme-picker label{ font-family:'Space Mono',monospace; font-size:.55rem; color:var(--muted); width:100%; margin-bottom:.1rem; }
+.ph-key{ background:#1a1a2e; border:1px solid var(--border); color:var(--muted); font-family:'Space Mono',monospace; font-size:.68rem; padding:.28rem .4rem; cursor:pointer; min-width:2.2rem; text-align:center; transition:background .12s; }
+.ph-key:hover,.ph-key:active{ background:var(--accent); color:#000; border-color:var(--accent); }
+.ph-key.vowel{ color:var(--accent3); border-color:#1e2e3e; }
+.ph-key.fric{ color:var(--accent); border-color:#2e1e2e; }
+.ph-key.plsv{ color:var(--accent2); border-color:#2e1a1e; }
+.ph-key.rest{ color:var(--muted); }
+
+/* ── VOCAB DEMYSTIFIER (from stocks-for-lemurs) ── */
+.lesson-body .vocab{ background:#0a0a18; border:1px solid #1a2840; border-left:3px solid var(--accent3); padding:.65rem 1rem; margin:.6rem 0; }
+.lesson-body .vocab::before{ content:'>> LABEL: '; color:var(--accent3); font-weight:700; font-size:.7em; letter-spacing:.08em; }
+.lesson-body .vocab .vt{ color:var(--accent); font-weight:700; }
+
+/* ── UNHINGED ENERGY CALLOUT (spamton) ── */
+.lesson-body .spamton{ background:#060011; border:2px solid #b48eff; padding:.75rem 1rem; margin:1rem 0; color:#d4b8ff; position:relative; overflow:hidden; }
+.lesson-body .spamton::before{ content:'!! WILD FACT: '; color:#d4b8ff; font-weight:700; letter-spacing:.05em; }
+.lesson-body .spamton strong{ color:#e8d4ff; }
+
+/* ── ARTISTS / LISTEN TO ── */
+.lesson-body .artists{ background:#0f0f1e; border:1px solid var(--border); border-left:3px solid var(--accent2); padding:.75rem 1rem; margin:.6rem 0; }
+.lesson-body .artists::before{ content:'>> LISTEN TO: '; color:var(--accent2); font-weight:700; display:block; margin-bottom:.3rem; font-size:.65rem; letter-spacing:.1em; }
+
+/* ── NAV SECTION DIVIDERS ── */
+.nav-section{ flex-shrink:0; font-family:'Space Mono',monospace; font-size:.55rem; color:var(--muted); padding:.38rem .4rem; opacity:.45; pointer-events:none; align-self:center; white-space:nowrap; border-left:1px solid var(--border); margin-left:.2rem; padding-left:.6rem; }
+
+/* ── VOCAB DEMYSTIFIER (from stocks-for-lemurs) ── */
+.lesson-body .vocab{ background:#0a0a18; border:1px solid #1a2840; border-left:3px solid var(--accent3); padding:.65rem 1rem; margin:.6rem 0; }
+.lesson-body .vocab::before{ content:'>> LABEL: '; color:var(--accent3); font-weight:700; font-size:.7em; letter-spacing:.08em; }
+.lesson-body .vocab .vt{ color:var(--accent); font-weight:700; }
+
+/* ── UNHINGED ENERGY CALLOUT (spamton) ── */
+.lesson-body .spamton{ background:#060011; border:2px solid #b48eff; padding:.75rem 1rem; margin:1rem 0; color:#d4b8ff; position:relative; overflow:hidden; }
+.lesson-body .spamton::before{ content:'!! WILD FACT: '; color:#d4b8ff; font-weight:700; letter-spacing:.05em; }
+.lesson-body .spamton strong{ color:#e8d4ff; }
+
+/* ── ARTISTS / LISTEN TO ── */
+.lesson-body .artists{ background:#0f0f1e; border:1px solid var(--border); border-left:3px solid var(--accent2); padding:.75rem 1rem; margin:.6rem 0; }
+.lesson-body .artists::before{ content:'>> LISTEN TO: '; color:var(--accent2); font-weight:700; display:block; margin-bottom:.3rem; font-size:.65rem; letter-spacing:.1em; }
+
+/* ── NAV SECTION DIVIDERS ── */
+.nav-section{ flex-shrink:0; font-family:'Space Mono',monospace; font-size:.55rem; color:var(--muted); padding:.38rem .4rem; opacity:.45; pointer-events:none; align-self:center; white-space:nowrap; border-left:1px solid var(--border); margin-left:.2rem; padding-left:.6rem; }
+</style>
+</head>
+<body>
+<header>
+  <canvas id="hero"></canvas>
+  <div class="inner">
+    <div class="tagline-chip">LEMUR Sound Synthesis School</div>
+    <h1>Voice Synthesis for <span>Lemurs</span></h1>
+    <p class="subtitle">// from vocal folds → formants → words → you can hear this happening</p>
+  </div>
+</header>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<nav id="lesson-nav"></nav>
+<main>
+  <div class="lesson-panel" id="lesson-text"></div>
+  <div class="synth-panel" id="synth-panel">
+    <div class="scope-area" id="scope-area">
+      <span class="scope-label">OSCILLOSCOPE — SPECTRUM</span>
+      <canvas id="scope-canvas"></canvas>
+    </div>
+    <div class="controls-area">
+      <div class="transport-row">
+        <button type="button" class="play-btn" id="play-btn">&gt; PLAY</button>
+        <span class="status-txt" id="status-txt">press play to hear the sound</span>
+      </div>
+      <div id="param-slots"></div>
+    </div>
+    <div class="code-toolbar">
+      <span>SYNTH CODE — edit &amp; run &nbsp;(Ctrl/Cmd+Enter)</span>
+      <div style="display:flex;gap:.5rem">
+        <button type="button" class="run-btn" id="seq-btn" style="background:var(--accent2);letter-spacing:.05em">⬡ SEQ</button>
+        <button type="button" class="run-btn" id="run-btn">&gt; RUN</button>
+      </div>
+    </div>
+    <div class="code-editor">
+      <textarea id="synth-code" spellcheck="false"></textarea>
+    </div>
+
+    <!-- PHONEME SEQUENCER OVERLAY -->
+    <div id="phoneme-overlay">
+      <div class="phseq-top">
+        <button type="button" id="phseq-play">&gt; PLAY</button>
+        <label>BPM</label>
+        <input type="range" id="phseq-bpm" min="40" max="200" value="80">
+        <span id="phseq-bpm-val">80</span>
+        <label style="margin-left:.5rem">STEPS</label>
+        <button type="button" id="phseq-steps-btn" style="background:none;border:1px solid var(--accent);color:var(--accent);padding:.15rem .5rem;cursor:pointer;font-size:.75rem">8</button>
+        <button type="button" id="phseq-clear" style="background:none;border:1px solid #444;color:#aaa;padding:.15rem .5rem;cursor:pointer;font-size:.75rem">CLEAR</button>
+        <select id="phseq-preset" style="background:#111;border:1px solid #333;color:#aaa;font-size:.7rem;padding:.1rem .3rem">
+          <option value="">load pattern…</option>
+          <option value="nasal-chain">L07 — nasal chain</option>
+          <option value="melodic-4">L12 — melodic 4-step</option>
+          <option value="consonant-vowel">CV coarticulation</option>
+          <option value="fricative-stack">voiced vs voiceless</option>
+        </select>
+        <button type="button" id="phseq-close">✕</button>
+        <span id="phseq-hint">chain phonemes left→right on one row to make syllables &amp; words</span>
+      </div>
+      <div class="phseq-pitch-row" id="phseq-pitch-row"></div>
+      <div class="phseq-grid" id="phseq-grid"></div>
+      <div class="phoneme-picker" id="phoneme-picker">
+        <label>VOWELS</label>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+'use strict';
+window.addEventListener('error', function(e){ e.preventDefault(); return true; }, true);
+window.addEventListener('unhandledrejection', function(e){ e.preventDefault(); }, true);
+
+// ═══════════════════════════════════════════════════════════════════
+//  LESSONS
+// ═══════════════════════════════════════════════════════════════════
+const LESSONS = [
+
+// ─── 01 ──────────────────────────────────────────────────────────
+{ subtitle:'01 — Source & Filter', title:'What Is Voice?',
+params:[
+  {id:'f0',          label:'Pitch (F0, Hz)',      min:80,  max:300, step:1,   def:120},
+  {id:'f1',          label:'Jaw height (F1)',  min:250, max:900, step:10,  def:800},
+  {id:'f2',          label:'Tongue front/back (F2)',min:700, max:2800,step:10,  def:1200},
+  {id:'breathiness', label:'Breathiness',     min:0,   max:1,   step:.01, def:0.15},
+],
+body:`<p>Here's the secret that phoneticians have been sitting on for 70 years: <strong>your voice is a synthesizer</strong>. Your vocal folds are the oscillator. Your throat, mouth, and nose are the filter bank. The sounds you make depend entirely on how you shape those filters in real time. You've been doing DSP since before you could walk — you just didn't know the label for it.</p>
+
+<div class="vocab"><span class="vt">"Source-Filter Model"</span> — not a metaphor, an actual model. Your voice has two separate parts: a <em>source</em> (the buzzing of your vocal folds) and a <em>filter</em> (the resonant cavities that shape it). These are independent. Same source + different filter = different vowel. Different source + same filter = whisper vs. voiced speech. The model was formalized by Gunnar Fant in 1960 and still underlies everything.</div>
+
+<div class="vocab"><span class="vt">"Formant"</span> — a resonant frequency peak in the vocal tract. When you change the shape of your mouth, you're tuning these peaks. Every vowel sound is defined by the positions of its formants. The first formant (F1) tracks jaw openness. The second (F2) tracks tongue position front-to-back. This is not metaphor. This is measurable, repeatable acoustics.</div>
+
+<div class="vocab"><span class="vt">"Bandpass Filter"</span> — a filter that lets through a narrow band of frequencies and attenuates everything else. In Web Audio: <code>BiquadFilterNode</code> with <code>type='bandpass'</code>. Center frequency set by <code>.frequency.value</code>, bandwidth controlled by Q. High Q = narrow peak = more resonant. This is how formants work — the vocal tract has natural resonances that act like high-Q bandpass filters.</div>
+
+<div class="step-card"><span class="step-num">THE SOURCE — VOCAL FOLDS</span>
+Your vocal folds are two flaps of muscle tissue in the larynx. When you speak, air pressure from below forces them apart, they snap back together (the Bernoulli effect + muscle tension), air shoots through the gap, and this cycle repeats 80–300 times per second depending on pitch. That rapid pressure pulsing is the raw source signal — acoustically it looks like a sawtooth wave. Rich in harmonics. Ready to be filtered.
+</div>
+
+<div class="step-card"><span class="step-num">THE FILTER — YOUR VOCAL TRACT</span>
+The vocal tract is a tube roughly 17cm long (adult male average) with a variable cross-section you control with your tongue, jaw, lips, and soft palate. Different configurations create different resonant frequencies. Those resonances amplify certain harmonics of the source and attenuate others. The pattern of amplified harmonics is what your ears recognize as a specific vowel. You've been tuning this filter continuously since infancy.
+</div>
+
+<div class="step-card"><span class="step-num">THE CODE ON THE RIGHT</span>
+The synthesizer here implements the source-filter model directly. <code>makeSynth()</code> creates a sawtooth oscillator (source) feeding into two bandpass filters (formants). The sliders control the source frequency (F0 = fundamental = pitch) and the two formant center frequencies (F1, F2). Drag the formant sliders and listen — you're literally moving your virtual mouth.
+</div>
+
+<div class="challenge">In the code, find the line <code>f1.frequency.value = params.f1</code> and add a second bandpass filter for F2 at <code>params.f2</code>. Connect it in parallel with F1 (both fed by <code>src</code>, both feeding the output mixer). Now drag the F2 slider from 800 up to 2600 while F1 stays at 300. You'll hear a rough journey from /u/ toward /i/. That's your virtual tongue moving forward. You built a two-formant synthesizer. That's basically the whole field.</div>
+
+
+
+<p class="tip">>> TIP: set F0 to 200Hz, then slowly drag F1 from 800 down to 300 while F2 stays around 1200. You'll hear a rough trajectory from an open "ahh" toward a closed "oo." Your jaw is doing this exact thing when you say those sounds — just 1000× faster and smoother.</p>`,
+code:`// ── WHAT IS VOICE? SOURCE-FILTER MODEL ─────────────────────────────
+// The most fundamental voice synthesis architecture.
+// Source: a sawtooth wave (buzzy glottal pulse approximation)
+// Filter: two resonant bandpass filters (formants F1 and F2)
+// The mix of source + aspiration noise through those formants
+// is enough to create recognizable vowel-like sounds.
+
+function makeSynth(audioCtx, params) {
+  // Safe defaults
+  const _d = {f0:120, f1:800, f2:1200, breathiness:0.15};
+  for(const k in _d) if(params[k]===undefined||isNaN(params[k])) params[k]=_d[k];
+
+  // ── GLOTTAL SOURCE: sawtooth approximates vocal fold buzz ──────
+  // Real glottal pulses are asymmetric and softer than a sawtooth,
+  // but a sawtooth gives us the rich harmonic content to work with.
+  const src = audioCtx.createOscillator();
+  src.type = 'sawtooth';
+  src.frequency.value = params.f0;
+
+  // ── ASPIRATION NOISE: turbulent airflow through the glottis ────
+  // Pre-render 2 seconds of noise into a looping buffer.
+  // This approximates the breathiness in real voice.
+  const SR = audioCtx.sampleRate;
+  const nBuf = audioCtx.createBuffer(1, SR * 2, SR);
+  const nd = nBuf.getChannelData(0);
+  for(let i=0; i<nd.length; i++) nd[i] = Math.random() * 2 - 1;
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = nBuf;
+  noise.loop = true;
+
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.value = params.breathiness * 0.4;
+
+  // ── FORMANT FILTERS: the vocal tract resonances ─────────────────
+  // F1 = first formant (jaw height / vocal tract length)
+  // F2 = second formant (tongue position front/back)
+  // Q value controls bandwidth — real formants are around Q=8-15.
+  // Higher Q = narrower, more nasal/resonant character.
+  const f1 = audioCtx.createBiquadFilter();
+  f1.type = 'bandpass';
+  f1.frequency.value = params.f1;
+  f1.Q.value = 10;
+
+  const f2 = audioCtx.createBiquadFilter();
+  f2.type = 'bandpass';
+  f2.frequency.value = params.f2;
+  f2.Q.value = 12;
+
+  // ── MIX: both paths through separate formant copies ────────────
+  // In a real vocal tract F1 and F2 are in series, but parallel BPF
+  // banks are a decent approximation and are easier to understand.
+  const f1b = audioCtx.createBiquadFilter(); // noise copy of F1
+  f1b.type = 'bandpass'; f1b.frequency.value = params.f1; f1b.Q.value = 10;
+  const f2b = audioCtx.createBiquadFilter(); // noise copy of F2
+  f2b.type = 'bandpass'; f2b.frequency.value = params.f2; f2b.Q.value = 12;
+
+  const master = audioCtx.createGain();
+  master.gain.value = 0.55;
+
+  // Source → formants → output
+  src.connect(f1);  f1.connect(master);
+  src.connect(f2);  f2.connect(master);
+  // Noise → formants (same resonances color the breathiness too)
+  noise.connect(noiseGain);
+  noiseGain.connect(f1b); f1b.connect(master);
+  noiseGain.connect(f2b); f2b.connect(master);
+
+  noise.start(); // noise starts immediately; engine starts osc
+
+  return { node: master, osc: src, noise, noiseGain, f1, f2, f1b, f2b };
+}
+
+function updateParams(nodes, params) {
+  nodes.osc.frequency.value    = params.f0;
+  nodes.f1.frequency.value     = params.f1;
+  nodes.f2.frequency.value     = params.f2;
+  nodes.f1b.frequency.value    = params.f1;
+  nodes.f2b.frequency.value    = params.f2;
+  nodes.noiseGain.gain.value   = params.breathiness * 0.4;
+}
+`},
+
+// ─── 02 ──────────────────────────────────────────────────────────
+{ subtitle:'02 — Vowels Are Filters', title:'The Vowel Space',
+params:[
+  {id:'f0',  label:'Pitch (F0, Hz)',       min:80,  max:400, step:1,  def:120},
+  {id:'f1',  label:'Jaw height (F1)', min:250, max:900, step:5,  def:800},
+  {id:'f2',  label:'Tongue front/back (F2)', min:700, max:2800,step:5,  def:1200},
+  {id:'f3',  label:'Nasal ring (F3)',     min:1800,max:3500,step:10, def:2500},
+  {id:'bw',  label:'Resonance sharpness (Q)',   min:3,   max:20,  step:0.5,def:10},
+],
+body:`<p>Every vowel sound in every human language is defined by two numbers: <strong>F1 and F2</strong> — the frequencies of the first and second formants. Linguists have been measuring these since the 1950s. The map of F1 vs F2 space is called the <em>vowel chart</em>, and it looks like this:</p>
+
+<div class="vowel-chart" id="vowel-chart">
+  <span class="vc-label" style="top:.4rem;left:.4rem;font-size:.5rem;opacity:.5">F2 HIGH (front) ←→ F2 LOW (back)</span>
+  <span class="vc-label" style="top:.4rem;right:.4rem;font-size:.5rem;opacity:.5;transform:rotate(90deg);transform-origin:right top">F1: open ↓</span>
+</div>
+
+<div class="vocab"><span class="vt">"F1 / F2"</span> — the first and second formant frequencies. Not arbitrary. F1 correlates almost perfectly with jaw height: low jaw (open mouth) = high F1, high jaw (closed mouth) = low F1. F2 correlates with tongue position: tongue forward = high F2 (front vowels like /i/), tongue back = low F2 (back vowels like /u/). So the vowel chart is literally a map of your mouth position.</div>
+
+<div class="vocab"><span class="vt">"Vowel Chart / IPA Trapezoid"</span> — a 2D map of F1 on the Y axis (inverted: low jaw at bottom) and F2 on the X axis. Every human language's vowels can be plotted here. The IPA (International Phonetic Alphabet) uses a stylized trapezoid version. What looks like an abstract diagram is actually a direct map of articulatory space — tongue height vs. tongue frontness.</div>
+
+<p>The vowel chart is literally acoustic phonetics rendered as a filter-parameter map. The x-axis is F2 (tongue front-back). The y-axis is F1 (jaw open-close). Your whole mouth is just a two-parameter filter bank.</p>
+
+<div class="step-card"><span class="step-num">CLASSIC VOWEL TARGETS (ENGLISH, MALE VOICE)</span>
+/ɑ/ "father": F1=800, F2=1200 — wide open jaw, tongue back<br>
+/æ/ "cat":    F1=730, F2=1900 — open jaw, tongue slightly forward<br>
+/ɛ/ "bed":    F1=600, F2=1900 — mid-open, tongue forward<br>
+/i/ "meet":   F1=280, F2=2620 — nearly closed jaw, tongue very forward<br>
+/ɪ/ "bit":    F1=390, F2=1990 — relaxed high front<br>
+/o/ "boat":   F1=450, F2=850  — rounded lips, tongue back<br>
+/u/ "boot":   F1=310, F2=890  — tight rounding, tongue very back<br>
+/ʌ/ "cup":    F1=640, F2=1190 — central, relaxed
+</div>
+
+<div class="spamton">Your <strong>entire lifetime</strong> of vowel production is a two-dimensional motor control problem. Babies spend months calibrating their jaw and tongue to hit specific (F1,F2) targets they heard from caregivers. They're doing nonlinear acoustic regression. <strong>With their face.</strong> Before they can walk.</div>
+
+<div class="step-card"><span class="step-num">F3 — THE SECRET THIRD FORMANT</span>
+F3 doesn't define vowel identity but it defines <em>speaker voice quality</em>. A low F3 (below 2200Hz) is the acoustic signature of American-English retroflex /r/ — the reason American English sounds so distinctive to non-American ears. Vocal tract length affects all formant values together: women's voices have higher formants across the board than men's because shorter vocal tracts have higher resonant frequencies. Same vowel target, different absolute Hz values.
+</div>
+
+<div class="challenge">Click /i/ on the vowel chart, then slowly drag F2 down toward 900 while keeping F1 at 280. You're moving from "ee" toward "oo" with only your tongue — jaw stays shut the whole time. Now try holding F2 at 1500 and dragging F1 from 300 up to 800. That's the jaw dropping while the tongue stays central — the path from "heed" toward "had." Diphthongs like the /aɪ/ in "I" are exactly this: a scheduled F1/F2 trajectory between two vowel targets, mid-sound.</div>
+
+
+
+<p class="tip">>> TIP: click any vowel button on the chart above to jump the sliders directly to that vowel's F1/F2 and hear it immediately. Then try manually interpolating between two adjacent vowels — that slow glide between formant targets is exactly what a diphthong is (the /aɪ/ in "I" or /oʊ/ in "go").</p>`,
+code:`// ── THE VOWEL SPACE — 3-FORMANT SYNTHESIZER ────────────────────────
+// Three formants, configurable bandwidth.
+// The vowel chart buttons in the lesson inject preset F1/F2 values.
+// F3 adds vocal tract length / timbre character.
+
+function makeSynth(audioCtx, params) {
+  const _d = {f0:120, f1:800, f2:1200, f3:2500, bw:10};
+  for(const k in _d) if(params[k]===undefined||isNaN(params[k])) params[k]=_d[k];
+
+  const src = audioCtx.createOscillator();
+  src.type = 'sawtooth';
+  src.frequency.value = params.f0;
+
+  // Pre-tilt: vocal tract has a natural high-frequency rolloff.
+  // A gentle lowpass before the formants helps realism.
+  const preTilt = audioCtx.createBiquadFilter();
+  preTilt.type = 'lowpass';
+  preTilt.frequency.value = 5000;
+  preTilt.Q.value = 0.5;
+
+  // Three parallel bandpass filters
+  function makeFormant(freq, Q) {
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.value = freq;
+    f.Q.value = Q;
+    return f;
+  }
+
+  const f1 = makeFormant(params.f1, params.bw);
+  const f2 = makeFormant(params.f2, params.bw * 1.2);
+  const f3 = makeFormant(params.f3, params.bw * 0.8);
+
+  // F1 is loudest in real speech, F2 next, F3 quieter
+  const g1 = audioCtx.createGain(); g1.gain.value = 1.0;
+  const g2 = audioCtx.createGain(); g2.gain.value = 0.7;
+  const g3 = audioCtx.createGain(); g3.gain.value = 0.4;
+
+  const master = audioCtx.createGain();
+  master.gain.value = 0.5;
+
+  src.connect(preTilt);
+  preTilt.connect(f1); f1.connect(g1); g1.connect(master);
+  preTilt.connect(f2); f2.connect(g2); g2.connect(master);
+  preTilt.connect(f3); f3.connect(g3); g3.connect(master);
+
+  return { node: master, osc: src, f1, f2, f3 };
+}
+
+function updateParams(nodes, params) {
+  nodes.osc.frequency.value = params.f0;
+  nodes.f1.frequency.value  = params.f1;
+  nodes.f2.frequency.value  = params.f2;
+  nodes.f3.frequency.value  = params.f3;
+  // Q update handled by slider — add if needed
+}
+`},
+
+// ─── 03 ──────────────────────────────────────────────────────────
+{ subtitle:'03 — The Glottal Source', title:'Vocal Folds & The Glottal Pulse',
+params:[
+  {id:'f0',        label:'Pitch (F0, Hz)',    min:60,  max:500, step:1,   def:120},
+  {id:'jitter',    label:'Pitch noise (jitter)',min:0,  max:0.05,step:.001, def:0.005},
+  {id:'shimmer',   label:'Volume flutter (shimmer)', min:0,  max:0.3, step:.01, def:0.05},
+  {id:'openQuot',  label:'Fold openness (OQ)',    min:0.3, max:0.9, step:.01, def:0.6},
+  {id:'breathiness',label:'Breathiness',     min:0,   max:1,   step:.01, def:0.1},
+],
+body:`<p>Real voices aren't clean sawtooth waves. They're messy, alive, imperfect — and those imperfections are what make them sound <em>human</em>. The two most important micro-perturbations are <strong>jitter</strong> (pitch instability) and <strong>shimmer</strong> (amplitude instability). Strip these out and you get the flat, robotic quality of early TTS. Add too much and you get a sick or elderly voice. The narrow band in between is where all human phonation lives.</p>
+
+<div class="vocab"><span class="vt">"Jitter"</span> — cycle-to-cycle variation in the period (duration) of each glottal pulse. Normal jitter in a healthy adult voice: ~0.5–1% of the fundamental period. Measured as a percentage: jitter% = average absolute difference between consecutive periods, divided by mean period. Elevated jitter (above ~2%) = hoarse or rough voice. Zero jitter = robot. Jitter is why no two vocal fold cycles are ever identical.</div>
+
+<div class="vocab"><span class="vt">"Shimmer"</span> — cycle-to-cycle variation in the amplitude of each glottal pulse. Measured similarly as a percentage of average amplitude difference. Works with jitter but separately. High shimmer = breathiness or vocal fatigue. Both jitter and shimmer increase with age, illness, and vocal strain — which is why voice analysis can actually diagnose some laryngeal conditions.</div>
+
+<div class="vocab"><span class="vt">"Open Quotient (OQ)"</span> — the fraction of each glottal cycle during which the folds are open (allowing air through). Low OQ = folds snap shut quickly = pressed, clear phonation (loud, bright). High OQ = folds stay open longer = breathy phonation (airy, soft). OQ is a primary controller of vocal effort quality — the difference between a shout and a whisper at the glottal level.</div>
+
+<div class="step-card"><span class="step-num">THE GLOTTAL PULSE SHAPE — NOT A SAWTOOTH</span>
+Real vocal fold vibration doesn't produce a perfect sawtooth. The actual glottal waveform has a smooth opening phase (air flows through as folds open) and a sharp closing phase (folds snap shut — the Bernoulli effect). This shape is called the <strong>Liljencrants-Fant (LF) model</strong>. Web Audio's <code>PeriodicWave</code> lets you specify arbitrary waveform shapes via Fourier coefficients — the open quotient slider below changes the ratio of opening to closing phase.
+</div>
+
+<div class="step-card"><span class="step-num">JITTER IMPLEMENTATION</span>
+In code: perturb <code>osc.frequency</code> slightly every few milliseconds using <code>setValueAtTime()</code> with random deviations. The deviation is a percentage of the base F0, applied at irregular intervals to simulate cycle-to-cycle variation. This is a rough approximation — real jitter would require sample-level control, not AudioParam scheduling. But it's perceptually convincing at low values.
+</div>
+
+<div class="spamton">Your vocal folds vibrate at <strong>100–300 Hz</strong>. At 120 Hz that's 120 complete open-close cycles per second — each cycle lasting about 8 milliseconds. The folds themselves move only about <strong>1–2mm</strong> on each cycle. The air velocity through the glottis peaks at about <strong>40 m/s</strong>. This is happening in your throat right now as you breathe. It's fine. It's normal. It's extremely violent.</div>
+
+<div class="challenge">Set jitter to 0 and shimmer to 0 — flat, robotic. Hit RUN. Now dial jitter up to 0.012 and shimmer to 0.08. Hit RUN again. That's the difference. Now push open quotient above 0.8 with breathiness at 0.5 — that's a breathy, airy voice. Pull open quotient to 0.2 with breathiness near 0 — that's pressed, tense phonation. The open quotient slider is the single control that sits between a shout and a whisper at the source level, before the filter even touches it.</div>
+
+
+
+<p class="tip">>> TIP: set jitter=0 and shimmer=0 — that's the "robot voice" baseline. Now add jitter=0.008 and shimmer=0.05. The pitch wavers slightly and the amplitude fluctuates — suddenly it sounds alive. The difference between "synthetic" and "human" is literally a few random number generators applied to the right parameters.</p>`,
+code:`// ── THE GLOTTAL SOURCE — JITTER, SHIMMER, OPEN QUOTIENT ────────────
+// We approximate the LF glottal pulse using a PeriodicWave with
+// harmonics shaped by the open quotient, then add jitter by continuously
+// perturbing the oscillator frequency with a random walk, and shimmer
+// by modulating a GainNode with a slowly drifting random signal.
+
+function makeSynth(audioCtx, params) {
+  const _d = {f0:120, jitter:0.005, shimmer:0.05, openQuot:0.6, breathiness:0.1};
+  for(const k in _d) if(params[k]===undefined||isNaN(params[k])) params[k]=_d[k];
+
+  const now = audioCtx.currentTime;
+
+  // ── GLOTTAL WAVEFORM via PeriodicWave ────────────────────────
+  // Approximate LF pulse: harmonics fall as 1/(n^openQuot_power).
+  // Low OQ (pressed) → slow harmonic rolloff → bright.
+  // High OQ (breathy) → fast rolloff → dark.
+  const N = 48;
+  const real = new Float32Array(N);
+  const imag = new Float32Array(N);
+  const rollPow = 1 + (1 - params.openQuot) * 1.5; // 1=breathy, 2.5=pressed
+  for(let n=1; n<N; n++) {
+    imag[n] = Math.pow(-1, n+1) / Math.pow(n, rollPow);
+  }
+  const wave = audioCtx.createPeriodicWave(real, imag, {disableNormalization:false});
+
+  const src = audioCtx.createOscillator();
+  src.setPeriodicWave(wave);
+  src.frequency.value = params.f0;
+
+  // ── JITTER: random walk on frequency each ~5ms ────────────────
+  // Schedule many small random frequency perturbations ahead in time.
+  // Each perturbation is ±(f0 * jitter) Hz.
+  const jitterDepth = params.f0 * params.jitter;
+  let t = now;
+  const period = 0.005; // perturbation every 5ms
+  for(let i=0; i<200; i++) {
+    const drift = (Math.random() * 2 - 1) * jitterDepth;
+    src.frequency.setValueAtTime(params.f0 + drift, t);
+    t += period;
+  }
+
+  // ── SHIMMER: random amplitude variation ───────────────────────
+  const shimGain = audioCtx.createGain();
+  shimGain.gain.value = 1;
+  let ts = now;
+  for(let i=0; i<200; i++) {
+    const sv = 1 + (Math.random() * 2 - 1) * params.shimmer;
+    shimGain.gain.linearRampToValueAtTime(Math.max(0.001, sv), ts + 0.005);
+    ts += 0.005;
+  }
+
+  // ── ASPIRATION NOISE ──────────────────────────────────────────
+  const SR = audioCtx.sampleRate;
+  const nBuf = audioCtx.createBuffer(1, SR * 2, SR);
+  const nd = nBuf.getChannelData(0);
+  for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1;
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = nBuf; noise.loop = true;
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.value = params.breathiness * 0.35;
+
+  // ── FORMANT CHAIN: series LPF approximating vocal tract ──────
+  // Two serial filters give a basic vocal tract coloring.
+  const f1 = audioCtx.createBiquadFilter();
+  f1.type = 'bandpass'; f1.frequency.value = 800; f1.Q.value = 8;
+  const f2 = audioCtx.createBiquadFilter();
+  f2.type = 'bandpass'; f2.frequency.value = 1200; f2.Q.value = 10;
+
+  const master = audioCtx.createGain();
+  master.gain.value = 0.5;
+
+  src.connect(shimGain);
+  shimGain.connect(f1); f1.connect(master);
+  shimGain.connect(f2); f2.connect(master);
+  noise.connect(noiseGain); noiseGain.connect(master);
+
+  noise.start();
+
+  return { node: master, osc: src, noise, noiseGain, f1, f2, shimGain };
+}
+
+function updateParams(nodes, params) {
+  // Jitter + shimmer re-scheduled on next PLAY (buffer approach)
+  // Breathiness and formants update live:
+  nodes.noiseGain.gain.value = params.breathiness * 0.35;
+}
+`},
+
+// ─── 04 ──────────────────────────────────────────────────────────
+{ subtitle:'04 — Noise & Bursts', title:'Consonants: Friction & Explosion',
+params:[
+  {id:'type',     label:'Consonant type', min:0, max:2, step:1, def:0},
+  {id:'cutoff',   label:'Hiss cutoff (Hz)',               min:1000, max:10000, step:100, def:6000},
+  {id:'Q',        label:'Resonance sharpness (Q)',                         min:0.5,  max:30,    step:0.5, def:3},
+  {id:'burstDur', label:'Release burst length (ms)',                 min:5,    max:150,   step:5,   def:15},
+  {id:'f0',       label:'Buzz pitch (F0, Hz)',                     min:0,    max:200,   step:1,   def:0},
+],
+body:`<p>Vowels are only part of the story. Consonants — especially stops, fricatives, and affricates — are where speech gets its rhythm, precision, and intelligibility. Each consonant class is produced by a completely different acoustic mechanism, and each one requires a different synthesis approach. This lesson builds all three.</p>
+
+<div class="vocab"><span class="vt">"Fricative"</span> — a consonant produced by forcing air through a narrow constriction, creating turbulent noise. English fricatives: /s/, /z/, /f/, /v/, /ʃ/ (sh), /ʒ/ (measure), /θ/ (thin), /ð/ (the), /h/. The turbulence generates broadband noise, filtered by the constriction location. /s/ = tongue near alveolar ridge = high-frequency noise. /ʃ/ = tongue further back = lower, noisier. Voiceless fricatives = noise only. Voiced = noise + buzzing.</div>
+
+<div class="vocab"><span class="vt">"Plosive / Stop"</span> — a consonant produced by fully blocking airflow, building pressure, then releasing it. English stops: /p/, /b/, /t/, /d/, /k/, /g/. The release burst is a brief (10–30ms) explosion of broadband noise followed immediately by the onset of voicing (for voiced stops). The burst frequency depends on place of articulation: bilabial /p b/ = low burst, alveolar /t d/ = mid-high, velar /k g/ = mid (and spread across frequencies).</div>
+
+<div class="vocab"><span class="vt">"Voiced vs. Voiceless"</span> — the single most important binary distinction in consonant phonology. Voiced = vocal folds vibrating during consonant production (/b/, /d/, /g/, /z/, /v/). Voiceless = folds not vibrating (/p/, /t/, /k/, /s/, /f/). This is why "bat" and "pat" sound different — the only acoustic difference is the presence or absence of a buzzing oscillator underlying the consonant burst. In synthesis: add an oscillator = voiced; noise only = voiceless.</div>
+
+<div class="step-card"><span class="step-num">VOICE ONSET TIME (VOT)</span>
+For aspirated stops like English /p t k/, there's a delay (10–80ms) between the burst release and the onset of voicing. This delay is called <strong>VOT</strong> (Voice Onset Time). Short or negative VOT = voiced. Long positive VOT = aspirated voiceless. Spanish /p/ has nearly zero VOT — which is why Spanish speakers' English /b/ and /p/ sound confusable to native English ears. VOT is one of the primary cues that distinguishes voiced from voiceless stops across languages.
+</div>
+
+<div class="step-card"><span class="step-num">AFFRICATE = STOP + FRICATIVE</span>
+An affricate is a stop release directly into a fricative at the same place of articulation. English has two: /tʃ/ (church) = alveolar stop release into palatal fricative. /dʒ/ (judge) = voiced version. They're not two sounds — they're one gesture with a two-phase release. In synthesis: schedule a burst noise source followed immediately by sustained filtered noise, with the second part longer.
+</div>
+
+<div class="artists">S, SH, F — compare English /s/ vs. /ʃ/ ("sip" vs. "ship") slowly. Feel where your tongue is. /s/ = tip touching or near the alveolar ridge (just behind your upper front teeth). /ʃ/ = tip pulled back slightly, blade of tongue up. The mouth position difference is ~5mm. The acoustic difference is about 3kHz of center frequency shift. Your ears can hear sub-centimeter tongue movements.</div>
+
+<div class="challenge">Set type to fricative, cutoff to 6500, Q to 3 — that's /s/. Add voicing (F0 to 120) and it becomes /z/. Now move cutoff to 3000, Q to 5, voicing off — that's /ʃ/ (sh). Switch to plosive, cutoff to 5000, burst duration 10ms — /t/. Add voicing — /d/. You've now covered six English consonants by changing three numbers. Try constructing an affricate (/tʃ/ as in "church"): start with a brief plosive burst (type=2, burstDur=8), then immediately switch type to 1. That's the actual two-phase release.</div>
+
+
+
+<p class="tip">>> TIP: set type to fricative, cutoff to 6500, Q to 3 — that's /s/. Now move cutoff to 3000 and Q to 4 — that's /ʃ/. Now drop to cutoff 2000, turn on voicing — that's approaching /ʒ/ (the middle consonant in "measure"). You're sliding along a spectral continuum that your ears have been discretizing into phoneme categories your whole life.</p>`,
+code:`// ── 04 — CONSONANTS: FRICATIVES, AFFRICATES, PLOSIVES ───────────────
+// Three consonant types, each with a different noise generation strategy.
+// The key variable distinguishing consonants of the same class is WHERE
+// in the frequency spectrum the noise energy lives — that's place of articulation.
+function makeSynth(audioCtx, params) {
+  const _d = {type:0, cutoff:6000, Q:4, burstDur:35, f0:0};
+  for(const k in _d) if(params[k]===undefined||isNaN(params[k])) params[k]=_d[k];
+
+  const now = audioCtx.currentTime;
+  const tp  = Math.round(params.type); // 0=fricative, 1=affricate, 2=plosive
+  const SR  = audioCtx.sampleRate;
+
+  const master = audioCtx.createGain(); master.gain.value = 0.65;
+  const allOscs = [];
+
+  function makeNoise(dur) {
+    const len = Math.ceil(SR * dur);
+    const buf = audioCtx.createBuffer(1, len, SR);
+    const d = buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+    const ns = audioCtx.createBufferSource(); ns.buffer = buf;
+    return ns;
+  }
+
+  // ── FRICATIVE FILTER CHAIN ─────────────────────────────────────────
+  // Two filters in series: HPF removes everything below the noise floor,
+  // peaking EQ shapes the spectral peak at the constriction frequency.
+  // This peak IS the distinguishing feature — /s/ vs /ʃ/ vs /f/ is
+  // almost entirely the center frequency of this peak.
+  function makeFricFilter(cutoff, Q) {
+    const hpf = audioCtx.createBiquadFilter();
+    hpf.type = 'highpass';
+    hpf.frequency.value = cutoff * 0.45; // HPF below the peak
+    hpf.Q.value = 0.7;
+    const peak = audioCtx.createBiquadFilter();
+    peak.type = 'peaking';
+    peak.frequency.value = cutoff;
+    peak.Q.value = Q;
+    peak.gain.value = 12; // 12dB boost at the spectral center
+    hpf.connect(peak);
+    return { input: hpf, output: peak };
+  }
+
+  // ── VOICING OSCILLATOR ─────────────────────────────────────────────
+  // Voiced consonants (/z/, /v/, /dʒ/) add a quiet sawtooth buzz
+  // filtered to the lower formant region (~200–500Hz).
+  // The noise stays dominant — buzz adds the "gravel" underneath.
+  let voiceOsc = null;
+  if(params.f0 > 10) {
+    voiceOsc = audioCtx.createOscillator();
+    voiceOsc.type = 'sawtooth';
+    voiceOsc.frequency.value = params.f0;
+    const vBPF = audioCtx.createBiquadFilter();
+    vBPF.type = 'bandpass'; vBPF.frequency.value = 380; vBPF.Q.value = 2;
+    const vGain = audioCtx.createGain(); vGain.gain.value = 0.22;
+    voiceOsc.connect(vBPF); vBPF.connect(vGain); vGain.connect(master);
+    voiceOsc.start(now);
+    allOscs.push(voiceOsc);
+  }
+
+  const burstDurS = params.burstDur / 1000;
+
+  if(tp === 0) {
+    // ── FRICATIVE: continuous turbulent noise ──────────────────────────
+    const dur = 1.4;
+    const ns  = makeNoise(dur);
+    const filt = makeFricFilter(params.cutoff, params.Q);
+    const env  = audioCtx.createGain();
+    env.gain.setValueAtTime(0, now);
+    env.gain.linearRampToValueAtTime(0.9, now + 0.012); // 12ms onset
+    env.gain.setValueAtTime(0.9, now + dur - 0.06);
+    env.gain.linearRampToValueAtTime(0, now + dur);
+    ns.connect(filt.input); filt.output.connect(env); env.connect(master);
+    ns.start(now); ns.stop(now + dur + 0.02);
+    allOscs.push(ns);
+
+  } else if(tp === 1) {
+    // ── AFFRICATE: stop closure → burst → fricative (e.g. /tʃ/ "ch") ──
+    // The closure is silence (already there — nothing fires yet).
+    // Then: short bandpass burst, then fricative takes over.
+    const closureDur = 0.030; // 30ms stop closure
+
+    // Burst — place-specific bandpass
+    const burstNs = makeNoise(burstDurS);
+    const burstBPF = audioCtx.createBiquadFilter();
+    burstBPF.type = 'bandpass'; burstBPF.frequency.value = params.cutoff * 0.6; burstBPF.Q.value = 3;
+    const burstEnv = audioCtx.createGain();
+    burstEnv.gain.setValueAtTime(0, now + closureDur);
+    burstEnv.gain.linearRampToValueAtTime(1.0, now + closureDur + 0.003);
+    burstEnv.gain.exponentialRampToValueAtTime(0.001, now + closureDur + burstDurS);
+    burstNs.connect(burstBPF); burstBPF.connect(burstEnv); burstEnv.connect(master);
+    burstNs.start(now + closureDur); burstNs.stop(now + closureDur + burstDurS + 0.01);
+
+    // Fricative follows immediately
+    const fricStart = now + closureDur + burstDurS;
+    const fricDur   = 1.0;
+    const fricNs = makeNoise(fricDur);
+    const filt   = makeFricFilter(params.cutoff, params.Q);
+    const fricEnv = audioCtx.createGain();
+    fricEnv.gain.setValueAtTime(0, fricStart);
+    fricEnv.gain.linearRampToValueAtTime(0.85, fricStart + 0.015);
+    fricEnv.gain.exponentialRampToValueAtTime(0.001, fricStart + fricDur);
+    fricNs.connect(filt.input); filt.output.connect(fricEnv); fricEnv.connect(master);
+    fricNs.start(fricStart); fricNs.stop(fricStart + fricDur + 0.01);
+    allOscs.push(burstNs, fricNs);
+
+  } else {
+    // ── PLOSIVE: closure → burst → aspiration (VOT) ────────────────────
+    // The three-phase structure is the key thing about English stops:
+    //   1. Closure: silence while the stop builds up (30ms)
+    //   2. Burst: the release — loud, brief, place-specific (burstDurS)
+    //   3. Aspiration: breath noise during VOT before voicing starts (~60ms)
+    //      This is what makes /p/ /t/ /k/ sound English — Spanish stops skip it.
+    const closureDur = 0.030;
+    const votDur     = 0.065;
+
+    // BURST
+    const burstNs = makeNoise(burstDurS + 0.01);
+    const burstBPF = audioCtx.createBiquadFilter();
+    burstBPF.type = 'bandpass'; burstBPF.frequency.value = params.cutoff; burstBPF.Q.value = params.Q;
+    const burstEnv = audioCtx.createGain();
+    burstEnv.gain.setValueAtTime(0, now + closureDur);
+    burstEnv.gain.linearRampToValueAtTime(1.1, now + closureDur + 0.003); // snappy 3ms attack
+    burstEnv.gain.exponentialRampToValueAtTime(0.001, now + closureDur + burstDurS);
+    burstNs.connect(burstBPF); burstBPF.connect(burstEnv); burstEnv.connect(master);
+    burstNs.start(now + closureDur); burstNs.stop(now + closureDur + burstDurS + 0.01);
+
+    // ASPIRATION (VOT)
+    const aspStart = now + closureDur + burstDurS;
+    const aspNs = makeNoise(votDur + 0.02);
+    const aspHPF = audioCtx.createBiquadFilter();
+    aspHPF.type = 'highpass'; aspHPF.frequency.value = 1200; aspHPF.Q.value = 0.5;
+    const aspEnv = audioCtx.createGain();
+    aspEnv.gain.setValueAtTime(0, aspStart);
+    aspEnv.gain.linearRampToValueAtTime(0.4, aspStart + 0.010);
+    aspEnv.gain.setValueAtTime(0.4, aspStart + votDur * 0.7);
+    aspEnv.gain.exponentialRampToValueAtTime(0.001, aspStart + votDur);
+    aspNs.connect(aspHPF); aspHPF.connect(aspEnv); aspEnv.connect(master);
+    aspNs.start(aspStart); aspNs.stop(aspStart + votDur + 0.02);
+
+    allOscs.push(burstNs, aspNs);
+  }
+
+  if(voiceOsc) {
+    const voiceDur = tp===0 ? 1.4 : tp===1 ? 1.2 : (burstDurS + 0.1);
+    voiceOsc.stop(now + voiceDur + 0.05);
+  }
+
+  const stopAt = now + (tp===0 ? 1.45 : tp===1 ? 1.1 : (0.030 + burstDurS + 0.075));
+  const primaryOsc = voiceOsc || allOscs[0];
+  return { node: master, osc: primaryOsc, allOscs, stopAt };
+}
+
+function updateParams(nodes, params) {}`},
+
+// ─── 05 ──────────────────────────────────────────────────────────
+{ subtitle:'05 — The Complete Tract', title:'Five Formants & The Full Voice',
+params:[
+  {id:'f0',  label:'Pitch (F0, Hz)',   min:80,  max:400, step:1,   def:120},
+  {id:'f1',  label:'Jaw height (F1, Hz)',         min:250, max:900, step:5,   def:800},
+  {id:'f2',  label:'Tongue position (F2, Hz)',         min:700, max:2800,step:5,   def:1200},
+  {id:'f3',  label:'Upper ring (F3, Hz)',         min:1800,max:3500,step:10,  def:2500},
+  {id:'f4',  label:'Presence (F4, Hz)',         min:3000,max:4500,step:20,  def:3500},
+  {id:'f5',  label:'Brilliance (F5, Hz)',         min:4000,max:5500,step:20,  def:4500},
+  {id:'noise',label:'Breathiness',    min:0,   max:0.5, step:.01, def:0.08},
+],
+body:`<p>Real speech uses five or more resonant peaks simultaneously, each carrying different information about the speaker and the sound. The first two formants define the vowel. The third defines the speaker's distinctive vocal quality. Four and five add richness and the high-frequency "brilliance" that makes a voice carry in a room. This lesson builds a five-formant synthesizer and shows you what each resonance contributes.</p>
+
+<div class="vocab"><span class="vt">"Spectral Envelope"</span> — the smooth curve connecting the tops of the harmonics when you look at a voiced sound's frequency spectrum. Formants are the peaks in this envelope. The spectral envelope is what carries vowel identity and voice quality — it's what TTS models are actually generating (via mel spectrograms, which are a compressed representation of this envelope). Individual harmonics vary; the envelope stays relatively stable across pitch changes.</div>
+
+<div class="vocab"><span class="vt">"Bandwidth"</span> — how wide a formant peak is. A narrow bandwidth (high Q) = strong, resonant peak = formant is clearly defined = vowel sounds pure. Wide bandwidth (low Q) = smeared peak = vowel sounds muddy or nasal. Formant bandwidths widen with increasing formant number: F1 has the narrowest bandwidth, F5 the widest. Nasal sounds and nasalized vowels have extra-wide bandwidths because the nasal cavity adds damping.</div>
+
+<div class="step-card"><span class="step-num">WHAT EACH FORMANT CARRIES</span>
+F1: jaw height / vowel openness — the single strongest cue for vowel identity<br>
+F2: tongue front-back position — second strongest vowel cue<br>
+F3: vocal tract length idiosyncrasy, r-coloring (low F3 = retroflex)<br>
+F4: overall voice quality, "nasality" character<br>
+F5: the "ring" or "brilliance" — the energy that makes a voice project<br><br>
+In practice, listeners use mostly F1 and F2 for vowel identification. F3–F5 contribute to speaker identity and voice quality but rarely change the <em>word</em> being perceived.
+</div>
+
+<div class="step-card"><span class="step-num">AMPLITUDE ROLLOFF — WHY HIGHER FORMANTS ARE QUIETER</span>
+Real speech has a natural high-frequency rolloff: about -12dB per octave from the glottal source, partially compensated by the vocal tract resonances. F1 is the loudest formant, F2 quieter, F3 quieter still. The code uses an exponential gain rolloff per formant to approximate this. Without it, the synthesis sounds unnaturally bright — all formants equal loudness is not what a real mouth sounds like.
+</div>
+
+<div class="artists">Listen to any good operatic voice on headphones, preferably a dramatic soprano or a heldentenor. The "ring" that cuts through an orchestra — that's the singer's formant: a cluster of F3–F5 boosted around 2500–3500Hz. It's not about loudness; it's about spectral specificity. A singer trained to produce that cluster projects further than an untrained voice at the same SPL. You're hearing F3–F5 doing work that F1–F2 cannot.</div>
+
+<div class="challenge">Start with F1=800, F2=1200 (/ɑ/ — open "ahh"). Now morph it toward a female voice: raise all five formants by about 15% (multiply each by 1.15). The voice brightens noticeably — that's shorter throat length shifting every resonance up simultaneously. Now raise F5 from wherever it is to about 3200 and notice the ring that appears — that's the singer's formant region. Drop noise to near zero. You've just sculpted a pressed operatic voice. Every parameter you touched maps to something a real throat does.</div>
+
+
+
+<p class="tip">>> TIP: start with F1=800, F2=1200 (open /ɑ/ vowel). Now slowly raise F5 toward 4000Hz and notice how the voice starts to "ring" or project — more presence, more forward energy. Then reduce the noise slider to near zero and notice how the voice loses its breathiness and becomes more pressed and clear. You're controlling the source-filter model from both ends simultaneously.</p>`,
+code:`// ── FIVE-FORMANT VOCAL SYNTHESIZER ─────────────────────────────────
+// Full voice model: glottal source + 5 parallel formant filters
+// + aspiration noise. Amplitude roll-off mimics natural speech.
+// Drag all 7 sliders to sculpt different voices and vowels.
+
+function makeSynth(audioCtx, params) {
+  const _d = {f0:120, f1:800, f2:1200, f3:2500, f4:3500, f5:4500, noise:0.08};
+  for(const k in _d) if(params[k]===undefined||isNaN(params[k])) params[k]=_d[k];
+
+  // ── GLOTTAL SOURCE ────────────────────────────────────────────
+  const src = audioCtx.createOscillator();
+  src.type = 'sawtooth';
+  src.frequency.value = params.f0;
+
+  // Pre-tilt: simulate glottal source spectral slope (-12dB/oct approx)
+  const preTilt = audioCtx.createBiquadFilter();
+  preTilt.type = 'lowpass';
+  preTilt.frequency.value = 4000;
+  preTilt.Q.value = 0.5;
+
+  // ── ASPIRATION NOISE ──────────────────────────────────────────
+  const SR = audioCtx.sampleRate;
+  const nBuf = audioCtx.createBuffer(1, SR*2, SR);
+  const nd = nBuf.getChannelData(0);
+  for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1;
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = nBuf; noise.loop = true;
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.value = params.noise;
+
+  // ── FIVE FORMANT FILTERS ──────────────────────────────────────
+  const formantData = [
+    {f:params.f1, q:10,  g:1.0},
+    {f:params.f2, q:11,  g:0.65},
+    {f:params.f3, q:10,  g:0.42},
+    {f:params.f4, q:15,  g:0.22},
+    {f:params.f5, q:15,  g:0.12},
+  ];
+
+  const master = audioCtx.createGain();
+  master.gain.value = 0.45;
+
+  const formants = formantData.map(({f, q, g}) => {
+    const bpf = audioCtx.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.value = f;
+    bpf.Q.value = q;
+
+    const gn = audioCtx.createGain();
+    gn.gain.value = g;
+
+    // Glottal source (pre-tilted) → formant → gain → output
+    src.connect(preTilt);
+    preTilt.connect(bpf);
+    bpf.connect(gn);
+    gn.connect(master);
+
+    // Noise also through same formants (aspiration gets shaped too)
+    const nbpf = audioCtx.createBiquadFilter();
+    nbpf.type = 'bandpass'; nbpf.frequency.value = f; nbpf.Q.value = q;
+    const ngn = audioCtx.createGain(); ngn.gain.value = g * 0.5;
+    noise.connect(noiseGain);
+    noiseGain.connect(nbpf); nbpf.connect(ngn); ngn.connect(master);
+
+    return bpf;
+  });
+
+  noise.start();
+
+  return {
+    node: master, osc: src, noise, noiseGain,
+    f1: formants[0], f2: formants[1], f3: formants[2],
+    f4: formants[3], f5: formants[4]
+  };
+}
+
+function updateParams(nodes, params) {
+  nodes.osc.frequency.value  = params.f0;
+  nodes.f1.frequency.value   = params.f1;
+  nodes.f2.frequency.value   = params.f2;
+  nodes.f3.frequency.value   = params.f3;
+  nodes.f4.frequency.value   = params.f4;
+  nodes.f5.frequency.value   = params.f5;
+  nodes.noiseGain.gain.value = params.noise;
+}
+`},
+
+// ─── 06 ─────────────────────────────────────────────────────────
+{ subtitle:'06 — Prosody', title:'The Music of Speech',
+params:[
+  {id:'contour', label:'Sentence type', min:0, max:2, step:1,  def:0},
+  {id:'f0base',  label:'Speaking pitch (F0, Hz)',                     min:80, max:280, step:1, def:120},
+  {id:'range',   label:'Pitch range (semitones)',             min:1,  max:16, step:0.5, def:7},
+  {id:'sylRate', label:'Syllable speed (Hz)',                  min:1,  max:8,  step:0.25, def:3.5},
+],
+body:`<p>Say "I didn't say she stole the money" seven times, stressing a different word each time. The meaning shifts completely — accusation, denial, deflection — without changing a single phoneme. That's <strong>prosody</strong>: the musical layer underneath speech that carries meaning the phonemes themselves can't express.</p>
+
+<div class="vocab"><span class="vt">"Prosody"</span> — the pitch, rhythm, stress, and phrasing that span across an utterance. Called "suprasegmental" because it operates above the phoneme level. Two speakers can say the exact same phoneme sequence with completely different meaning, emotion, or grammar just by changing the prosody.</div>
+
+<div class="vocab"><span class="vt">"Pitch contour (F0 contour)"</span> — the curve your pitch traces across a whole phrase. English statements end falling (starting around 140Hz, landing near 90Hz for a male voice). Yes/no questions end rising. Emphasis peaks sharply and falls fast. These aren't grammar rules — infants respond to these contours before they understand any words.</div>
+
+<div class="vocab"><span class="vt">"AudioParam Automation"</span> — Web Audio's scheduling system. <code>linearRampToValueAtTime(v, t)</code> for straight-line pitch changes. <code>exponentialRampToValueAtTime(v, t)</code> for curves that sound natural to the ear (use this for rising pitch — frequency is perceived logarithmically). <code>setValueCurveAtTime(array, t, dur)</code> for arbitrary shapes. You can draw the entire pitch curve of a sentence before a single sample plays.</div>
+
+<div class="step-card"><span class="step-num">STRESS ISN'T JUST LOUDER</span>
+When you stress a syllable, three things happen at once: the pitch rises (3–5 semitones above surrounding speech), the duration stretches (1.3–2× an unstressed syllable), and the volume nudges up slightly. All three fire together. Early TTS systems often only raised pitch and got the timing wrong — and listeners immediately heard it as unnatural. Duration is the thing people are most sensitive to; get the rhythm wrong and the whole sentence feels off.
+</div>
+
+<div class="step-card"><span class="step-num">SCHEDULING A PITCH CURVE IN CODE</span>
+A statement falls: <code>fp.setValueAtTime(f0 * 1.08, now)</code> then <code>fp.linearRampToValueAtTime(f0 * 0.82, now + dur)</code>. A question rises at the end — hold pitch until 72% through, then <code>fp.exponentialRampToValueAtTime(f0 * 1.45, now + dur)</code>. Use exponential for rises, not linear: a linear Hz ramp sounds like it slows down as it climbs because pitch perception is logarithmic.
+</div>
+
+<div class="step-card"><span class="step-num">TONAL LANGUAGES — PITCH AS VOCABULARY</span>
+In English, pitch changes meaning at the sentence level. In Mandarin, Vietnamese, Yoruba — roughly 70% of the world's languages — pitch changes meaning at the syllable level. Mandarin "ma" means mother (˥), hemp (˧˥), horse (˨˩˦), or scold (˥˩) depending on the contour you use. Getting a tone wrong doesn't produce an accent. It produces a different word. Building TTS for these languages means predicting lexical tones from text — a problem English TTS doesn't have at all.
+</div>
+
+<div class="step-card"><span class="step-num">STRESS-TIMED VS SYLLABLE-TIMED</span>
+English is stress-timed: stressed syllables occur at roughly equal intervals, and unstressed syllables compress to fit in between. The result is an uneven, bouncy rhythm. French, Spanish, and Mandarin are syllable-timed: every syllable gets roughly equal time. This is why English sounds "choppy" to French speakers and French sounds "flat and fast" to English ears. TTS for English that doesn't compress unstressed syllables sounds foreign — rhythm carries as much information as pitch does.
+</div>
+
+<div class="spamton">A singing teacher and a speech scientist are studying the same thing. The difference between speech melody and a sung melody is <strong>basically just precision and duration</strong> — speech pitch drifts freely, singing locks to discrete notes. The F0 contours are the same type of object. When a pop singer "speaks" a lyric rather than singing it, they're choosing to let pitch be free rather than locked. <strong>You've been doing prosody your whole life. You just didn't have a word for it.</strong></div>
+
+<div class="challenge">In the code editor, change <code>f0 * 0.82</code> (the statement's landing pitch) to <code>f0 * 1.35</code>. You've turned a statement into a question. Now switch to emphasis mode and push the peak ratio to <code>f0 * 1.8</code> — that's a shout. Move the peak earlier: <code>now + 0.04</code> instead of <code>now + 0.12</code>. Same height, faster attack, angrier read. The timing of the peak matters more than the height.</div>
+
+<p class="tip">>> TIP: real pitch contours are never perfectly smooth — they bump at syllable boundaries and drift slightly in between. If your synthesis sounds glassy or mechanical, scatter small random offsets across the contour: <code>f0 * (1 + Math.random() * 0.02)</code> at each scheduled point. That's the texture of a human voice thinking while it speaks.</p>`,
+code:`// ── 06 — PROSODY: F0 contour shaping + syllable-rate AM ────────────
+// This synth has no fixed pitch — it draws a pitch *curve* across time.
+// The curve shape is what carries grammatical and emotional meaning.
+function makeSynth(ctx, p) {
+  const now  = ctx.currentTime;
+  const dur  = 1.8;
+  const f0   = p.f0base;
+
+  // ratio: how far the pitch can deviate from base, in frequency space
+  // Math.pow(2, semitones/12) converts semitones → frequency multiplier.
+  // e.g. 7 semitones = ratio ~1.5 (a perfect fifth above f0)
+  const ratio = Math.pow(2, p.range / 12);
+
+  // ── GLOTTAL SOURCE ────────────────────────────────────────────────
+  // Sawtooth into two formants — same engine as L01, but now pitch moves.
+  const osc = ctx.createOscillator();
+  osc.type = 'sawtooth';
+
+  const f1n = ctx.createBiquadFilter();
+  f1n.type = 'bandpass'; f1n.frequency.value = 500; f1n.Q.value = 8;
+  const f2n = ctx.createBiquadFilter();
+  f2n.type = 'bandpass'; f2n.frequency.value = 1600; f2n.Q.value = 10;
+
+  // ── F0 CONTOUR SCHEDULING ─────────────────────────────────────────
+  // We pre-schedule the entire pitch trajectory before any audio plays.
+  // AudioParam ramps let us describe the contour as a series of targets.
+  const fp = osc.frequency;
+
+  if (p.contour < 0.5) {
+    // STATEMENT: gentle fall from slightly above base to below.
+    // English declarative = pitch falls at the end. This is not a rule —
+    // it's a phonetic universal. Infants respond to it before any words.
+    fp.setValueAtTime(f0 * 1.08, now);
+    fp.linearRampToValueAtTime(f0 * 0.82, now + dur);
+
+  } else if (p.contour < 1.5) {
+    // QUESTION (yes/no): flat through most of phrase, then a final rise.
+    // Hold base pitch until 72% through — then spike up.
+    // exponentialRampToValueAtTime sounds more natural than linear for rises
+    // because pitch is perceived logarithmically (like all frequency).
+    fp.setValueAtTime(f0, now);
+    fp.linearRampToValueAtTime(f0, now + dur * 0.72);
+    fp.exponentialRampToValueAtTime(f0 * ratio, now + dur);
+
+  } else {
+    // EMPHASIS: fast rise to peak, then steep fall.
+    // The fast attack (0.12s) is what marks it as emphatic rather than
+    // just "high pitched." Same height but slow rise sounds like singing.
+    fp.setValueAtTime(f0, now);
+    fp.linearRampToValueAtTime(f0 * ratio, now + 0.12);
+    fp.exponentialRampToValueAtTime(f0 * 0.72, now + dur);
+  }
+
+  // ── SYLLABLE-RATE AMPLITUDE MODULATION ────────────────────────────
+  // Real speech has amplitude bumps at each syllable — the voice swells
+  // and dips as muscles fire for each stressed/unstressed pair.
+  // Simulating this: a low-frequency oscillator (LFO) modulates the gain.
+  // sylRate controls how fast the bumps come (syllables per second).
+  const sylLFO = ctx.createOscillator();
+  sylLFO.type = 'sine';
+  sylLFO.frequency.value = p.sylRate;
+  const sylGain = ctx.createGain();
+  sylGain.gain.value = 0.35;   // depth of the modulation
+  const sylBase = ctx.createGain();
+  sylBase.gain.value = 0.65;   // base level (so it never goes to zero)
+  sylLFO.connect(sylGain);
+  sylGain.connect(sylBase.gain);  // LFO drives the gain node's gain param
+
+  // ── SIGNAL CHAIN ──────────────────────────────────────────────────
+  const mix = ctx.createGain(); mix.gain.value = 0.55;
+  osc.connect(f1n); f1n.connect(mix);
+  osc.connect(f2n); f2n.connect(mix);
+  mix.connect(sylBase);  // formant output feeds the sylBase gain node
+
+  // Sentence-level envelope: fade in, sustain, fade out
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(0, now);
+  env.gain.linearRampToValueAtTime(1, now + 0.05);
+  env.gain.setValueAtTime(1, now + dur - 0.12);
+  env.gain.linearRampToValueAtTime(0, now + dur);
+  sylBase.connect(env);
+
+  osc.start(now);    osc.stop(now + dur);
+  sylLFO.start(now); sylLFO.stop(now + dur);
+
+  return { node: env, osc, stopAt: now + dur, allOscs: [osc, sylLFO] };
+}
+
+function updateParams(nodes, p) {
+  // F0 contour is pre-scheduled — it can't be updated mid-sound.
+  // Hit RUN again to hear a new contour shape.
+}` },
+
+
+
+// ─── 07 ─────────────────────────────────────────────────────────
+{ subtitle:'07 — Phoneme Sequencer', title:'Building Words from Parts',
+params:[
+  {id:'f0',      label:'Pitch (F0, Hz)',            min:80, max:280, step:1,   def:120},
+  {id:'transMs', label:'Crossfade (ms)',  min:10, max:200, step:5,   def:60},
+  {id:'v1f1',    label:'V1 jaw height (F1)',    min:200, max:900, step:10, def:280},
+  {id:'v1f2',    label:'V1 tongue (F2)',    min:700, max:2800,step:20, def:2620},
+  {id:'v2f1',    label:'V2 jaw height (F1)',    min:200, max:900, step:10, def:730},
+  {id:'v2f2',    label:'V2 tongue (F2)',    min:700, max:2800,step:20, def:1090},
+],
+body:`<p>There is no isolated /d/. The "d" in "dig" sounds different from the "d" in "dog" because your mouth is already moving toward the next vowel while making the consonant. Every sound bleeds into the next — and this blending, called <strong>coarticulation</strong>, is why the first naive speech synthesizers sounded like a broken answering machine.</p>
+
+<div class="vocab"><span class="vt">"Coarticulation"</span> — the overlapping articulation of neighboring sounds. Your tongue, jaw, lips, and soft palate don't wait for one phoneme to finish before starting the next. Every sound is different depending on its neighbors. There's no context-free version of any consonant in real, continuous speech.</div>
+
+<div class="vocab"><span class="vt">"Formant transition"</span> — the movement of a resonance peak (formant) as the mouth changes shape between phoneme targets. The key finding from Haskins Laboratories in the 1950s: a consonant's identity lives mostly in the transition it causes in surrounding vowels — not in the consonant itself. Cut the burst off a /d/ and listeners still hear /d/. Cut the transition instead and the consonant vanishes. The consonant is essentially movement instructions written in the vowel trajectory.</div>
+
+<div class="vocab"><span class="vt">"Locus equation"</span> — the pattern describing where a tongue-position transition appears to originate from: F2_onset = k × F2_vowel + locus. Each place in the mouth has a characteristic locus. Lip sounds (/p b m/): ~700Hz. Tongue-behind-teeth sounds (/t d n/): ~1800Hz. Back-of-mouth sounds (/k g/): ~3000Hz. Even through a bad phone connection, the trajectory tells you where the consonant was made.</div>
+
+<div class="step-card"><span class="step-num">CHAINING FORMANT TARGETS IN WEB AUDIO</span>
+Building a word means scheduling formant ramps in sequence: <code>f1n.frequency.setValueAtTime(phoneA_F1, t)</code> to lock on phoneme A, then <code>f1n.frequency.linearRampToValueAtTime(phoneB_F1, t + transition)</code> to glide to B. Transition timing matters a lot: 20–40ms for a stop into a vowel, 40–80ms between vowels, 80–120ms for glides like /w/ and /y/. Too short = an audible click. Too long = the vowel identity blurs. The window where this sounds like actual speech is surprisingly small.
+</div>
+
+<div class="step-card"><span class="step-num">UNDERSHOOT</span>
+At normal speaking rate, the mouth never fully reaches each sound's target formant values before moving on. Unstressed vowels often only hit 60–75% of their target. Native listeners compensate automatically — the brain reads the trajectory, not the endpoint. Non-native listeners hear mumbling because they're trying to decode each phoneme independently. Ironically, TTS that hits every target precisely sounds slightly robotic: too accurate, not enough mess.
+</div>
+
+<div class="step-card"><span class="step-num">A MINIMAL DIPHONE TABLE</span>
+A basic formant synthesizer needs a lookup table: for each sound pair, store the starting and ending resonance values, the duration, and the crossfade time. Something like: <code>{"d_ae": {f1s:300, f2s:1800, f1e:700, f2e:1800, dur:0.10}}</code>. Chain entries by matching the end values of one to the start of the next. That's Vocaloid's parameter editor in miniature — and what neural TTS learns automatically from thousands of hours of recorded speech.
+</div>
+
+<div class="step-card"><span class="step-num">VOWEL REDUCTION</span>
+Unstressed syllables don't just get shorter — their vowels migrate toward the neutral "uh" sound (schwa, /ə/ — roughly F1≈500, F2≈1500). "Photograph" has a full rounded vowel. "Photography" — same spelling, different stress — reduces that vowel to schwa. English spelling never tells you which vowels reduce. Speakers who produce every vowel at full quality sound overly formal. Models have to learn reduction from data; no rule set can describe it.
+</div>
+
+<div class="artists">Say "butter" at normal speed. American English: "budder." The /t/ became a flap /ɾ/ — a single tap of the tongue, about 20ms, acoustically between /t/ and /d/. The tongue didn't have time to complete a full stop closure at natural rate, so coarticulation just... changed the phoneme. Every accent has its own version of this. Scottish English keeps the /t/ crisp. Brazilian Portuguese does something different again. Same word, different physics.</div>
+
+<div class="challenge">Extend the word synthesizer: add a third vowel state after the existing two. Schedule V1 → nasal segment (try F1=300, F2=1100, about 50ms) → V2. You've built something like /man/ or /min/ depending on your second vowel. Then try replacing the nasal with silence (set gain near-zero for 40ms). That silence is a stop consonant's closure phase. The abrupt formant jump when gain comes back is the release burst. You've assembled a plosive from nothing but an envelope and four numbers.</div>
+
+<p class="tip">>> TIP: in ⬡ SEQ, stack a vowel row and a fricative row on the same step — they fire simultaneously. The vowel's buzz plus the fricative's filtered noise: that's voiced fricative synthesis. /z/ is literally just sawtooth + high-Q noise highpass playing at the same time. Coarticulation at the sequencer level.</p>`,
+code:`// ── 07 — COARTICULATION: smooth formant transitions between vowels ──
+// This synth demonstrates the core mechanic of coarticulation:
+// formants don't jump discretely — they ramp from one target to the next.
+// The ramp IS the consonant. The target IS the vowel.
+// Everything else in this lesson flows from that one idea.
+function makeSynth(ctx, p) {
+  const now   = ctx.currentTime;
+  const segMs = 0.28;             // how long each vowel "holds" (seconds)
+  const trans = p.transMs / 1000; // transition window — the coarticulation
+  const dur   = segMs * 2 + trans + 0.05;
+
+  // ── GLOTTAL SOURCE ─────────────────────────────────────────────────
+  const osc = ctx.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.value = p.f0;
+
+  // ── FORMANT FILTERS ────────────────────────────────────────────────
+  // Two bandpass filters — F1 (jaw height) and F2 (tongue position).
+  // We'll move their center frequencies over time to simulate the
+  // vocal tract smoothly changing shape between the two vowels.
+  const f1n = ctx.createBiquadFilter();
+  f1n.type = 'bandpass'; f1n.Q.value = 10;
+  const f2n = ctx.createBiquadFilter();
+  f2n.type = 'bandpass'; f2n.Q.value = 12;
+
+  // ── TRANSITION SCHEDULING ─────────────────────────────────────────
+  // At 'now': lock F1/F2 to vowel 1 targets (V1).
+  // After segMs + trans seconds: F1/F2 arrive at vowel 2 targets (V2).
+  // The linearRamp describes the coarticulation window.
+  // Try transMs=10 (abrupt click) vs transMs=150 (diphthong glide) —
+  // the perceptual difference is enormous for such a small timing change.
+  f1n.frequency.setValueAtTime(p.v1f1, now);
+  f2n.frequency.setValueAtTime(p.v1f2, now);
+
+  f1n.frequency.linearRampToValueAtTime(p.v2f1, now + segMs + trans);
+  f2n.frequency.linearRampToValueAtTime(p.v2f2, now + segMs + trans);
+
+  // ── SIGNAL CHAIN ──────────────────────────────────────────────────
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(0, now);
+  env.gain.linearRampToValueAtTime(0.65, now + 0.03);
+  env.gain.setValueAtTime(0.65, now + dur - 0.06);
+  env.gain.linearRampToValueAtTime(0, now + dur);
+
+  osc.connect(f1n); f1n.connect(env);
+  osc.connect(f2n); f2n.connect(env);
+
+  osc.start(now); osc.stop(now + dur + 0.05);
+
+  return { node: env, osc, stopAt: now + dur };
+}
+
+function updateParams(nodes, p) {
+  // Transitions are pre-scheduled — restart to hear new target values.
+  // Try: V1 = /i/ (F1=280, F2=2620) + V2 = /ɑ/ (F1=800, F2=1200).
+  // Then narrow the transition time to ~15ms and hear the abrupt click
+  // at the boundary — that's the sound of formants with no coarticulation.
+}` },
+
+
+
+// ─── 08 ─────────────────────────────────────────────────────────
+{ subtitle:'08 — LPC & Vocoders', title:'Stealing a Vocal Tract',
+params:[
+  {id:'bands',  label:'Bands',          min:4,  max:32, step:1,  def:16},
+  {id:'carrier',label:'Carrier type',   min:0,  max:2,  step:1,  def:1},
+  {id:'f0',     label:'Carrier pitch (F0, Hz)',      min:60, max:300,step:1,  def:130},
+  {id:'vowel',  label:'Vowel — ɑ i u ɛ',       min:0,  max:3,  step:1,  def:0},
+  {id:'tilt',   label:'High-frequency rolloff',    min:0,  max:1,  step:0.05,def:0.6},
+],
+body:`<p>Can you compress a phone call down to 10 numbers every 20 milliseconds and still have it sound like the person? <strong>Linear Predictive Coding</strong> says yes — because those 10 numbers, chosen correctly, describe the shape of the vocal tract well enough to reconstruct the sound. It's been doing this in phone codecs and speech assistants since the 1970s.</p>
+
+<div class="vocab"><span class="vt">"LPC (Linear Predictive Coding)"</span> — models the vocal tract as an all-pole filter. Each speech sample is approximately a weighted sum of the previous ~10 samples: s(n) ≈ a₁·s(n-1) + a₂·s(n-2) + ... + aₚ·s(n-p) + e(n). The coefficients {a₁…aₚ} encode the tract shape. The residual e(n) — what the predictor got wrong — encodes the source. Send just those two things and the receiver reconstructs your voice.</div>
+
+<div class="vocab"><span class="vt">"Cepstrum / MFCC"</span> — the cepstrum is the "spectrum of the log spectrum." It mathematically separates the slow-moving spectral envelope (the resonance peaks) from the fast-varying harmonic structure (the pitch). MFCCs apply a mel-scale filterbank first — squishing the frequency axis to match how the ear works — then keep only ~13 numbers. Those 13 numbers, extracted 50 times per second, ran every commercial voice system from around 1980 to 2015.</div>
+
+<div class="vocab"><span class="vt">"Vocoder"</span> — splits a signal into N frequency bands, extracts the volume envelope in each band, then applies those envelopes to shape a carrier signal through the same bands. The carrier takes on the resonant character and rhythm of the modulator. Invented at Bell Labs in 1939 to compress phone calls. Discovered by musicians in the 1970s. The circuit is identical in both applications — the only change is what you feed in as the carrier.</div>
+
+<div class="step-card"><span class="step-num">HOW LPC WORKS — THE SHORT VERSION</span>
+Take a 20ms slice of speech. Compute the autocorrelation — how similar the signal is to time-shifted copies of itself. Solve for predictor coefficients using Levinson-Durbin recursion, which exploits the symmetric structure of the autocorrelation matrix to find the best solution in O(p²) steps. Each conjugate pole pair in the resulting filter maps to one resonance peak. The pole's angle gives the resonance frequency; its distance from the unit circle gives the bandwidth. LPC directly gives you resonance positions — which is why speech researchers still use it for acoustic analysis even though neural models have replaced it for synthesis.
+</div>
+
+<div class="step-card"><span class="step-num">BAND COUNT AND VOWEL RESOLUTION</span>
+More bands = more spectral resolution = clearer vowels. The original SIGSALY used 10 bands — intelligible but robotic. Hardware vocoders like the Roland SVC-350 used 12–16. Software vocoders use 32–64. Below 8 bands, the "ee" and "oo" vowels start to blur because the resonance peaks aren't resolved. Try bands=4, then bands=32 on the same vowel — vowel perception depends entirely on separating those peaks, and band count is the lever.
+</div>
+
+<div class="step-card"><span class="step-num">CROSS-SYNTHESIS</span>
+The vocoder's real creative power: use any sound as the modulator and any sound as the carrier. Speech + string ensemble = strings that talk. Drum loop + choir = rhythmically gated choral pads. Voice + orchestra = Imogen Heap's "Hide and Seek." The carrier doesn't need to be tonal. The result is simultaneously familiar (voice-shaped) and wrong (wrong material) — which is where the artistic interest lives. Wendy Carlos, Kraftwerk, Arca, and countless producers have built aesthetics entirely on this collision.
+</div>
+
+<div class="spamton">MFCCs ran <strong>every commercial voice system</strong> from ~1980 to 2015. Every voice assistant, every phone menu, every dictation engine. All of it — running on 13 numbers extracted from 20 milliseconds of audio, 50 times per second. The entire industry was built on a trick derived from modeling <strong>the geometry of cochlear hair cells</strong>. We built AI assistants on ear hair math. They still misheard you constantly. <strong>Deep learning fixed this. Mostly.</strong></div>
+
+<div class="challenge">In the code editor, replace the sawtooth carrier with three oscillators: 220Hz, 277Hz, 330Hz (A3, C#4, E4 — an A major chord). Mix them and run through the vocoder. The chord takes on your vowel's resonance shape. You've built a chord vocoder. Now push the envelope smoothing up — the vowel definition blurs into a washy gated texture. That smooth/staccato tradeoff is the main control surface of every hardware vocoder ever made.</div>
+
+<p class="tip">>> TIP: set carrier=noise and cycle through vowels while it runs. You're hearing whispered vowels — same resonance structure as voiced speech, just without pitch. This is why whispered speech is still intelligible. Vowel identity lives entirely in the resonance shape, not in the source buzzing.</p>`,
+code:`// ── 08 — VOCODER: N-band spectral envelope transfer ─────────────────
+// A vocoder splits the carrier into N frequency bands,
+// shapes each band's amplitude to match the modulator's spectral envelope
+// (here: a static vowel formant model), then sums the bands.
+// Result: the carrier's tonal character takes on the vowel's resonance shape.
+function makeSynth(ctx, p) {
+  const now = ctx.currentTime;
+  const dur = 1.8;
+
+  // ── CARRIER ────────────────────────────────────────────────────────
+  // Three carrier types demonstrate the source-filter model in action:
+  // noise = voiceless (whisper), sawtooth = voiced speech, sine = pure tone.
+  // Same vocoder, same vowel, same bands — only the carrier changes.
+  // This is literally what the voiced/voiceless distinction IS.
+  let carrier;
+  if (p.carrier < 0.5) {
+    // Noise carrier: broadband white noise
+    const len = Math.ceil(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    carrier = ctx.createBufferSource();
+    carrier.buffer = buf;
+  } else if (p.carrier < 1.5) {
+    // Sawtooth: rich harmonic series — approximates vocal fold buzz
+    carrier = ctx.createOscillator();
+    carrier.type = 'sawtooth';
+    carrier.frequency.value = p.f0;
+  } else {
+    // Sine: single harmonic — purer, more tonal, less speech-like
+    carrier = ctx.createOscillator();
+    carrier.type = 'sine';
+    carrier.frequency.value = p.f0;
+  }
+
+  // ── VOWEL MODEL (pre-baked formant positions) ──────────────────────
+  // These are the F1/F2/F3 targets for four English vowels.
+  // In a real vocoder, the modulator signal IS the speech and you'd
+  // extract these amplitudes in real-time. Here we bake them in.
+  const VOWELS = [
+    [800, 1200, 2500],  // ɑ "ahh" — open back, low jaw
+    [280, 2620, 3380],  // i "eeee" — close front, high tongue
+    [310,  890, 2370],  // u "oooo" — close back, rounded lips
+    [600, 1900, 2550],  // ɛ "bed"  — open-mid front
+  ];
+  const formants = VOWELS[Math.round(p.vowel) % 4];
+
+  // ── SPECTRAL TILT ──────────────────────────────────────────────────
+  // Real speech has a natural high-frequency rolloff (~-12dB/octave).
+  // The tilt slider controls a low-shelf boost — low values = heavy
+  // rolloff (more "muffled"), high values = flatter (more "bright").
+  const tiltF = ctx.createBiquadFilter();
+  tiltF.type = 'lowshelf';
+  tiltF.frequency.value = 600;
+  tiltF.gain.value = (1 - p.tilt) * -10;
+  carrier.connect(tiltF);
+
+  const master = ctx.createGain(); master.gain.value = 0.55;
+  const n = Math.round(p.bands);
+  const minHz = 80, maxHz = 6000;
+
+  // ── BAND ARRAY ────────────────────────────────────────────────────
+  // N bandpass filters, logarithmically spaced from 80Hz to 6000Hz.
+  // (Log spacing because we hear pitch logarithmically — equal steps
+  // should feel equal, not look equal on a linear axis.)
+  for (let b = 0; b < n; b++) {
+    // Center frequency for this band (log-spaced)
+    const fc = minHz * Math.pow(maxHz / minHz, b / (n - 1));
+
+    // How much gain does this band get?
+    // It depends on proximity to the formant frequencies.
+    // Close to a formant peak → high gain. Far away → near zero.
+    // exp(-dist * 4.5) is a soft Gaussian window in log-frequency space.
+    let amp = 0;
+    formants.forEach(fhz => {
+      const dist = Math.abs(Math.log2(fc / fhz)); // distance in octaves
+      amp = Math.max(amp, Math.exp(-dist * 4.5));
+    });
+    // Additional rolloff for high bands (mimics natural spectral slope)
+    amp *= Math.exp(-b / (n * 1.1));
+
+    const bpf = ctx.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.value = fc;
+    bpf.Q.value = Math.max(3, n / 4); // narrower Q as band count increases
+
+    const g = ctx.createGain();
+    g.gain.value = amp * 2.8;
+
+    tiltF.connect(bpf); bpf.connect(g); g.connect(master);
+  }
+
+  // Smooth amplitude envelope
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(0, now);
+  env.gain.linearRampToValueAtTime(1, now + 0.08);
+  env.gain.setValueAtTime(1, now + dur - 0.1);
+  env.gain.linearRampToValueAtTime(0, now + dur);
+  master.connect(env);
+
+  carrier.start(now); carrier.stop(now + dur);
+
+  return { node: env, osc: carrier, stopAt: now + dur };
+}
+
+function updateParams(nodes, p) {}` },
+
+
+
+// ─── 09 ─────────────────────────────────────────────────────────
+{ subtitle:'09 — Concatenative TTS', title:'Assembly-Line Speech',
+params:[
+  {id:'word',      label:'Word — mama / baba / weee',  min:0, max:2, step:1,   def:0},
+  {id:'f0',        label:'Pitch (F0, Hz)',              min:80, max:280, step:1, def:120},
+  {id:'crossfade', label:'Join smoothness (ms)',     min:5, max:150, step:5,  def:40},
+  {id:'rate',      label:'Speaking rate', min:0.5, max:2, step:0.1, def:1},
+],
+body:`<p>The voice in your 2007 GPS navigator didn't come from rules or a neural network. It came from recordings — thousands of sound pairs spliced together in real time. Record one speaker saying every adjacent phoneme pair in English (~1600 of them), index everything, build a search algorithm to find the best sequence for any text. Ship it. That's concatenative synthesis, and it dominated commercial voice for twenty years.</p>
+
+<div class="vocab"><span class="vt">"Diphone"</span> — a unit spanning from the middle of one phoneme to the middle of the next. The join point always falls in the acoustically stable center of a phoneme, while the transition — where the coarticulation lives — is preserved intact inside each unit. ~1600 diphones cover all English phoneme pairs. This design is the reason 1990s concatenative TTS was intelligible at all; every join lands at a steady region rather than mid-transition.</div>
+
+<div class="vocab"><span class="vt">"Unit selection"</span> — an advanced concatenative approach (Festival 2, AT&T Natural Voices) that stores multiple recordings of each unit in different contexts, then searches for the globally optimal sequence. The cost function weighs target cost (does this unit have the right pitch and duration?) against join cost (will adjacent unit boundaries splice smoothly?). The search uses the Viterbi algorithm — a dynamic programming technique for finding the best path through a graph. With large enough databases, it could approach human naturalness for in-coverage content.</div>
+
+<div class="vocab"><span class="vt">"PSOLA (Pitch-Synchronous Overlap-Add)"</span> — the algorithm behind Autotune, Melodyne, and most pitch-shifting in audio tools. Find the glottal pulse marks in the signal. Cut pitch-synchronous windows centered on each mark. Resynthesize by repositioning those windows: closer together = higher pitch, duplicate = longer at the same pitch, remove = shorter. The resonance envelope stays locked to the grain shape — only the pitch changes. The gritty metallic quality at extreme shifts is grain boundary mismatch.</div>
+
+<div class="step-card"><span class="step-num">WHY JOINS SOUND WRONG</span>
+When unit A ends and unit B begins, the resonance envelope of A may not match B's opening — especially if they were recorded in different emotional contexts. The join cost quantifies this as the distance between their cepstral vectors at the boundary. Unit selection minimizes total join cost across the whole utterance using Viterbi. High join cost = audible click or spectral seam. The whole system is essentially a shortest-path problem through a graph of thousands of recorded clips.
+</div>
+
+<div class="step-card"><span class="step-num">HMM SYNTHESIS — THE BRIDGE</span>
+Between concatenative and neural sits Hidden Markov Model synthesis. Instead of storing recordings, it trains statistical models of acoustic features per phoneme, then generates smooth feature trajectories by sampling from those models at synthesis time. Fully parametric: want a sad voice? Shift the pitch model. Want a whisper? Adjust the breathiness parameter. Concatenative couldn't do this without re-recording. HMM could. The cost was a characteristic "buzzy" quality — like listening through a thin wall.
+</div>
+
+<div class="step-card"><span class="step-num">A MINIMAL DIPHONE TABLE IN JAVASCRIPT</span>
+A toy version: <code>{"a_m": {f1s:800, f2s:1200, f1e:350, f2e:1100, dur:0.12, xf:0.04}}</code> — starting resonances, ending resonances, duration, crossfade. Chain entries by matching end values to start values of the next. Schedule ramps with <code>linearRampToValueAtTime</code>. Extend this to all 1600 English pairs with real measured values and you'd have a working formant TTS engine. What makes commercial systems better is data quality, not a fundamentally different architecture.
+</div>
+
+<div class="step-card"><span class="step-num">WHY EMOTION BROKE EVERYTHING</span>
+Every unit was recorded in a neutral, careful reading voice. The prosody model could predict an angry pitch contour — but the recordings themselves were always neutral. The breathiness, laryngeal tension, and vocal effort of real emotion are encoded in the source signal, not the pitch. PSOLA could bend pitch and stretch duration but couldn't add any of those qualities without re-recording from scratch. This is the wall that concatenative synthesis hit. Neural synthesis walked straight through it.
+</div>
+
+<div class="artists">Find Apple's original "Fred" voice from 1984 on YouTube, then Siri circa 2012, then any current neural voice. The arc is audible: "intelligible but clearly a machine" → "occasionally convincing on rehearsed content" → "hard to tell." Same phonemes. Same words. Three completely different physical processes for generating the sound. The voice didn't change. The physics did.</div>
+
+<div class="challenge">Add a fourth word to the WORDS array — your name, or any word you like. Break it into resonance segments using the vowel values from lesson 02. Add short near-silence segments (30–50ms, gain≈0.05) for any stop consonants. It will be rough — but you'll hear the trajectory you designed, and you'll understand exactly why commercial systems needed thousands of carefully recorded units to cover what you just roughed out with a handful of numbers.</div>
+
+<p class="tip">>> TIP: set rate to 0.5 and listen to the crossfade in slow motion — you can hear the resonances blending at each boundary. Set it to 2.0 and synthesis artifacts shrink because transitions compress and your ear fills them in. Rate acceleration hides seams. This is why fast TTS sounds better than slow TTS on the same underlying engine.</p>`,
+code:`// ── 09 — CONCATENATIVE TTS: diphone crossfade simulation ────────────
+// Each "word" is a sequence of formant target pairs.
+// We schedule the F1/F2 filters to ramp from one target to the next.
+// The crossfade time is what separates "abrupt diphone splice" from
+// "natural-sounding coarticulation." This is the entire tradeoff.
+function makeSynth(ctx, p) {
+  const now  = ctx.currentTime;
+  const rate = p.rate;       // speaking rate multiplier — compresses durations
+  const xf   = p.crossfade / 1000;  // crossfade window in seconds
+  const f0   = p.f0;
+
+  // ── WORD TABLE (diphone formant sequences) ─────────────────────────
+  // Each entry: [F1, F2, segment_duration_seconds]
+  // F1 = jaw height (low = open mouth), F2 = tongue position (high = front)
+  // "mama" — nasal closure → open vowel → nasal closure → open vowel
+  // "baba" — bilabial approximation → open vowel → bilabial → open vowel
+  //          (the bilabial dip in F2 is what makes it sound like /b/ vs /m/)
+  // "weee" — rounded glide → mid-open front → higher front → close front /i/
+  //          (w→e→ee→i = a steady F2 climb as tongue moves forward and up)
+  const WORDS = [
+    [[300,1000,0.10],[800,1200,0.20],[300,1000,0.10],[800,1200,0.20]],  // mama
+    [[380,1050,0.08],[800,1200,0.20],[380,1050,0.08],[800,1200,0.20]],  // baba
+    [[310,890,0.10],[600,1900,0.14],[420,2200,0.14],[280,2620,0.20]],   // weee
+  ];
+  const seq = WORDS[Math.round(p.word) % 3];
+
+  // ── GLOTTAL SOURCE ─────────────────────────────────────────────────
+  const osc = ctx.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.value = f0;
+
+  // ── TWO FORMANT FILTERS ────────────────────────────────────────────
+  const f1n = ctx.createBiquadFilter();
+  f1n.type = 'bandpass'; f1n.Q.value = 9;
+  const f2n = ctx.createBiquadFilter();
+  f2n.type = 'bandpass'; f2n.Q.value = 11;
+
+  // ── SCHEDULE THE FORMANT SEQUENCE ─────────────────────────────────
+  // Initialize at the first segment's targets
+  f1n.frequency.setValueAtTime(seq[0][0], now);
+  f2n.frequency.setValueAtTime(seq[0][1], now);
+
+  // For each segment: ramp F1 and F2 to the target within xf seconds.
+  // 't' accumulates the timeline position.
+  // 'rate' scales duration — higher rate = faster = shorter segments.
+  let t = now + 0.02;
+  seq.forEach(([f1, f2, dur]) => {
+    const d = dur / rate;
+    // xf is the crossfade window — how quickly we reach the new target.
+    // Small xf = abrupt boundary (click). Large xf = smooth blend (smear).
+    f1n.frequency.linearRampToValueAtTime(f1, t + xf);
+    f2n.frequency.linearRampToValueAtTime(f2, t + xf);
+    t += d;
+  });
+
+  const totalDur = seq.reduce((s, [,,d]) => s + d / rate, 0) + 0.08;
+
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(0, now);
+  env.gain.linearRampToValueAtTime(0.65, now + 0.04);
+  env.gain.setValueAtTime(0.65, now + totalDur - 0.06);
+  env.gain.linearRampToValueAtTime(0, now + totalDur);
+
+  osc.connect(f1n); f1n.connect(env);
+  osc.connect(f2n); f2n.connect(env);
+
+  osc.start(now); osc.stop(now + totalDur + 0.05);
+
+  return { node: env, osc, stopAt: now + totalDur };
+}
+
+function updateParams(nodes, p) {}` },
+
+
+
+// ─── 10 ─────────────────────────────────────────────────────────
+{ subtitle:'10 — Neural TTS', title:'How AI Voices Work',
+params:[
+  {id:'preset',    label:'Voice character', min:0, max:3, step:1,   def:0},
+  {id:'f0offset',  label:'Pitch shift (semitones)',        min:-12, max:12, step:0.5, def:0},
+  {id:'jitter',    label:'Roughness (jitter)',            min:0, max:0.02, step:0.001, def:0.003},
+  {id:'breathiness',label:'Breathiness',                   min:0, max:1,   step:0.05,  def:0.1},
+],
+body:`<p>ElevenLabs can take three sentences of audio, extract the resonance fingerprint of the speaker, and generate unlimited new speech in that voice in under a second. That workflow — audio in, speaker identity out, new speech out — is what neural TTS made possible. Here's what's actually happening at each step, and how you'd build something like it yourself.</p>
+
+<div class="vocab"><span class="vt">"Mel spectrogram"</span> — a 2D image of sound: time across the X axis, frequency up the Y axis (scaled to match how the ear hears), log energy as brightness. Vowel resonances show as horizontal bright bands. Fricatives are diffuse high-frequency fuzz. Stops are silences followed by vertical bursts. Most neural TTS systems generate this image as an intermediate step, then convert it to audio with a neural vocoder. The model is essentially learning to draw these images from text.</div>
+
+<div class="vocab"><span class="vt">"Speaker embedding"</span> — a fixed-length vector (typically 256–512 numbers) that encodes a speaker's vocal identity. Computed by a speaker encoder network trained to be similar for the same speaker and dissimilar for different speakers. It captures: habitual speaking pitch, how long the resonating tube is (which shifts all resonances together), breathiness, pitch irregularity, and the speaker-specific resonance geometry of their nasal cavity that can't be described any simpler than "this person's face." This is the thing you'd give ElevenLabs 30 seconds of audio to generate.</div>
+
+<div class="vocab"><span class="vt">"Neural vocoder"</span> — the component that converts a mel spectrogram back to a waveform. WaveNet (2016) was first but ~2000× slower than real-time. HiFi-GAN (2020) runs in real-time on CPU and is the most widely deployed. The "slightly bubbly" or "metallic" artifacts you occasionally notice in neural TTS are HiFi-GAN artifacts — the spectrogram is mostly right, the vocoder imperfectly inverts it.</div>
+
+<div class="step-card"><span class="step-num">HOW ELEVENLABS WORKS (SIMPLIFIED)</span>
+Their pipeline is essentially: (1) a speaker encoder extracts a speaker embedding from your reference audio. (2) A text-to-phoneme model converts input text to a phoneme sequence with predicted durations and pitch. (3) A spectrogram decoder generates mel spectrogram frames, conditioned on both the phoneme sequence and your speaker embedding. (4) A vocoder converts the spectrogram to audio. Your voice identity is a conditioning signal — the model generates what the text would sound like if spoken by someone at that point in embedding space. The "instant voice cloning" feature is just a fast speaker encoder running inference on your upload.
+</div>
+
+<div class="step-card"><span class="step-num">HOW TO BUILD THIS YOURSELF</span>
+You don't need to train from scratch. Open-source multi-speaker models are already trained on thousands of voices — you just need to fine-tune or condition them on yours. The stack: <a href="https://github.com/coqui-ai/TTS">Coqui TTS</a> (VITS-based, multi-speaker, good documentation). <a href="https://github.com/yl4579/StyleTTS2">StyleTTS 2</a> (style vector conditioning, very natural output). <a href="https://github.com/SWivid/F5-TTS">F5-TTS</a> (2024, flow-matching based, convincing zero-shot from 5 seconds). Try F5-TTS right now in your browser at <a href="https://huggingface.co/spaces/mrfakename/E2-F5-TTS">Hugging Face Spaces</a> — no setup required.
+</div>
+
+<div class="step-card"><span class="step-num">THE ARCHITECTURE: WHAT EACH PIECE DOES</span>
+Text normalization ("3pm" → "three p.m."). Grapheme-to-phoneme conversion — English has ~13% irregular words where spelling doesn't match sound ("read" present vs. past). Duration and pitch prediction per phoneme — this is where the prosody lives. Spectrogram decoder generates the mel frames. Neural vocoder converts frames to audio. Each stage has its own failure mode: G2P errors produce wrong words, bad duration prediction produces uneven rhythm, vocoder artifacts produce the characteristic "AI voice" texture.
+</div>
+
+<div class="step-card"><span class="step-num">FastSpeech 2 — THE TRICK THAT MADE IT FAST</span>
+Early systems like Tacotron generated frames sequentially — each depends on all previous, so it can't be parallelized. FastSpeech 2 (Microsoft, 2020) breaks this with a duration predictor: a small network that predicts how many output frames each phoneme should occupy. With those durations, the phoneme sequence is expanded to match output length, a variance adapter adds pitch and energy values, then a Transformer decoder generates all frames simultaneously. 50× faster than Tacotron 2 at comparable quality.
+</div>
+
+<div class="spamton">WaveNet in 2016: one second of audio took <strong>several minutes</strong> to generate. WaveNet in 2019: real-time. HiFi-GAN in 2020: real-time on CPU. F5-TTS in 2024: convincing voice clone from 5 seconds, running on a laptop, in a Python repo you can install in one line. The gap between <strong>"I want a voice for my project"</strong> and <strong>"I have a voice for my project"</strong> collapsed from "hire a studio" to "one afternoon." That happened in about eight years. The voices will keep getting better and the compute will keep getting cheaper. <strong>This is an unusually good time to understand how this works.</strong></div>
+
+<div class="challenge">Call the ElevenLabs API (free tier, no credit card): <code>pip install elevenlabs</code>, grab your API key, then: <code>from elevenlabs import ElevenLabs; client = ElevenLabs(api_key="YOUR_KEY"); audio = client.text_to_speech.convert(voice_id="Rachel", text="your text here", model_id="eleven_multilingual_v2")</code>. Generate the same sentence with three different preset voices. Listen with headphones. Try to describe each voice in the terms from this course: is the speaking pitch high or low? Does it sound breathy? Is the resonance spacing wide (long throat) or narrow (short throat)? You now have vocabulary for what you're hearing.</div>
+
+<p class="tip">>> TIP: add a little pitch irregularity (jitter=0.010) and breathiness to any preset and it sounds more human despite being technically noisier. Listeners read vocal imperfection as effort — as a body with friction and mass. Flawlessly clean synthesis sounds like it has no physical body. Zero imperfection is impossible for biological systems, so a perfect voice reads as absence.</p>`,
+code:`// ── 10 — NEURAL TTS: speaker embedding → acoustic preset ────────────
+// A real neural TTS system encodes speaker identity as a dense vector
+// (256–512 numbers). Here we approximate that with four acoustic presets —
+// each one a different cluster in the acoustic parameter space.
+// The jitter + breathiness sliders simulate what a speaker embedding
+// would express about phonation style and glottal health.
+function makeSynth(ctx, p) {
+  const now = ctx.currentTime;
+  const dur = 1.6;
+
+  // ── SPEAKER PRESETS ────────────────────────────────────────────────
+  // Each preset: [F0 base, F1, F2, F3, spectral tilt, noise base]
+  // These values approximate distinct vocal tract and phonation styles.
+  // "warm"   — low F0, central formants, heavy rolloff, minimal noise
+  // "thin"   — high F0, fronted formants, bright rolloff, minimal noise
+  // "breathy"— mid F0, backed formants, moderate rolloff, lots of noise
+  // "bass"   — very low F0, backed formants, heavy rolloff, minimal noise
+  const PRESETS = [
+    [120, 500, 1500, 2500, 0.70, 0.06],  // warm
+    [185, 590, 2050, 3100, 0.45, 0.04],  // thin
+    [145, 460, 1380, 2380, 0.62, 0.28],  // breathy
+    [ 78, 440, 1080, 2180, 0.82, 0.05],  // bass
+  ];
+  const idx = Math.round(p.preset) % 4;
+  const [f0b, f1, f2, f3, tilt, nAmt] = PRESETS[idx];
+
+  // f0offset: semitones shift above or below preset base
+  // Math.pow(2, semitones/12) converts semitone offset to frequency ratio
+  const f0 = f0b * Math.pow(2, p.f0offset / 12);
+
+  // ── GLOTTAL SOURCE WITH JITTER ─────────────────────────────────────
+  // Jitter = cycle-to-cycle frequency perturbation.
+  // We schedule small random F0 deviations every 1/15 second.
+  // Low jitter → robotic. A little jitter → alive.
+  // The deviation size is proportional to both p.jitter and f0 —
+  // same jitter % sounds more pronounced at higher fundamental frequencies.
+  const osc = ctx.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.value = f0;
+  for (let j = 0; j < dur * 15; j++) {
+    const jt  = now + j / 15;
+    const jDev = (Math.random() * 2 - 1) * p.jitter * f0;
+    osc.frequency.setValueAtTime(f0 + jDev, jt);
+  }
+
+  // ── THREE FORMANT FILTERS ──────────────────────────────────────────
+  // F1, F2, F3 in parallel — same architecture as L05.
+  // Q values increase with formant number because higher formants
+  // in real speech have narrower bandwidths relative to their frequency.
+  const filters = [f1, f2, f3].map((fc, i) => {
+    const bpf = ctx.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.value = fc;
+    bpf.Q.value = 8 + i * 2;
+    return bpf;
+  });
+
+  // ── SPECTRAL TILT ──────────────────────────────────────────────────
+  // Real voices lose energy at high frequencies at roughly -12dB/octave.
+  // A high-shelf cut simulates this rolloff.
+  // tilt=1 → flat (bright, thin). tilt=0 → -12dB at 1200Hz (warm, dark).
+  const tiltNode = ctx.createBiquadFilter();
+  tiltNode.type = 'highshelf';
+  tiltNode.frequency.value = 1200;
+  tiltNode.gain.value = -12 * (1 - tilt);
+
+  // ── ASPIRATION NOISE ───────────────────────────────────────────────
+  // Adds breathiness: air turbulence through the glottis.
+  // The final noise level is preset's baseline + user breathiness slider.
+  const noiseLen = Math.ceil(ctx.sampleRate * dur);
+  const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
+  const nd = noiseBuf.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+  const noiseSrc = ctx.createBufferSource();
+  noiseSrc.buffer = noiseBuf;
+  const noiseLPF = ctx.createBiquadFilter();
+  noiseLPF.type = 'lowpass'; noiseLPF.frequency.value = 3500;
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.value = (p.breathiness + nAmt) * 0.45;
+  noiseSrc.connect(noiseLPF); noiseLPF.connect(noiseGain);
+
+  // ── SIGNAL CHAIN ──────────────────────────────────────────────────
+  const master = ctx.createGain(); master.gain.value = 0.45;
+  osc.connect(tiltNode); tiltNode.connect(master);  // tilt before formants
+  filters.forEach(bpf => { osc.connect(bpf); bpf.connect(master); });
+  noiseGain.connect(master);
+
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(0, now);
+  env.gain.linearRampToValueAtTime(1, now + 0.05);
+  env.gain.setValueAtTime(1, now + dur - 0.08);
+  env.gain.linearRampToValueAtTime(0, now + dur);
+  master.connect(env);
+
+  osc.start(now);      osc.stop(now + dur);
+  noiseSrc.start(now); noiseSrc.stop(now + dur);
+
+  return { node: env, osc, stopAt: now + dur, allOscs: [osc, noiseSrc] };
+}
+
+function updateParams(nodes, p) {}` },
+
+
+
+// ─── 11 ─────────────────────────────────────────────────────────
+{ subtitle:'11 — Voice Cloning', title:'Speaker Embeddings in Practice',
+params:[
+  {id:'f0scale',    label:'Speaking pitch (F0)',  min:0.5, max:2.0,  step:0.02,  def:1},
+  {id:'tractScale', label:'Throat length (tract)',min:0.7, max:1.4,  step:0.02,  def:1},
+  {id:'vowel',      label:'Vowel — ɑ / i / u / ɛ',min:0,   max:3,    step:1,     def:0},
+  {id:'tilt',       label:'Spectral tilt',        min:0,   max:1,    step:0.05,  def:0.5},
+  {id:'jitter',     label:'Roughness (jitter)',   min:0,   max:0.025, step:0.001, def:0.005},
+  {id:'breathiness',label:'Breathiness',          min:0,   max:0.8,  step:0.05,  def:0.15},
+  {id:'f0drift',    label:'Pitch wandering speed',min:0,   max:4,    step:0.1,   def:0.7},
+],
+body:`<p>Your voice is a fingerprint — not metaphorically, but acoustically. The length of your resonating tube, your habitual speaking pitch, the statistical texture of your pitch irregularity, the specific resonances of your nasal cavity: together these place you at a unique point in a 256-dimensional space. Voice cloning is the technology of finding that point from a short recording and using it to generate new speech from the same location.</p>
+
+<div class="vocab"><span class="vt">"d-vector / x-vector"</span> — two speaker embedding architectures. d-vectors (Google, 2018) use LSTM encoders trained with a contrastive objective: push same-speaker embeddings together, push different-speaker embeddings apart. x-vectors (Snyder et al., 2018) use time-delay neural networks with statistics pooling. d-vectors dominate TTS conditioning. x-vectors dominate speaker identification and "who spoke when" tasks. Both output ~256-dimensional vectors from audio of any length.</div>
+
+<div class="vocab"><span class="vt">"Zero-shot voice cloning"</span> — extracting a speaker embedding from a reference recording at inference time, with no retraining of model weights. The model was trained on thousands of speakers and has learned to generalize: give it a new embedding and it generates the corresponding voice. Quality scales with reference length and audio cleanliness. 2024-generation systems (F5-TTS, CosyVoice, Seed-TTS) achieve convincing results from 5–10 seconds of clean audio.</div>
+
+<div class="vocab"><span class="vt">"Throat length normalization (VTLN)"</span> — compensates for the fact that different speakers have differently sized resonating tubes. A 15cm tube produces resonances ~13% higher than a 17cm tube. VTLN estimates a warp factor α and rescales the frequency axis: mel_warped(f) = mel(α·f). The warp factor is directly interpretable as resonating tube length — one of the most powerful axes in speaker embedding space, and what the throat length slider approximates here.</div>
+
+<div class="step-card"><span class="step-num">MEASURING YOUR OWN VOICE IN PRAAT</span>
+<a href="https://www.praat.org">Praat</a> is free. Record yourself sustaining /ɑ/, /i/, /u/, /ɛ/ for 1–2 seconds each. Formant → Get first formant, Get second formant — those are your resonance values, which will differ from the textbook averages because your tube length differs from the reference speaker. For speaking pitch: read a paragraph aloud, extract mean pitch from the pitch track (10th–90th percentile of voiced frames). For pitch irregularity: Voice report → Local jitter %. Healthy voice: 0.5–1.0%. Above 2% = hoarse quality.
+</div>
+
+<div class="step-card"><span class="step-num">THE EMBEDDING SPACE IS NAVIGABLE</span>
+Interpolating between two speaker embeddings (e₁ × w + e₂ × (1-w)) produces perceptually intermediate voices. This is practically useful: blend two accents, create a gender-neutral voice, generate synthetic characters that don't correspond to any real person, or study which acoustic properties live on which embedding dimensions. ElevenLabs' "voice design" feature is essentially a UI for navigating this space. The space isn't perfectly smooth everywhere — sparsely represented regions produce artifacts — but near well-covered areas, you can navigate continuously.
+</div>
+
+<div class="step-card"><span class="step-num">PITCH DRIFT — THE OVERLOOKED FINGERPRINT</span>
+Mean speaking pitch is easy to clone. Pitch drift — the slow quasi-random wandering over 1–3 second spans — is speaker-specific in ways that resist simple description. It has a characteristic speed, amplitude, and frequency structure (approximately 1/f pink noise in many speakers). Early TTS had no drift, which was immediately detectable. Modern speaker encoders capture drift statistics implicitly. Voice detection systems look for drift patterns inconsistent with a target speaker's recordings.
+</div>
+
+<div class="step-card"><span class="step-num">THE CREATIVE APPLICATIONS</span>
+What voice cloning actually gets used for, in practice: audiobooks narrated in the author's own voice. Game characters whose dialogue can be extended infinitely without re-recording sessions. Language learning tools that let you hear familiar voices speaking a new language. Accessibility applications that give people with ALS or vocal cord damage their own synthesized voice back. Post-production voice fixes without re-scheduling studio time. The technology is the same regardless of application — what changes is whose voice, and whether you have their consent.
+</div>
+
+<div class="spamton">In 2004 Yamaha hired voice actors to record every phoneme pair in Japanese. The actors got paid once. Vocaloid got their vocal tract geometry forever. That's the original voice cloning deal: <strong>your throat shape, our software, infinite uses, no royalties.</strong> Modern embedding systems are more sophisticated but the physics is the same — extract the resonance fingerprint, keep the person optional. The interesting question isn't whether this is technically possible. It clearly is. The interesting question is what you want to make with it.</div>
+
+<div class="challenge">Use <a href="https://www.praat.org">Praat</a> to measure your own voice: record and measure the first two resonances for /ɑ/, /i/, /u/. Go to lesson 02's synth and dial in your measured values instead of the textbook averages. Do they sound more like you? Then come back here: set throat length to your estimated ratio (if your resonances are ~10% lower than reference, set it to 1.1). Set habitual pitch to your mean speaking pitch divided by 130Hz. You're building your speaker embedding by hand, one parameter at a time.</div>
+
+<p class="tip">>> TIP: throat length and habitual pitch (F0 scale) feel like a coherent body when used together — because those two things are correlated in real populations. Larger bodies have longer tubes and lower habitual pitch. Mismatching them (short tube, low pitch) produces something immediately uncanny. The embedding space learned this correlation from data.</p>`,
+code:`// ── 11 — VOICE CLONING: speaker embedding parameter space ──────────
+// This synth exposes the five most perceptually powerful axes of a
+// speaker embedding as sliders. Together they cover most of what
+// makes one voice sound different from another.
+function makeSynth(ctx, p) {
+  const now = ctx.currentTime;
+  const dur = 1.8;
+
+  // ── SPEAKING PITCH ─────────────────────────────────────────────────
+  // f0scale multiplies a 130Hz reference (middle of male range).
+  // 1.0 = ~130Hz  |  1.5 = ~195Hz (female range)  |  0.7 = ~91Hz (deep)
+  const f0 = 130 * p.f0scale;
+
+  // ── THROAT LENGTH: SCALES ALL RESONANCES ──────────────────────────
+  // A longer throat lowers ALL resonance frequencies proportionally —
+  // shorter throat = brighter, higher resonances (child, smaller body)
+  // longer throat = darker, lower resonances (tall, larger body)
+  // ts = 1/tractScale so that a bigger value → lower frequencies
+  const ts = 1 / p.tractScale;
+
+  // ── VOWEL FORMANTS (scaled by throat length) ───────────────────────
+  // These are the resonance peak positions for four vowels.
+  // Each one gets scaled: multiply by ts to apply throat length.
+  // F1 = how open the jaw is | F2 = tongue front/back | F3 = upper ring
+  const VOWELS = [
+    [800, 1200, 2500],  // ɑ "ahh" — open jaw, back tongue
+    [280, 2620, 3380],  // i "eee" — nearly closed jaw, front tongue
+    [310,  890, 2370],  // u "ooo" — nearly closed jaw, back tongue
+    [600, 1900, 2550],  // ɛ "eh"  — mid-open, front-ish
+  ];
+  const vIdx = Math.round(p.vowel) % 4;
+  const [rawF1, rawF2, rawF3] = VOWELS[vIdx];
+  const f1 = rawF1 * ts;
+  const f2 = rawF2 * ts;
+  const f3 = rawF3 * ts;
+
+  // ── GLOTTAL SOURCE ─────────────────────────────────────────────────
+  const osc = ctx.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.value = f0;
+
+  // ── FORMANT FILTER BANK ────────────────────────────────────────────
+  const f1n = ctx.createBiquadFilter(); f1n.type='bandpass'; f1n.frequency.value=f1; f1n.Q.value=10;
+  const f2n = ctx.createBiquadFilter(); f2n.type='bandpass'; f2n.frequency.value=f2; f2n.Q.value=12;
+  const f3n = ctx.createBiquadFilter(); f3n.type='bandpass'; f3n.frequency.value=f3; f3n.Q.value=11;
+
+  // ── SPECTRAL TILT ──────────────────────────────────────────────────
+  // One of the most powerful male/female differentiators:
+  // male voices have steeper high-frequency rolloff (more "warm/dark")
+  // female voices have flatter rolloff (more "bright/present")
+  // tilt=0 → heavy rolloff (dark, warm, "male-ish")
+  // tilt=1 → flat rolloff (bright, airy, "female-ish")
+  // implemented as a high-shelf filter: negative gain = cut high freqs
+  const tiltNode = ctx.createBiquadFilter();
+  tiltNode.type = 'highshelf';
+  tiltNode.frequency.value = 1200;
+  tiltNode.gain.value = -18 * (1 - p.tilt); // 0 tilt = -18dB at 1200Hz+
+
+  // ── ASPIRATION NOISE ───────────────────────────────────────────────
+  // Run noise through the formant filters too — this is important.
+  // Real breathiness isn't just flat noise added on top; it's colored
+  // by the same resonances as the voiced source. The result sounds
+  // much more natural than filtered noise mixed separately.
+  const noiseLen = Math.ceil(ctx.sampleRate * dur);
+  const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
+  const nd = noiseBuf.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+  const noiseSrc = ctx.createBufferSource(); noiseSrc.buffer = noiseBuf;
+  const noiseGain = ctx.createGain(); noiseGain.gain.value = p.breathiness * 0.5;
+
+  // ── SIGNAL CHAIN ──────────────────────────────────────────────────
+  const master = ctx.createGain(); master.gain.value = 0.45;
+
+  // Voiced source → tilt → formants → master
+  osc.connect(tiltNode);
+  tiltNode.connect(f1n); f1n.connect(master);
+  tiltNode.connect(f2n); f2n.connect(master);
+  tiltNode.connect(f3n); f3n.connect(master);
+
+  // Noise → same formant filters (colored breathiness)
+  noiseSrc.connect(noiseGain);
+  noiseGain.connect(f1n);
+  noiseGain.connect(f2n);
+
+  // ── F0 DRIFT ──────────────────────────────────────────────────────
+  // Slow, speaker-specific pitch wandering — one of the last things
+  // to get right in a voice clone. 0 = robotic steady pitch.
+  if (p.f0drift > 0) {
+    const steps = Math.ceil(dur * p.f0drift * 3);
+    let dF = f0;
+    for (let d = 0; d < steps; d++) {
+      const dt = now + d / (p.f0drift * 3);
+      dF += (Math.random() * 2 - 1) * 2.5;
+      dF = Math.max(f0 * 0.88, Math.min(f0 * 1.12, dF));
+      osc.frequency.linearRampToValueAtTime(dF, dt);
+    }
+  }
+
+  // ── JITTER: CYCLE-TO-CYCLE MICRO-PERTURBATION ─────────────────────
+  const jSteps = Math.ceil(dur * 18);
+  for (let j = 0; j < jSteps; j++) {
+    const jt = now + j / 18;
+    const jDev = (Math.random() * 2 - 1) * p.jitter * f0;
+    osc.frequency.setValueAtTime(f0 + jDev, jt);
+  }
+
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(0, now);
+  env.gain.linearRampToValueAtTime(1, now + 0.06);
+  env.gain.setValueAtTime(1, now + dur - 0.1);
+  env.gain.linearRampToValueAtTime(0, now + dur);
+  master.connect(env);
+
+  osc.start(now);      osc.stop(now + dur);
+  noiseSrc.start(now); noiseSrc.stop(now + dur);
+
+  return { node: env, osc, stopAt: now + dur, allOscs: [osc, noiseSrc] };
+}
+
+function updateParams(nodes, p) {}` },
+
+
+
+// ─── 12 ─────────────────────────────────────────────────────────
+{ subtitle:'12 — Singing Synthesis', title:'Making a Voice Sing',
+params:[
+  {id:'note',      label:'Note — 60 = middle C',             min:48, max:84, step:1,   def:60},
+  {id:'vowel',     label:'Vowel — ɑ / i / u / ɛ',             min:0,  max:3,  step:1,   def:0},
+  {id:'vibRate',   label:'Vibrato speed (Hz)',             min:3,  max:8,  step:0.1, def:5.5},
+  {id:'vibDepth',  label:'Vibrato depth (cents)',     min:0,  max:1,  step:0.02,def:0.35},
+  {id:'vibDelay',  label:'Vibrato delay (ms)',      min:0,  max:600,step:10,  def:200},
+  {id:'singerF',   label:"Singer's formant (dB)",  min:0,  max:12, step:0.5, def:4},
+],
+body:`<p>Singing synthesis is speech synthesis with every assumption broken. Pitch must lock to exact values. Vowels hold across whole notes. Consonants compress into rhythmic slots. At high pitches the acoustic physics do something genuinely strange. And the result needs to be emotionally compelling. It's the hardest version of the problem — and after this course, you have every piece you need to build it.</p>
+
+<div class="vocab"><span class="vt">"PSOLA"</span> — Pitch-Synchronous Overlap-Add. Mark the glottal pulses in a voiced recording. Cut pitch-period windows centered on each mark. Resynthesize at a new pitch by repositioning those windows: closer together = higher pitch, duplicated = held at same pitch. The resonance envelope stays tied to the grain shape — only the pitch changes. Vocaloid's engine is essentially PSOLA applied to a recorded phoneme database. The "Vocaloid sound" is the artifacts from extreme pitch shifts, aestheticized.</div>
+
+<div class="vocab"><span class="vt">"Vibrato"</span> — quasi-periodic pitch oscillation around a sustained note, typically 5–7Hz at ±30–100 cents depth. Not a perfect sine wave — real vibrato has cycle-to-cycle variation in both rate and depth (~10–15%), a delayed onset (the note arrives and stabilizes before the oscillation begins), and slight correlated amplitude modulation. A pure LFO sounds like a theremin. The onset delay is what distinguishes trained technique from an unsteady voice.</div>
+
+<div class="vocab"><span class="vt">"Singer's formant"</span> — a resonance cluster at 2500–3500Hz, produced when the upper resonances are tuned close together through specific throat and pharynx positioning. Adds 15–20dB in a frequency range where the orchestra has a spectral gap. This is how operatic singers are heard over 70 musicians without amplification. Pop singers don't develop it — a microphone is cheaper than a decade of technique training.</div>
+
+<div class="step-card"><span class="step-num">MIDI TO FREQUENCY</span>
+The formula: <code>f = 440 × 2^((note - 69) / 12)</code>. MIDI 69 = A4 = 440Hz. Every 12 steps = one octave. Every 1 step = one semitone = 2^(1/12) ≈ 1.0595×. For vibrato depth in Hz: <code>targetHz × (2^(depth_semitones / 12) - 1)</code>. At 0.3 semitones on C4 (261.6Hz), that's ±4.6Hz — narrow trained vibrato. At 0.8 semitones, ±12Hz — wide and expressive.
+</div>
+
+<div class="step-card"><span class="step-num">HIGH-NOTE VOWEL MODIFICATION</span>
+When the fundamental frequency exceeds the first resonance (F1), that resonance can no longer reinforce any harmonic and the voice thins out. The fix: raise F1 to stay above the pitch. Rule: F1_modified = max(F1_original, pitch_Hz × 1.35). At C5 (523Hz), an "ee" vowel (F1=280Hz) must raise its F1 to 706Hz — into "ah" territory. This is correct technique, not a flaw. Opera singers do it without thinking. The synth below does it automatically.
+</div>
+
+<div class="step-card"><span class="step-num">VOCALOID → DIFFSINGER → WHERE IT'S HEADED</span>
+Vocaloid (Yamaha, 2004): phoneme database + PSOLA + manual tuning per note. The editor exposes vibrato depth, rate, delay, and consonant timing per note — a full parameter surface. DiffSinger (2021): diffusion model conditioned on musical score + phoneme sequence + singer embedding. No PSOLA artifacts, no database gaps. <a href="https://github.com/MakiMakiLab/DiffSinger">Open source on GitHub</a>. <a href="https://synthesizerv.com">Synthesizer V</a> and <a href="https://ace-studio.timedomain.cn">ACE Studio</a> are commercial DiffSinger-tier tools you can use today with no DSP knowledge. The gap from "requires expert parameter tuning" to "drag and drop" took 20 years.
+</div>
+
+<div class="step-card"><span class="step-num">YOUR JANK VOCALOID: COMPLETE ARCHITECTURE</span>
+Everything you need is already in this course. The challenge below is a self-contained, paste-and-run singing synthesizer built entirely from what you've learned:
+<br><br>
+• <strong>Pitch per note</strong>: MIDI → Hz formula from above<br>
+• <strong>Resonances per vowel</strong>: your measured values from L11, scaled by throat length<br>
+• <strong>High-note modification</strong>: auto-raise F1 when pitch exceeds it<br>
+• <strong>Formant transitions</strong>: linear ramps between notes (coarticulation from L07)<br>
+• <strong>Vibrato</strong>: delayed LFO connected to oscillator pitch<br>
+• <strong>Source quality</strong>: jitter and breathiness from your L11 measurements<br>
+<br>
+Paste the code from the challenge block into the code editor and hit RUN. It sings.
+</div>
+
+<div class="spamton">Hatsune Miku (Yamaha/Crypton, 2007): a Vocaloid voice package with a turquoise-haired character design. Built on concatenative synthesis + PSOLA, complete with audible pitch-quantization artifacts. Fans called these artifacts "Miku's voice." Over <strong>100,000 original songs</strong> attributed to her. Sold-out holographic concerts in Tokyo, LA, and Paris. A voice synthesizer with visible technical limitations became one of the most recognizable vocal identities on the planet. <strong>The uncanny valley became a fanbase.</strong> You're working with the same building blocks she runs on.</div>
+
+<div class="challenge">The code editor already has the Jank Vocaloid loaded — hit <strong>RUN</strong> and it sings. Then make it yours:
+<br><br>
+Edit the <code>sequence</code> array at the top — each entry is <code>[midi_note, vowel_index, duration_ms]</code>. Vowels: 0=ɑ (ahh), 1=i (ee), 2=u (oo), 3=ɛ (eh). Try alternating vowels on the same pitch — coarticulation. Try a rising scale. Try all the same vowel at different pitches and notice where the quality shifts — that's high-note modification kicking in.
+<br><br>
+Then swap in your L11 measurements: set <code>myPitch</code> to your mean speaking pitch, <code>myTract</code> to your throat length ratio, <code>myJitter</code> to your measured jitter %. Does it sound more like you?</div>
+
+<p class="tip">>> TIP: set vibrato onset delay to 0 and depth to wide — that's an unsteady, nervous sound. Set the delay to 250ms and depth moderate — the note arrives, settles, then vibrato begins. That sequence is technique. "Trained singer" vs "uncertain singer" lives almost entirely in whether the vibrato waits.</p>
+<div class="step-card"><span class="step-num">WHAT YOU NOW UNDERSTAND</span>
+You started with a sawtooth wave and two filters. You now know why that works — because the voice is a source and a filter, and you built both from scratch. Along the way you learned: how vowel identity lives in two resonance frequencies that map directly to jaw height and tongue position; why vocal imperfection (jitter, shimmer, open quotient) is the difference between "synthetic" and "alive"; how consonants are transitions embedded in vowels, not standalone sounds; why prosody carries meaning that phonemes can't; how a vocoder extracts and transplants spectral shape; why every TTS system from a 1990s GPS voice to ElevenLabs is solving the same problem with increasingly powerful tools; what a speaker embedding actually encodes about a person's throat; and why singing synthesis breaks every assumption that speech synthesis gets to make.
+<br><br>
+The code on the right is a working singing synthesizer. It's not ElevenLabs — it's about a decade of research behind it. But it runs on the same principles. The gap between "a sawtooth and two bandpass filters" and "a commercially convincing voice" is not a gap in concepts. It's a gap in data, compute, and the patience to measure 1600 diphone transitions. The concepts are exactly what you just learned.
+</div>
+
+<div class="step-card"><span class="step-num">WHERE TO GO FROM HERE</span>
+If you want to keep building: <a href="https://github.com/coqui-ai/TTS">Coqui TTS</a> is the most accessible open-source TTS stack — multi-speaker VITS models, decent documentation, runs locally. <a href="https://github.com/SWivid/F5-TTS">F5-TTS</a> does zero-shot voice cloning from 5 seconds of audio, one pip install. <a href="https://github.com/MakiMakiLab/DiffSinger">DiffSinger</a> is the current best open-source singing synthesis model. <a href="https://www.praat.org">Praat</a> is the free acoustic analysis tool researchers use — measure your own formants, jitter, and pitch. <a href="https://huggingface.co/models?pipeline_tag=text-to-speech">Hugging Face TTS models</a> hosts hundreds of models you can run in a browser. If you want to go deeper on the math: Julius O. Smith's <a href="https://ccrma.stanford.edu/~jos/filters/">Introduction to Digital Filters</a> at Stanford CCRMA is free online and covers everything under the hood of every filter you used here.
+</div>
+
+`,
+code:`// Jank Vocaloid — paste into code editor, hit RUN
+// sequence: [midi_note, vowel_index, duration_ms]
+// vowels: 0=ɑ(ahh)  1=i(ee)  2=u(oo)  3=ɛ(eh)
+const sequence = [
+  [60, 0, 400],  // C4 "ahh"
+  [62, 3, 300],  // D4 "eh"
+  [64, 1, 400],  // E4 "ee"
+  [67, 0, 600],  // G4 "ahh"
+  [65, 3, 300],  // F4 "eh"
+  [64, 1, 500],  // E4 "ee"
+  [62, 0, 700],  // D4 "ahh"
+];
+
+// ← YOUR voice parameters (swap in your L11 measurements)
+const myPitch   = 130;   // your mean speaking pitch in Hz
+const myTract   = 1.0;   // throat length (1.0 = neutral, 1.15 = longer)
+const myJitter  = 0.005; // pitch irregularity (0.005 = healthy)
+const myBreath  = 0.12;  // breathiness (0 = pressed, 0.4 = very breathy)
+
+function makeSynth(ctx, p) {
+  const now = ctx.currentTime;
+  const VOWELS = [
+    [800,1200,2500], // ɑ
+    [280,2620,3380], // i
+    [310, 890,2370], // u
+    [600,1900,2550], // ɛ
+  ];
+  const ts = 1 / myTract; // tract scale factor
+
+  const osc = ctx.createOscillator();
+  osc.type = 'sawtooth';
+  const f1n = ctx.createBiquadFilter(); f1n.type='bandpass'; f1n.Q.value=10;
+  const f2n = ctx.createBiquadFilter(); f2n.type='bandpass'; f2n.Q.value=12;
+  const f3n = ctx.createBiquadFilter(); f3n.type='bandpass'; f3n.Q.value=11;
+
+  // Vibrato LFO — delayed onset so it ramps in after pitch settles
+  const vibLFO = ctx.createOscillator();
+  vibLFO.type = 'sine'; vibLFO.frequency.value = 5.5;
+  const vibGain = ctx.createGain(); vibGain.gain.value = 0;
+  vibLFO.connect(vibGain); vibGain.connect(osc.frequency);
+
+  let t = now + 0.02;
+  let totalDur = 0;
+
+  sequence.forEach(([note, vIdx, durMs]) => {
+    const dur = durMs / 1000;
+    const hz  = 440 * Math.pow(2, (note - 69) / 12);
+    let [rawF1, f2, f3] = VOWELS[vIdx];
+
+    // High-note vowel modification: keep first resonance above pitch
+    const f1 = Math.max(rawF1 * ts, hz * 1.35);
+
+    // Schedule pitch and resonances for this note
+    const xf = Math.min(0.06, dur * 0.2); // crossfade = coarticulation
+    osc.frequency.setValueAtTime(hz, t);
+    f1n.frequency.linearRampToValueAtTime(f1,      t + xf);
+    f2n.frequency.linearRampToValueAtTime(f2 * ts, t + xf);
+    f3n.frequency.linearRampToValueAtTime(f3 * ts, t + xf);
+
+    // Vibrato: kicks in 200ms after note start, fades before note ends
+    const vibHz = hz * (Math.pow(2, 0.25 / 12) - 1); // ±0.25 semitone depth
+    vibGain.gain.setValueAtTime(0, t);
+    vibGain.gain.linearRampToValueAtTime(vibHz, t + 0.20);
+    vibGain.gain.setValueAtTime(vibHz, t + dur - 0.08);
+    vibGain.gain.linearRampToValueAtTime(0, t + dur);
+
+    t += dur;
+    totalDur += dur;
+  });
+
+  // Jitter: small cycle-to-cycle pitch irregularity
+  for (let j = 0; j < totalDur * 20; j++) {
+    const jt = now + j / 20;
+    osc.frequency.setValueAtTime(
+      osc.frequency.value + (Math.random() * 2 - 1) * myJitter * myPitch,
+      jt
+    );
+  }
+
+  // Aspiration noise (breathiness)
+  const nLen = Math.ceil(ctx.sampleRate * (totalDur + 0.1));
+  const nBuf = ctx.createBuffer(1, nLen, ctx.sampleRate);
+  const nd = nBuf.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+  const nSrc = ctx.createBufferSource(); nSrc.buffer = nBuf;
+  const nLPF = ctx.createBiquadFilter(); nLPF.type='lowpass'; nLPF.frequency.value=4000;
+  const nGain = ctx.createGain(); nGain.gain.value = myBreath * 0.35;
+  nSrc.connect(nLPF); nLPF.connect(nGain);
+
+  const master = ctx.createGain(); master.gain.value = 0.42;
+  osc.connect(f1n); f1n.connect(master);
+  osc.connect(f2n); f2n.connect(master);
+  osc.connect(f3n); f3n.connect(master);
+  nGain.connect(master);
+
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(0, now);
+  env.gain.linearRampToValueAtTime(1, now + 0.05);
+  env.gain.setValueAtTime(1, now + totalDur - 0.1);
+  env.gain.linearRampToValueAtTime(0, now + totalDur + 0.05);
+  master.connect(env);
+
+  osc.start(now);    osc.stop(now + totalDur + 0.15);
+  vibLFO.start(now); vibLFO.stop(now + totalDur + 0.15);
+  nSrc.start(now);   nSrc.stop(now + totalDur + 0.15);
+
+  return { node: env, osc, stopAt: now + totalDur + 0.15, allOscs: [osc, vibLFO, nSrc] };
+}
+function updateParams(nodes, p) {}`,
+},
+
+
+]; // end LESSONS
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  ENGINE
+// ═══════════════════════════════════════════════════════════════════
+let audioCtx = null, analyser = null;
+let currentNodes = null, currentLesson = 0;
+let rafId = null, autoStopTimer = null;
+let params = {};
+
+const playBtn    = document.getElementById('play-btn');
+const runBtn     = document.getElementById('run-btn');
+const statusTxt  = document.getElementById('status-txt');
+const paramSlots = document.getElementById('param-slots');
+const codeTA     = document.getElementById('synth-code');
+const scopeC     = document.getElementById('scope-canvas');
+const progress   = document.getElementById('progress');
+const lessonText = document.getElementById('lesson-text');
+const lessonNav  = document.getElementById('lesson-nav');
+const scopeCtx   = scopeC.getContext('2d');
+
+// ── OSCILLOSCOPE ────────────────────────────────────────────────
+function resizeScope() {
+  scopeC.width  = scopeC.offsetWidth  * devicePixelRatio;
+  scopeC.height = scopeC.offsetHeight * devicePixelRatio;
+}
+resizeScope();
+window.addEventListener('resize', resizeScope);
+
+let timeBuf = new Uint8Array(2048), freqBuf = new Uint8Array(2048);
+let scopeRunning = false;
+
+function drawScope() {
+  if(!scopeRunning) return;
+  rafId = requestAnimationFrame(drawScope);
+  if(!analyser) return;
+
+  const W = scopeC.width, H = scopeC.height;
+  const half = W >> 1;
+
+  scopeCtx.fillStyle = '#000';
+  scopeCtx.fillRect(0, 0, W, H);
+
+  analyser.getByteTimeDomainData(timeBuf);
+  analyser.getByteFrequencyData(freqBuf);
+
+  // centre divider
+  scopeCtx.strokeStyle = '#1a1a2e';
+  scopeCtx.lineWidth = 1;
+  scopeCtx.beginPath();
+  scopeCtx.moveTo(half, 0); scopeCtx.lineTo(half, H);
+  scopeCtx.stroke();
+
+  // time domain — left half
+  scopeCtx.strokeStyle = '#b48eff';
+  scopeCtx.lineWidth = 1.5;
+  scopeCtx.beginPath();
+  const step = Math.ceil(timeBuf.length / half);
+  for(let i=0, drawn=0; i<timeBuf.length && drawn<half; i+=step, drawn++) {
+    const x = drawn;
+    const y = H/2 + (timeBuf[i] - 128) / 128 * (H/2 - 3);
+    drawn===0 ? scopeCtx.moveTo(x, y) : scopeCtx.lineTo(x, y);
+  }
+  scopeCtx.stroke();
+
+  // centre line ref
+  scopeCtx.strokeStyle = '#1e1e2e';
+  scopeCtx.lineWidth = 1;
+  scopeCtx.beginPath();
+  scopeCtx.moveTo(0, H/2); scopeCtx.lineTo(half, H/2);
+  scopeCtx.stroke();
+
+  // frequency spectrum — right half
+  const bins = Math.min(freqBuf.length, 512);
+  const bw = half / bins;
+  for(let i=0; i<bins; i++) {
+    const v = freqBuf[i] / 255;
+    const h = v * H;
+    const hue = 260 + v * 80; // purple → pink
+    scopeCtx.fillStyle = `hsl(${hue},80%,${40 + v*40}%)`;
+    scopeCtx.fillRect(half + i * bw, H - h, bw + 0.5, h);
+  }
+}
+
+function startScope() {
+  scopeRunning = true;
+  drawScope();
+}
+function stopScope() {
+  scopeRunning = false;
+  if(rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+  // blank canvas
+  scopeCtx.fillStyle = '#000';
+  scopeCtx.fillRect(0, 0, scopeC.width, scopeC.height);
+}
+
+// ── AUDIO CONTEXT ────────────────────────────────────────────────
+function ensureContext() {
+  if(!audioCtx) {
+    audioCtx = new AudioContext();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 4096;
+    analyser.smoothingTimeConstant = 0.8;
+    timeBuf = new Uint8Array(analyser.fftSize);
+    freqBuf = new Uint8Array(analyser.frequencyBinCount);
+    analyser.connect(audioCtx.destination);
+  }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// ── STOP CURRENT SYNTH ───────────────────────────────────────────
+function stopSynth() {
+  if(autoStopTimer) { clearTimeout(autoStopTimer); autoStopTimer = null; }
+  if(!currentNodes) return;
+
+  try {
+    const n = currentNodes;
+    // stop all oscillators / buffer sources
+    const stopAll = (obj) => {
+      if(!obj) return;
+      if(typeof obj.stop === 'function') { try { obj.stop(); } catch(e){} }
+    };
+    stopAll(n.osc);
+    stopAll(n.noise);
+    if(Array.isArray(n.oscs)) n.oscs.forEach(stopAll);
+    if(Array.isArray(n.allOscs)) n.allOscs.forEach(stopAll);
+    if(n.node) n.node.disconnect();
+  } catch(e){}
+
+  currentNodes = null;
+  stopScope();
+  playBtn.textContent = '> PLAY';
+  playBtn.classList.remove('playing');
+  statusTxt.textContent = 'stopped';
+}
+
+// ── RUN SYNTH ────────────────────────────────────────────────────
+function runSynth() {
+  ensureContext();
+  stopSynth();
+
+  // Build params object from sliders
+  const p = {};
+  const lesson = LESSONS[currentLesson];
+  lesson.params.forEach(pr => {
+    p[pr.id] = parseFloat(
+      document.getElementById('sl-' + pr.id)?.value ?? pr.def
+    );
+  });
+  params = p;
+
+  // Evaluate user-edited code
+  let makeS, updateP;
+  try {
+    const code = codeTA.value;
+    const fn = new Function(code + '\nreturn { makeSynth, updateParams };');
+    const exports = fn();
+    makeS   = exports.makeSynth;
+    updateP = exports.updateParams;
+  } catch(err) {
+    statusTxt.textContent = 'CODE ERROR: ' + err.message;
+    return;
+  }
+
+  try {
+    const result = makeS(audioCtx, {...p});
+    if(!result || !result.node) { statusTxt.textContent = 'makeSynth must return {node, osc}'; return; }
+
+    currentNodes = result;
+    currentNodes._updateParams = updateP;
+
+    // Start oscillator if it hasn't been started
+    if(result.osc && typeof result.osc.start === 'function') {
+      try { result.osc.start(); } catch(e){}
+    }
+
+    result.node.connect(analyser);
+
+    startScope();
+    playBtn.textContent = '> STOP';
+    playBtn.classList.add('playing');
+    statusTxt.textContent = 'playing — drag sliders to sculpt sound';
+
+    // Auto-stop if stopAt provided
+    if(result.stopAt) {
+      const ms = (result.stopAt - audioCtx.currentTime) * 1000;
+      autoStopTimer = setTimeout(stopSynth, Math.max(0, ms));
+    }
+  } catch(err) {
+    statusTxt.textContent = 'RUNTIME ERROR: ' + err.message;
+    console.error(err);
+  }
+}
+
+// ── PLAY BUTTON ──────────────────────────────────────────────────
+playBtn.addEventListener('click', () => {
+  if(currentNodes) stopSynth();
+  else runSynth();
+});
+
+runBtn.addEventListener('click', runSynth);
+
+// Ctrl/Cmd+Enter to run
+document.addEventListener('keydown', (e) => {
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runSynth(); }
+});
+
+// ── SLIDER UPDATE ────────────────────────────────────────────────
+function onSlider(id, value) {
+  params[id] = parseFloat(value);
+  const valEl = document.getElementById('val-' + id);
+  if(valEl) valEl.textContent = parseFloat(value).toFixed(
+    value % 1 === 0 ? 0 : value < 1 ? 3 : 1
+  );
+  if(currentNodes && currentNodes._updateParams) {
+    try { currentNodes._updateParams(currentNodes, {...params}); } catch(e){}
+  }
+}
+
+// ── LOAD LESSON ──────────────────────────────────────────────────
+function loadLesson(idx) {
+  stopSynth();
+  currentLesson = idx;
+  const L = LESSONS[idx];
+
+  // Progress bar
+  const pct = ((idx + 1) / LESSONS.length * 100).toFixed(1);
+  progress.style.width = pct + '%';
+
+  // Nav
+  document.querySelectorAll('.nav-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+  });
+
+  // Lesson text
+  lessonText.innerHTML = `
+    <div class="lesson-number">${L.subtitle}</div>
+    <div class="lesson-title">${L.title}</div>
+    <div class="lesson-body">${L.body}</div>
+  `;
+
+  // Wire up vowel chart if present
+  const vc = lessonText.querySelector('#vowel-chart');
+  if(vc) buildVowelChart(vc);
+
+  // Code
+  codeTA.value = L.code;
+
+  // Sliders
+  paramSlots.innerHTML = '';
+  L.params.forEach(pr => {
+    const row = document.createElement('div');
+    row.className = 'param-row';
+    row.innerHTML = `
+      <label for="sl-${pr.id}">${pr.label}</label>
+      <input type="range" id="sl-${pr.id}" min="${pr.min}" max="${pr.max}"
+             step="${pr.step}" value="${pr.def}">
+      <span class="val" id="val-${pr.id}">${pr.def}</span>
+    `;
+    row.querySelector('input').addEventListener('input', function() {
+      onSlider(pr.id, this.value);
+    });
+    paramSlots.appendChild(row);
+  });
+
+  // Phoneme overlay visibility
+  const overlay = document.getElementById('phoneme-overlay');
+  overlay.classList.remove('visible');
+
+  // Status
+  statusTxt.textContent = 'press play to hear the sound';
+}
+
+// ── BUILD NAV ────────────────────────────────────────────────────
+const NAV_SECTIONS = { 0:'FUNDAMENTALS', 5:'SYNTHESIS', 9:'ADVANCED' };
+LESSONS.forEach((L, i) => {
+  if (NAV_SECTIONS[i]) {
+    const div = document.createElement('span');
+    div.className = 'nav-section';
+    div.textContent = NAV_SECTIONS[i];
+    lessonNav.appendChild(div);
+  }
+  const btn = document.createElement('button');
+  btn.className = 'nav-btn' + (L.locked ? ' locked' : '');
+  btn.textContent = L.subtitle;
+  btn.addEventListener('click', () => { if(!L.locked) loadLesson(i); });
+  lessonNav.appendChild(btn);
+});
+
+// ── VOWEL CHART ──────────────────────────────────────────────────
+const VOWELS = [
+  { label:'/ɑ/ "ahh"', f1:800, f2:1200, x:0.42, y:0.12 },
+  { label:'/æ/ "cat"', f1:730, f2:1900, x:0.65, y:0.20 },
+  { label:'/ɛ/ "bed"', f1:600, f2:1900, x:0.65, y:0.38 },
+  { label:'/i/ "eeee"',f1:280, f2:2620, x:0.88, y:0.80 },
+  { label:'/ɪ/ "bit"', f1:390, f2:1990, x:0.67, y:0.62 },
+  { label:'/o/ "oh"',  f1:450, f2:850,  x:0.24, y:0.52 },
+  { label:'/u/ "oo"',  f1:310, f2:890,  x:0.22, y:0.74 },
+  { label:'/ʌ/ "cup"', f1:640, f2:1190, x:0.38, y:0.30 },
+];
+
+function buildVowelChart(container) {
+  container.querySelectorAll('.vowel-btn').forEach(b => b.remove());
+  VOWELS.forEach(v => {
+    const btn = document.createElement('button');
+    btn.className = 'vowel-btn';
+    btn.textContent = v.label.split('"')[1] || v.label;
+    btn.title = v.label + ' — F1=' + v.f1 + ' F2=' + v.f2;
+    btn.style.left = (v.x * 100) + '%';
+    btn.style.top  = ((1 - v.y) * 100) + '%'; // invert: high F1 = low on chart
+    btn.addEventListener('click', () => {
+      const sl1 = document.getElementById('sl-f1');
+      const sl2 = document.getElementById('sl-f2');
+      if(sl1) { sl1.value = v.f1; onSlider('f1', v.f1); }
+      if(sl2) { sl2.value = v.f2; onSlider('f2', v.f2); }
+      container.querySelectorAll('.vowel-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      runSynth(); // always play immediately on click
+    });
+    container.appendChild(btn);
+  });
+  // Axis labels — use createElement to avoid clobbering buttons
+  const labels = [
+    {text:'← F2 high (front)', style:'left:.4rem;top:.4rem'},
+    {text:'F2 low (back) →',   style:'right:.4rem;top:.4rem'},
+    {text:'F1 low (closed)',    style:'left:.3rem;top:8%'},
+    {text:'F1 high (open)',     style:'left:.3rem;bottom:6%'},
+  ];
+  labels.forEach(({text, style}) => {
+    const sp = document.createElement('span');
+    sp.className = 'vc-label';
+    sp.textContent = text;
+    sp.setAttribute('style', style + ';font-size:.48rem;opacity:.45;position:absolute;pointer-events:none');
+    container.appendChild(sp);
+  });
+}
+
+// ── PHONEME SEQUENCER ────────────────────────────────────────────
+const PHONEMES = [
+  // vowels
+  {ph:'A',  type:'vowel', f1:800,  f2:1200},
+  {ph:'E',  type:'vowel', f1:600,  f2:1900},
+  {ph:'I',  type:'vowel', f1:280,  f2:2620},
+  {ph:'O',  type:'vowel', f1:450,  f2:850 },
+  {ph:'U',  type:'vowel', f1:310,  f2:890 },
+  {ph:'ʌ',  type:'vowel', f1:640,  f2:1190},
+  {ph:'æ',  type:'vowel', f1:740,  f2:1800},
+  // fricatives — cutoff = spectral peak center, Q = peak sharpness
+  // HPF removes everything below cutoff/2; BPF shapes the peak at cutoff
+  // voiceless
+  {ph:'S',  type:'fric',  cutoff:6500, Q:8,  hpf:3500, voiced:false},  // narrow high sibilant
+  {ph:'ʃ',  type:'fric',  cutoff:2800, Q:6,  hpf:1800, voiced:false},  // lower, retracted
+  {ph:'F',  type:'fric',  cutoff:4200, Q:2,  hpf:2500, voiced:false},  // broad labiodental
+  {ph:'θ',  type:'fric',  cutoff:5500, Q:3,  hpf:3000, voiced:false},  // dental, thin
+  // voiced — same spectral shape, buzz added at low gain
+  {ph:'Z',  type:'fric',  cutoff:6500, Q:8,  hpf:3500, voiced:true},
+  {ph:'V',  type:'fric',  cutoff:4200, Q:2,  hpf:2500, voiced:true},
+  {ph:'ð',  type:'fric',  cutoff:5500, Q:3,  hpf:3000, voiced:true},
+  // plosives — burst dur in seconds (longer = more audible), cutoff = burst BPF center
+  // locus = F2 transition target (where F2 appears to come FROM)
+  {ph:'P',  type:'plsv',  cutoff:800,  dur:0.040, locus:700,  vot:0.055},  // bilabial — low burst
+  {ph:'T',  type:'plsv',  cutoff:4000, dur:0.030, locus:1800, vot:0.070},  // alveolar — high burst
+  {ph:'K',  type:'plsv',  cutoff:1800, dur:0.040, locus:3000, vot:0.060},  // velar — mid burst
+  {ph:'B',  type:'plsv',  cutoff:800,  dur:0.030, locus:700,  vot:0.020, voiced:true},
+  {ph:'D',  type:'plsv',  cutoff:4000, dur:0.020, locus:1800, vot:0.020, voiced:true},
+  {ph:'G',  type:'plsv',  cutoff:1800, dur:0.025, locus:3000, vot:0.020, voiced:true},
+  // nasals + approximants
+  {ph:'M',  type:'nasal', f1:300,  f2:1000},
+  {ph:'N',  type:'nasal', f1:280,  f2:1500},
+  {ph:'ŋ',  type:'nasal', f1:280,  f2:2300},
+  {ph:'L',  type:'approx',f1:360,  f2:1000},
+  {ph:'R',  type:'approx',f1:460,  f2:1100},
+  // rest
+  {ph:'—',  type:'rest'},
+];
+
+const TRACKS = ['SYL 1','SYL 2','SYL 3','SYL 4'];
+let STEPS = 8;
+const CHROMATIC = [
+  {name:'—',    midi:null},
+  {name:'C3',   midi:48},{name:'D3',midi:50},{name:'E3',midi:52},{name:'F3',midi:53},
+  {name:'G3',   midi:55},{name:'A3',midi:57},{name:'B3',midi:59},
+  {name:'C4',   midi:60},{name:'D4',midi:62},{name:'E4',midi:64},{name:'F4',midi:65},
+  {name:'G4',   midi:67},{name:'A4',midi:69},{name:'B4',midi:71},
+  {name:'C5',   midi:72},{name:'D5',midi:74},{name:'E5',midi:76},{name:'G5',midi:79},
+];
+let pitchData = Array(16).fill(null); // null = follow global F0 slider
+let seqData = Array.from({length:TRACKS.length}, () => Array(16).fill(null));
+let selTrack = 0, selStep  = -1;
+let seqPlaying = false, seqStep = 0, seqTimer = null;
+let seqVoice = null; // persistent legato voice nodes
+
+
+// ─── PRESET PATTERNS ────────────────────────────────────────────
+const PH = (s) => PHONEMES.find(p => p.ph === s) || PHONEMES.find(p=>p.ph==='—');
+const PATTERNS = {
+  'nasal-chain': {
+    desc: 'lesson 07 nasal chain: vowel → nasal → vowel',
+    steps: 8,
+    tracks: [
+      ['A','—','M','—','A','—','—','—'],
+      ['I','—','N','—','I','—','—','—'],
+      ['—','—','—','—','—','—','—','—'],
+      ['—','—','—','—','—','—','—','—'],
+    ],
+    pitch: [60,null,60,null,62,null,null,null],
+  },
+  'melodic-4': {
+    desc: 'lesson 12 capstone: four vowels on a major scale',
+    steps: 8,
+    tracks: [
+      ['A','—','E','—','I','—','O','—'],
+      ['—','—','—','—','—','—','—','—'],
+      ['—','—','—','—','—','—','—','—'],
+      ['—','—','—','—','—','—','—','—'],
+    ],
+    pitch: [60,null,62,null,64,null,67,null],
+  },
+  'consonant-vowel': {
+    desc: 'CV pattern — feel coarticulation at the step boundary',
+    steps: 8,
+    tracks: [
+      ['M','A','N','I','P','E','—','—'],
+      ['—','—','—','—','—','—','—','—'],
+      ['—','—','—','—','—','—','—','—'],
+      ['—','—','—','—','—','—','—','—'],
+    ],
+    pitch: [60,60,62,62,64,64,null,null],
+  },
+  'fricative-stack': {
+    desc: 'voiced vs voiceless fricatives stacked',
+    steps: 8,
+    tracks: [
+      ['S','—','ʃ','—','F','—','θ','—'],
+      ['Z','—','—','—','V','—','ð','—'],
+      ['—','—','—','—','—','—','—','—'],
+      ['—','—','—','—','—','—','—','—'],
+    ],
+    pitch: Array(8).fill(null),
+  },
+};
+
+function loadPattern(name) {
+  const pat = PATTERNS[name];
+  if(!pat) return;
+  STEPS = pat.steps;
+  // reset
+  seqData = Array.from({length:TRACKS.length}, () => Array(16).fill(null));
+  pitchData = Array(16).fill(null);
+  pat.tracks.forEach((row, ti) => {
+    row.forEach((sym, si) => {
+      const found = PHONEMES.find(p => p.ph === sym);
+      seqData[ti][si] = (found && found.type !== 'rest') ? found : null;
+    });
+  });
+  (pat.pitch || []).forEach((m, si) => { pitchData[si] = m; });
+  // update step count display
+  const sc = document.getElementById('phseq-steps-val');
+  if(sc) sc.textContent = STEPS;
+  buildSequencer();
+  const hint = document.getElementById('phseq-hint');
+  if(hint) hint.textContent = '>> loaded: ' + (pat.desc || name);
+}
+
+function buildPitchRow() {
+  const row = document.getElementById('phseq-pitch-row');
+  if(!row) return;
+  row.innerHTML = '<div class="phseq-pitch-label">PITCH</div>';
+  for(let si=0; si<STEPS; si++) {
+    const cell = document.createElement('div');
+    cell.className = 'phseq-pitch-cell' + (si%2===0 ? ' beat' : '');
+    cell.dataset.si = si;
+    const n = CHROMATIC.find(c => c.midi === pitchData[si]);
+    cell.textContent = n ? n.name : '—';
+    cell.title = 'L-click: cycle note  ·  R-click: clear';
+    cell.addEventListener('click', () => {
+      // cycle through CHROMATIC
+      const cur = pitchData[si];
+      const idx = CHROMATIC.findIndex(c => c.midi === cur);
+      const next = CHROMATIC[(idx + 1) % CHROMATIC.length];
+      pitchData[si] = next.midi;
+      cell.textContent = next.name;
+      cell.classList.toggle('has-pitch', next.midi !== null);
+    });
+    cell.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      pitchData[si] = null;
+      cell.textContent = '—';
+      cell.classList.remove('has-pitch');
+    });
+    row.appendChild(cell);
+  }
+}
+
+function buildSequencer() {
+  const grid    = document.getElementById('phseq-grid');
+  const picker  = document.getElementById('phoneme-picker');
+  grid.innerHTML   = '';
+  picker.innerHTML = '<label>PHONEMES — select a step, then tap one below</label>';
+
+  buildPitchRow();
+
+  TRACKS.forEach((label, ti) => {
+    const col = document.createElement('div');
+    col.className = 'phseq-track';
+    const lbl = document.createElement('div');
+    lbl.className = 'phseq-track-label';
+    lbl.textContent = label;
+    col.appendChild(lbl);
+
+    for(let si=0; si<STEPS; si++) {
+      const cell = document.createElement('div');
+      cell.className = 'phseq-step' + (si%2===0 ? ' beat' : '');
+      cell.dataset.ti = ti;
+      cell.dataset.si = si;
+      cell.textContent = seqData[ti][si]?.ph ?? '—';
+      if(seqData[ti][si] && seqData[ti][si].type !== 'rest') cell.classList.add('on');
+      cell.addEventListener('click', () => {
+        selTrack = ti; selStep = si;
+        document.querySelectorAll('.phseq-step').forEach(c => c.classList.remove('active-step'));
+        cell.classList.add('active-step');
+        document.getElementById('phseq-hint').textContent =
+          'track ' + label + ' step ' + (si+1) + ' — tap a phoneme below';
+      });
+      col.appendChild(cell);
+    }
+    grid.appendChild(col);
+  });
+
+  // Phoneme picker
+  PHONEMES.forEach(ph => {
+    const btn = document.createElement('button');
+    btn.className = 'ph-key ' + (ph.type==='vowel'?'vowel':ph.type==='fric'?'fric':ph.type==='plsv'?'plsv':'rest');
+    btn.textContent = ph.ph;
+    btn.title = ph.type;
+    btn.addEventListener('click', () => {
+      if(selStep < 0) return;
+      seqData[selTrack][selStep] = ph.type==='rest' ? null : ph;
+      refreshSequencerCells();
+    });
+    picker.appendChild(btn);
+  });
+}
+
+function refreshSequencerCells() {
+  document.querySelectorAll('.phseq-step').forEach(cell => {
+    const ti = parseInt(cell.dataset.ti), si = parseInt(cell.dataset.si);
+    const ph = seqData[ti][si];
+    cell.textContent = ph?.ph ?? '—';
+    cell.classList.toggle('on', !!ph && ph.type !== 'rest');
+  });
+}
+
+function midiToHz(midi) {
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+function getSeqF0(stepMidi) {
+  if(stepMidi !== null && stepMidi !== undefined) return midiToHz(stepMidi);
+  // fall through to current lesson's F0 slider (or pitch slider)
+  const f0el = document.getElementById('f0') || document.getElementById('basePitch');
+  return f0el ? parseFloat(f0el.value) : 120;
+}
+
+function playPhoneme(ph, stepMidi) {
+  ensureContext();
+  if(!ph || ph.type === 'rest') return;
+
+  const ctx = audioCtx;
+  const now = ctx.currentTime;
+  const master = ctx.createGain();
+  master.gain.value = 0.4;
+  master.connect(analyser);
+
+  const f0 = getSeqF0(stepMidi);
+
+  if(ph.type === 'approx') {
+    // lateral/rhotic approximants — vowel-like but darker
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.value = f0;
+    const f1 = ctx.createBiquadFilter(); f1.type='bandpass'; f1.frequency.value=ph.f1; f1.Q.value=8;
+    const f2 = ctx.createBiquadFilter(); f2.type='bandpass'; f2.frequency.value=ph.f2; f2.Q.value=8;
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0, now);
+    env.gain.linearRampToValueAtTime(0.8, now+0.03);
+    env.gain.setValueAtTime(0.8, now+0.10);
+    env.gain.exponentialRampToValueAtTime(0.001, now+0.18);
+    osc.connect(f1); f1.connect(env);
+    osc.connect(f2); f2.connect(env);
+    env.connect(master);
+    osc.start(now); osc.stop(now+0.20);
+  } else if(ph.type === 'vowel' || ph.type === 'nasal') {
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.value = f0;
+    const f1 = ctx.createBiquadFilter(); f1.type='bandpass'; f1.frequency.value=ph.f1; f1.Q.value=10;
+    const f2 = ctx.createBiquadFilter(); f2.type='bandpass'; f2.frequency.value=ph.f2; f2.Q.value=12;
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0, now);
+    env.gain.linearRampToValueAtTime(1, now+0.02);
+    env.gain.setValueAtTime(1, now+0.12);
+    env.gain.exponentialRampToValueAtTime(0.001, now+0.22);
+    osc.connect(f1); f1.connect(env);
+    osc.connect(f2); f2.connect(env);
+    env.connect(master);
+    osc.start(now); osc.stop(now+0.25);
+
+  } else if(ph.type === 'fric') {
+    // Two-stage filter: HPF removes energy below the noise floor,
+    // BPF shapes the spectral peak — this peak is what makes /s/ vs /ʃ/ vs /f/ distinct.
+    const dur = 0.16;
+    const len = Math.ceil(ctx.sampleRate * (dur + 0.02));
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    const nSrc = ctx.createBufferSource(); nSrc.buffer = buf;
+    const hpf = ctx.createBiquadFilter(); hpf.type='highpass';
+    hpf.frequency.value = ph.hpf || ph.cutoff * 0.5; hpf.Q.value = 0.7;
+    const bpf = ctx.createBiquadFilter(); bpf.type='peaking';
+    bpf.frequency.value = ph.cutoff; bpf.Q.value = ph.Q; bpf.gain.value = 10;
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0, now);
+    env.gain.linearRampToValueAtTime(0.55, now + 0.010);
+    env.gain.setValueAtTime(0.55, now + dur - 0.03);
+    env.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    nSrc.connect(hpf); hpf.connect(bpf); bpf.connect(env); env.connect(master);
+    nSrc.start(now); nSrc.stop(now + dur + 0.02);
+    if(ph.voiced) {
+      // Voiced: low-gain buzz through a low bandpass (the glottal formant region)
+      // The noise stays dominant — buzz just adds the voicing "gravel" underneath
+      const vbuzz = ctx.createOscillator();
+      vbuzz.type = 'sawtooth'; vbuzz.frequency.value = f0;
+      const vbpf = ctx.createBiquadFilter(); vbpf.type='bandpass';
+      vbpf.frequency.value = 400; vbpf.Q.value = 3;
+      const vbg = ctx.createGain(); vbg.gain.value = 0.18;
+      vbuzz.connect(vbpf); vbpf.connect(vbg); vbg.connect(master);
+      vbuzz.start(now); vbuzz.stop(now + dur);
+    }
+
+  } else if(ph.type === 'plsv') {
+    // Plosive structure: closure (silence) → burst → aspiration (VOT) → voice onset
+    // The burst duration and VOT length are the primary place-of-articulation cues.
+    const closure  = 0.025;           // 25ms silence — the stop closure
+    const burstDur = ph.dur;          // place-specific burst length
+    const vot      = ph.vot || 0.05; // voice onset time — aspiration after burst
+    const total    = closure + burstDur + vot + 0.02;
+
+    // BURST: loud, short, bandpass-filtered noise at place-specific frequency
+    const burstLen = Math.ceil(ctx.sampleRate * (burstDur + 0.01));
+    const burstBuf = ctx.createBuffer(1, burstLen, ctx.sampleRate);
+    const bd = burstBuf.getChannelData(0); for(let i=0;i<bd.length;i++) bd[i]=Math.random()*2-1;
+    const burstSrc = ctx.createBufferSource(); burstSrc.buffer = burstBuf;
+    const burstBPF = ctx.createBiquadFilter(); burstBPF.type='bandpass';
+    burstBPF.frequency.value = ph.cutoff; burstBPF.Q.value = 4;
+    const burstEnv = ctx.createGain();
+    burstEnv.gain.setValueAtTime(0, now + closure);
+    burstEnv.gain.linearRampToValueAtTime(1.0, now + closure + 0.003);  // 3ms attack — snappy
+    burstEnv.gain.exponentialRampToValueAtTime(0.001, now + closure + burstDur);
+    burstSrc.connect(burstBPF); burstBPF.connect(burstEnv); burstEnv.connect(master);
+    burstSrc.start(now + closure); burstSrc.stop(now + closure + burstDur + 0.01);
+
+    // ASPIRATION: quieter broadband noise during VOT (voice onset time)
+    // This is the "h-like" breath after an English voiceless stop
+    const aspLen = Math.ceil(ctx.sampleRate * (vot + 0.02));
+    const aspBuf = ctx.createBuffer(1, aspLen, ctx.sampleRate);
+    const ad = aspBuf.getChannelData(0); for(let i=0;i<ad.length;i++) ad[i]=Math.random()*2-1;
+    const aspSrc = ctx.createBufferSource(); aspSrc.buffer = aspBuf;
+    const aspHPF = ctx.createBiquadFilter(); aspHPF.type='highpass';
+    aspHPF.frequency.value = 1000; aspHPF.Q.value = 0.5;
+    const aspEnv = ctx.createGain();
+    const aspStart = now + closure + burstDur;
+    aspEnv.gain.setValueAtTime(0, aspStart);
+    aspEnv.gain.linearRampToValueAtTime(0.35, aspStart + 0.008);
+    aspEnv.gain.exponentialRampToValueAtTime(0.001, aspStart + vot);
+    aspSrc.connect(aspHPF); aspHPF.connect(aspEnv); aspEnv.connect(master);
+    aspSrc.start(aspStart); aspSrc.stop(aspStart + vot + 0.01);
+
+    if(ph.voiced) {
+      // Voiced plosive: prevoicing — quiet buzz starts BEFORE the burst
+      const pbuzz = ctx.createOscillator();
+      pbuzz.type = 'sawtooth'; pbuzz.frequency.value = f0;
+      const pbpf = ctx.createBiquadFilter(); pbpf.type='bandpass'; pbpf.frequency.value=300; pbpf.Q.value=2;
+      const pbg = ctx.createGain(); pbg.gain.value = 0;
+      pbg.gain.setValueAtTime(0, now);
+      pbg.gain.linearRampToValueAtTime(0.12, now + 0.01);
+      pbg.gain.setValueAtTime(0.12, now + closure + burstDur * 0.5);
+      pbg.gain.linearRampToValueAtTime(0, now + closure + burstDur);
+      pbuzz.connect(pbpf); pbpf.connect(pbg); pbg.connect(master);
+      pbuzz.start(now); pbuzz.stop(now + ph.dur + 0.06);
+    }
+  }
+
+  setTimeout(() => { try { master.disconnect(); } catch(e){} }, 500);
+}
+
+// ── LEGATO VOICE ─────────────────────────────────────────────────
+// Instead of firing a new oscillator every step, we keep one running
+// and ramp the formant filters to new targets — exactly how TTS works.
+// Consonant impulses (fricatives, plosives) fire as brief overlays.
+function startLegatoVoice() {
+  ensureContext();
+  const ctx = audioCtx;
+  const osc  = ctx.createOscillator();
+  osc.type   = 'sawtooth';
+  osc.frequency.value = 120;
+
+  const f1 = ctx.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = 500; f1.Q.value = 10;
+  const f2 = ctx.createBiquadFilter(); f2.type = 'bandpass'; f2.frequency.value = 1500; f2.Q.value = 12;
+
+  // Breathiness noise — runs continuously
+  const nLen = ctx.sampleRate * 60; // 60s buffer, loops
+  const nBuf = ctx.createBuffer(1, nLen, ctx.sampleRate);
+  const nd = nBuf.getChannelData(0);
+  for (let i = 0; i < nLen; i++) nd[i] = Math.random() * 2 - 1;
+  const nSrc = ctx.createBufferSource(); nSrc.buffer = nBuf; nSrc.loop = true;
+  const nLPF = ctx.createBiquadFilter(); nLPF.type = 'lowpass'; nLPF.frequency.value = 4000;
+  const nGain = ctx.createGain(); nGain.gain.value = 0;
+  nSrc.connect(nLPF); nLPF.connect(nGain);
+
+  const gate  = ctx.createGain(); gate.gain.value = 0; // controls voiced/rest
+  const master = ctx.createGain(); master.gain.value = 0.5;
+
+  osc.connect(f1); f1.connect(gate);
+  osc.connect(f2); f2.connect(gate);
+  nGain.connect(gate);
+  gate.connect(master); master.connect(analyser);
+
+  osc.start(); nSrc.start();
+  seqVoice = { osc, f1, f2, gate, nGain, nSrc, master, ctx };
+}
+
+function stopLegatoVoice() {
+  if (!seqVoice) return;
+  const { osc, nSrc, gate, master, ctx } = seqVoice;
+  const now = ctx.currentTime;
+  gate.gain.cancelScheduledValues(now);
+  gate.gain.setValueAtTime(0, now);
+  try { osc.stop(now + 0.05); } catch(e) {}
+  try { nSrc.stop(now + 0.05); } catch(e) {}
+  setTimeout(() => { try { master.disconnect(); } catch(e) {} }, 200);
+  seqVoice = null;
+}
+
+
+// Soft fricative overlay for legato sequencer — short duration, low gain
+// Same HPF+BPF approach as playPhoneme but quieter and briefer
+function playFricOverlay(ph, startTime) {
+  ensureContext();
+  const ctx = audioCtx;
+  const dur = 0.08; // 80ms — just enough hiss to identify the consonant
+  const len = Math.ceil(ctx.sampleRate * (dur + 0.01));
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  const nSrc = ctx.createBufferSource(); nSrc.buffer = buf;
+  const hpf = ctx.createBiquadFilter(); hpf.type='highpass';
+  hpf.frequency.value = ph.hpf || ph.cutoff * 0.5; hpf.Q.value = 0.7;
+  const bpf = ctx.createBiquadFilter(); bpf.type='peaking';
+  bpf.frequency.value = ph.cutoff; bpf.Q.value = ph.Q; bpf.gain.value = 10;
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(0, startTime);
+  env.gain.linearRampToValueAtTime(0.30, startTime + 0.006);
+  env.gain.setValueAtTime(0.30, startTime + dur - 0.015);
+  env.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+  nSrc.connect(hpf); hpf.connect(bpf); bpf.connect(env); env.connect(analyser);
+  nSrc.start(startTime); nSrc.stop(startTime + dur + 0.01);
+}
+
+function seqTick() {
+  const bpm = parseInt(document.getElementById('phseq-bpm')?.value ?? 80);
+  const intervalMs = (60 / bpm / 2) * 1000; // eighth-note steps
+  const stepSec    = intervalMs / 1000;
+  const xfSec      = Math.min(0.04, stepSec * 0.25); // crossfade = 25% of step or 40ms max
+
+  if (!seqVoice) { startLegatoVoice(); }
+  const { osc, f1, f2, gate, nGain, ctx } = seqVoice;
+  const now = ctx.currentTime;
+
+  // Collect what's on this step across all tracks
+  let voicedPh  = null;  // first vowel/nasal/approx found
+  let impulsePh = null;  // first fricative/plosive found
+
+  TRACKS.forEach((_, ti) => {
+    const ph = seqData[ti][seqStep];
+    if (!ph || ph.type === 'rest') return;
+    if (!voicedPh  && (ph.type === 'vowel' || ph.type === 'nasal' || ph.type === 'approx')) voicedPh = ph;
+    if (!impulsePh && (ph.type === 'fric'  || ph.type === 'plsv'))  impulsePh = ph;
+  });
+
+  const stepMidi = pitchData[seqStep];
+  const targetF0 = getSeqF0(stepMidi);
+
+  if (voicedPh) {
+    // Ramp formants to this vowel/nasal (coarticulation window = xfSec)
+    osc.frequency.linearRampToValueAtTime(targetF0, now + xfSec);
+    f1.frequency.linearRampToValueAtTime(voicedPh.f1, now + xfSec);
+    f2.frequency.linearRampToValueAtTime(voicedPh.f2, now + xfSec);
+    // Breathiness from phoneme type — nasals slightly airier
+    const breath = voicedPh.type === 'nasal' ? 0.08 : 0.04;
+    nGain.gain.linearRampToValueAtTime(breath, now + xfSec);
+    gate.gain.linearRampToValueAtTime(0.9, now + xfSec * 0.5);
+    gate.gain.setValueAtTime(0.9, now + stepSec - xfSec);
+    gate.gain.linearRampToValueAtTime(0.3, now + stepSec);  // slight tail into next step
+  } else if (!impulsePh) {
+    // Rest — fade out
+    gate.gain.linearRampToValueAtTime(0, now + xfSec);
+    nGain.gain.linearRampToValueAtTime(0, now + xfSec);
+  }
+
+  // Plosives: gate dip implies closure — no separate burst (prevents snare sound)
+  // Fricatives: fire a soft hiss overlay on top of the legato voice
+  if (impulsePh && impulsePh.type === 'plsv') {
+    gate.gain.setValueAtTime(0.04, now);
+    gate.gain.linearRampToValueAtTime(voicedPh ? 0.9 : 0.3, now + xfSec * 2);
+  } else if (impulsePh && impulsePh.type === 'fric') {
+    // Hiss overlay: separate quiet fricative on top of legato voice
+    playFricOverlay(impulsePh, now);
+    // Slight gate reduction — voice continues underneath the fricative
+    gate.gain.setValueAtTime(0.3, now);
+    gate.gain.linearRampToValueAtTime(voicedPh ? 0.9 : 0.2, now + stepSec * 0.7);
+  }
+
+  // Highlight active step
+  document.querySelectorAll('.phseq-step, .phseq-pitch-cell').forEach(cell => {
+    cell.classList.remove('play-head');
+    if (parseInt(cell.dataset.si) === seqStep) cell.classList.add('play-head');
+  });
+
+  seqStep = (seqStep + 1) % STEPS;
+  if (seqPlaying) seqTimer = setTimeout(seqTick, intervalMs);
+}
+
+document.getElementById('phseq-clear')?.addEventListener('click', () => {
+  seqData = Array.from({length:TRACKS.length}, () => Array(16).fill(null));
+  pitchData = Array(16).fill(null);
+  refreshSequencerCells();
+  buildPitchRow();
+  document.getElementById('phseq-hint').textContent = 'cleared — select a step, then tap a phoneme below';
+});
+
+document.getElementById('phseq-steps-btn')?.addEventListener('click', function() {
+  STEPS = STEPS === 8 ? 16 : 8;
+  this.textContent = STEPS;
+  buildSequencer();
+});
+
+document.getElementById('phseq-preset')?.addEventListener('change', function() {
+  if(this.value) { loadPattern(this.value); this.value = ''; }
+});
+
+document.getElementById('phseq-play')?.addEventListener('click', function() {
+  seqPlaying = !seqPlaying;
+  this.textContent = seqPlaying ? '> STOP' : '> PLAY';
+  this.classList.toggle('playing', seqPlaying);
+  if(seqPlaying) {
+    seqStep = 0;
+    startLegatoVoice();
+    seqTick();
+  } else {
+    clearTimeout(seqTimer);
+    stopLegatoVoice();
+    document.querySelectorAll('.phseq-step, .phseq-pitch-cell').forEach(c => c.classList.remove('play-head'));
+  }
+});
+
+document.getElementById('phseq-bpm')?.addEventListener('input', function() {
+  document.getElementById('phseq-bpm-val').textContent = this.value;
+});
+
+document.getElementById('phseq-close')?.addEventListener('click', () => {
+  seqPlaying = false;
+  clearTimeout(seqTimer);
+  document.getElementById('phoneme-overlay').classList.remove('visible');
+  document.getElementById('phseq-play').textContent = '> PLAY';
+  document.getElementById('phseq-play').classList.remove('playing');
+});
+
+// ── SEQ BUTTON ───────────────────────────────────────────────────
+document.getElementById('seq-btn')?.addEventListener('click', () => {
+  const ov = document.getElementById('phoneme-overlay');
+  ov.classList.toggle('visible');
+});
+
+buildSequencer();
+
+// ── HERO CANVAS ──────────────────────────────────────────────────
+(function() {
+  const heroC = document.getElementById('hero');
+  const hCtx  = heroC.getContext('2d');
+  let hW, hH, hRaf;
+
+  function resize() {
+    hW = heroC.width  = heroC.offsetWidth;
+    hH = heroC.height = heroC.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function drawHero(ts) {
+    hRaf = requestAnimationFrame(drawHero);
+    const t = ts / 1000;
+
+    hCtx.clearRect(0, 0, hW, hH);
+
+    // Animate two overlapping vocal-tract waveforms
+    for(let wave=0; wave<2; wave++) {
+      const pitchHz  = wave === 0 ? 120 : 180;
+      const syllRate = wave === 0 ? 0.7 : 1.1;
+      const phase    = wave * Math.PI / 2;
+      const color    = wave === 0 ? '#b48eff' : '#6bc5ff';
+
+      hCtx.strokeStyle = color;
+      hCtx.lineWidth   = wave === 0 ? 2 : 1.2;
+      hCtx.globalAlpha = wave === 0 ? 0.9 : 0.55;
+      hCtx.beginPath();
+
+      for(let x=0; x<hW; x++) {
+        const tx = x / hW * 4 + t * 0.25 + phase;
+
+        // Glottal pulse envelope (syllable rate)
+        const syll = 0.5 + 0.5 * Math.sin(tx * syllRate * Math.PI * 2);
+
+        // Glottal period
+        const gPhase = (tx * pitchHz) % 1;
+        let pulse;
+        if(gPhase < 0.55) {
+          // open phase: smooth rise
+          pulse = Math.pow(Math.sin(gPhase / 0.55 * Math.PI), 1.4);
+        } else {
+          // closed phase: abrupt return
+          pulse = -0.18 * Math.exp(-(gPhase - 0.55) / 0.04);
+        }
+
+        // Formant ripple (F1 ~400Hz)
+        const formant = Math.sin(tx * 400 * Math.PI * 2 + phase) * 0.15;
+
+        const y = hH / 2 - (pulse * syll + formant * syll) * hH * 0.32;
+        x === 0 ? hCtx.moveTo(x, y) : hCtx.lineTo(x, y);
+      }
+      hCtx.stroke();
+    }
+
+    hCtx.globalAlpha = 1;
+  }
+
+  drawHero(0);
+})();
+
+// ── INIT ─────────────────────────────────────────────────────────
+loadLesson(0);
+</script>
+</body>
+</html>
